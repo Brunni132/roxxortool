@@ -1,0 +1,7 @@
+ipch
+x64
+Release
+Debug
+Debug_VS2013
+Release_VS2013
+*.sdf
