@@ -35,10 +35,12 @@ Using the Roxxor Tool
 ---------------------
 
 The Roxxor tool will usually find its way at ease on your system in three steps.
-1) Unzipping it somewhere. Run it with the default configuration and try out.
-2) Tweaking the config.json file (make sure it stays side by side with the executable). Enable, disable or customize the functionality according to your needs. Relaunch the executable to test it with your parameters. If reloadConfigWithCtrlWinR is true, you can do so simply by pressing Ctrl+Win+R. The program will relaunch itself with the updated configuration.
-3) Once you are satisfied and like this utility, you may want to allow it run as administrator at startup. Loading the Roxxor Tool as administrator allows to capture hotkeys from within administrator windows, such as the Task Manager. This is done by putting the executable some place safe and shared, then setting up a scheduled task.
--> Open the Task Scheduler (Win+R, taskschd.msc, RETURN). Create a new task (recommended at root "Task Scheduler Library") with the following parameters:
+
+1. Unzipping it somewhere. Run it with the default configuration and try out.
+2. Tweaking the config.json file (make sure it stays side by side with the executable). Enable, disable or customize the functionality according to your needs. Relaunch the executable to test it with your parameters. If reloadConfigWithCtrlWinR is true, you can do so simply by pressing Ctrl+Win+R. The program will relaunch itself with the updated configuration.
+3. Once you are satisfied and like this utility, you may want to allow it run as administrator at startup. Loading the Roxxor Tool as administrator allows to capture hotkeys from within Administrator windows, such as the Task Manager, and ensure a smooth and consistent experience. This is done by putting the executable some place safe and shared, then setting up a scheduled task.
+
+In order to do this, open the Task Scheduler (Win+R, taskschd.msc, RETURN). Create a new task (recommended at root "Task Scheduler Library") with the following parameters:
 - Under the General tab, Choose "Run only when user is logged on"
 - Tick "Run with highest privileges"
 - Under the "Triggers" tab, add a new Trigger. Set it to begin "At log on". Do not tick anything else than "Enabled".
