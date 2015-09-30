@@ -138,7 +138,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 	}
 
-	if (config.iAmAMac) {
+	if (config.altGrContextMenu) {
 		static bool bringMenuAtNextKeyUp = false;
 		// Remappe Alt droit => context menu
 		if (nKey == VK_RMENU) {
@@ -154,7 +154,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		} else if (nKey != VK_LCONTROL) {
 			bringMenuAtNextKeyUp = false;
 		}
+	}
 
+	if (config.iAmAMac) {
 		// Eat accidental left/right presses after home/end on Mac
 		static int eatNextCorrespondingKey;
 		static DWORD releaseTime;

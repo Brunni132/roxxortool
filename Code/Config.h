@@ -7,6 +7,8 @@ extern char originalExeCommand[1024];
 struct Config: public RefClass {
 	// The right control key becomes the context menu key
 	bool rightCtrlContextMenu;
+	// Also bring the context menu when pressing on AltGr
+	bool altGrContextMenu;
 	// Toggle hidden folder view in explorer by pressing Ctrl+H
 	bool toggleHideFolders;
 	// Start screensaver using Insert key
