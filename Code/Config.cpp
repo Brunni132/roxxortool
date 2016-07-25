@@ -14,7 +14,6 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	memset(defaultGammaCurve, 0, sizeof(defaultGammaCurve));
 	IMPLEMENT_BOOL_PROP(rightCtrlContextMenu, false);
 	IMPLEMENT_BOOL_PROP(altGrContextMenu, false);
-	IMPLEMENT_BOOL_PROP(rightAltContextMenu, false);
 	IMPLEMENT_BOOL_PROP(toggleHideFolders, true);
 	IMPLEMENT_BOOL_PROP(startScreenSaverWithInsert, false);
 	IMPLEMENT_BOOL_PROP(smoothVolumeControl, true);

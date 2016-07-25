@@ -7,6 +7,20 @@
 #include "Utilities.h"
 #include "StatusWindow.h"
 
+static void TEMP_log(const char *format, ...) {
+	char vbuf[256];
+	va_list arg_ptr;
+	va_start(arg_ptr, format);
+	vsnprintf(vbuf, sizeof(vbuf), format, arg_ptr);
+	FILE *f = fopen("log.txt", "a");
+	if (f) {
+		fputs(vbuf, f);
+		fputc('\n', f);
+		fclose(f);
+	}
+}
+
+
 static void SimulateKeyAction(int code, int state);
 static void SimulateKeyDown(int code);
 static void SimulateKeyUp(int code);
@@ -22,7 +36,7 @@ static const struct { int original; int modified; } keyboardEatTable[] = {
 
 
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
-	static bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, lShiftPressed = false;
+	static bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, lShiftPressed = false, rShiftPressed = false;
 	static int numkeysDown = 0;
 	static bool winKeyWasForced = false;
 
@@ -34,7 +48,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	KBDLLHOOKSTRUCT *kbd = (KBDLLHOOKSTRUCT*) lParam;
 	int nKey = kbd->vkCode;
 	int processed = 0;
-	bool ctrlKeyWasPressed = lCtrlPressed || rCtrlPressed;
+	bool ctrlKeyWasPressed = lCtrlPressed || rCtrlPressed, rShiftWasPressed = rShiftPressed;
 
 	// Special keys
 	if (wParam == WM_KEYDOWN || wParam == WM_KEYUP) {
@@ -50,6 +64,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			break;
 		case VK_LWIN:
 			lWinPressed = wParam == WM_KEYDOWN;
+			break;
+		case VK_RSHIFT:
+			rShiftPressed = wParam == WM_KEYDOWN;
 			break;
 		}
 	}
@@ -138,7 +155,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 	}
 
-	if (config.altGrContextMenu || config.rightAltContextMenu) {
+	if (config.altGrContextMenu) {
 		static bool bringMenuAtNextKeyUp = false;
 		// Remappe Alt droit => context menu
 		if (nKey == VK_RMENU) {
@@ -151,7 +168,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				SimulateKeyPress(93);
 				return 1;
 			}
-		} else if (config.altGrContextMenu && nKey != VK_LCONTROL) {
+		} else if (nKey != VK_LCONTROL) {
 			bringMenuAtNextKeyUp = false;
 		}
 	}
@@ -195,6 +212,22 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			// Release Ctrl
 			keybd_event(VK_CONTROL, 0x9d, KEYEVENTF_KEYUP, 0);
 			needToReleaseCtrl = false;
+		}
+
+		if (config.rightCtrlContextMenu) {
+			static bool pressedAnotherKeySince = false;
+			// Remappe Alt droit => context menu
+			if (nKey == VK_RSHIFT) {
+				if (wParam == WM_KEYDOWN)
+					pressedAnotherKeySince = false;
+				// Au keyup, on presse un context menu (93)
+				else if (wParam == WM_KEYUP  && rShiftWasPressed && !pressedAnotherKeySince) {
+					//				SimulateKeyUp(VK_RCONTROL);		// Fix for the apps which do not accept context menu with CTRL pressed
+					SimulateKeyPress(93);
+				}
+			}
+			else if (wParam == WM_KEYDOWN)
+				pressedAnotherKeySince = true;
 		}
 	} else {
 		if (config.rightCtrlContextMenu) {

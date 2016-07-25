@@ -9,8 +9,6 @@ struct Config: public RefClass {
 	bool rightCtrlContextMenu;
 	// Also bring the context menu when pressing on AltGr
 	bool altGrContextMenu;
-	// The context menu is brought by Right Alt
-	bool rightAltContextMenu;
 	// Toggle hidden folder view in explorer by pressing Ctrl+H
 	bool toggleHideFolders;
 	// Start screensaver using Insert key
