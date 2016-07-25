@@ -138,7 +138,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 	}
 
-	if (config.altGrContextMenu) {
+	if (config.altGrContextMenu || config.rightAltContextMenu) {
 		static bool bringMenuAtNextKeyUp = false;
 		// Remappe Alt droit => context menu
 		if (nKey == VK_RMENU) {
@@ -151,7 +151,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				SimulateKeyPress(93);
 				return 1;
 			}
-		} else if (nKey != VK_LCONTROL) {
+		} else if (config.altGrContextMenu && nKey != VK_LCONTROL) {
 			bringMenuAtNextKeyUp = false;
 		}
 	}
