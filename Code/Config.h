@@ -39,6 +39,10 @@ struct Config: public RefClass {
 	bool winHHidesWindow;
 	bool unixLikeMouseWheel;
 	float horizontalScrollFactor;
+	// Uses LWin+[0-9] instead of Ctrl+[num0-num9] to switch tasks
+	bool noNumPad;
+	// Also bring the context menu when pressing on Right Shift
+	bool rightShiftContextMenu;
 
 	// Reload the values from the config file. Will affect all members of this instance. Must be called at least once before use of the instance.
 	bool readFile();

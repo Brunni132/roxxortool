@@ -177,7 +177,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		// Eat accidental left/right presses after home/end on Mac
 		static int eatNextCorrespondingKey;
 		static DWORD releaseTime;
-		
+
 		if (wParam == WM_KEYDOWN && nKey == eatNextCorrespondingKey) {
 			// Key to be eaten
 			DWORD nowTime = GetTickCount();
@@ -185,21 +185,25 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			if (nowTime - releaseTime <= 10) {
 				return 1;
 			}
-		} else if (wParam == WM_KEYUP) {
+		}
+		else if (wParam == WM_KEYUP) {
 			for (int i = 0; i < numberof(keyboardEatTable); i++) {
 				if (nKey == keyboardEatTable[i].original) {
 					eatNextCorrespondingKey = keyboardEatTable[i].modified;
 					releaseTime = GetTickCount();
 					break;
-				} else if (nKey == keyboardEatTable[i].modified) {
+				}
+				else if (nKey == keyboardEatTable[i].modified) {
 					eatNextCorrespondingKey = keyboardEatTable[i].original;
 					releaseTime = GetTickCount();
 					break;
 				}
 			}
 		}
+	}
 
-		// LWin+[0-9] -> Ctrl+Win+[0-9]
+	// LWin+[0-9] -> Ctrl+Win+[0-9]
+	if (config.noNumPad) {
 		static bool needToReleaseCtrl = false;
 		if (lWinPressed && nKey >= '0' && nKey <= '9' && wParam == WM_KEYDOWN && !winKeyWasForced) {
 			if (!needToReleaseCtrl && !lShiftPressed && !lCtrlPressed && config.multiDesktopLikeApplicationSwitcher) {
@@ -213,31 +217,31 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			keybd_event(VK_CONTROL, 0x9d, KEYEVENTF_KEYUP, 0);
 			needToReleaseCtrl = false;
 		}
+	}
 
-		if (config.rightCtrlContextMenu) {
-			static bool pressedAnotherKeySince = false;
-			// Remappe Alt droit => context menu
-			if (nKey == VK_RSHIFT) {
-				if (wParam == WM_KEYDOWN)
-					pressedAnotherKeySince = false;
-				// Au keyup, on presse un context menu (93)
-				else if (wParam == WM_KEYUP  && rShiftWasPressed && !pressedAnotherKeySince) {
-					//				SimulateKeyUp(VK_RCONTROL);		// Fix for the apps which do not accept context menu with CTRL pressed
-					SimulateKeyPress(93);
-				}
+	if (config.rightShiftContextMenu) {
+		static bool pressedAnotherKeySince = false;
+		// Remappe Alt droit => context menu
+		if (nKey == VK_RSHIFT) {
+			if (wParam == WM_KEYDOWN)
+				pressedAnotherKeySince = false;
+			// Au keyup, on presse un context menu (93)
+			else if (wParam == WM_KEYUP  && rShiftWasPressed && !pressedAnotherKeySince) {
+				//				SimulateKeyUp(VK_RCONTROL);		// Fix for the apps which do not accept context menu with CTRL pressed
+				SimulateKeyPress(93);
 			}
-			else if (wParam == WM_KEYDOWN)
-				pressedAnotherKeySince = true;
 		}
-	} else {
-		if (config.rightCtrlContextMenu) {
-			// Remappe Ctrl droit => context menu
-			if (nKey == VK_RCONTROL) {
-				// Au keyup, on presse un context menu (93)
-				if (wParam == WM_KEYUP  && ctrlKeyWasPressed) {
-					//				SimulateKeyUp(VK_RCONTROL);		// Fix for the apps which do not accept context menu with CTRL pressed
-					SimulateKeyPress(93);
-				}
+		else if (wParam == WM_KEYDOWN)
+			pressedAnotherKeySince = true;
+	}
+
+	if (config.rightCtrlContextMenu) {
+		// Remappe Ctrl droit => context menu
+		if (nKey == VK_RCONTROL) {
+			// Au keyup, on presse un context menu (93)
+			if (wParam == WM_KEYUP  && ctrlKeyWasPressed) {
+				//				SimulateKeyUp(VK_RCONTROL);		// Fix for the apps which do not accept context menu with CTRL pressed
+				SimulateKeyPress(93);
 			}
 		}
 	}

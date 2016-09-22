@@ -33,6 +33,8 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(winHHidesWindow, true);
 	IMPLEMENT_BOOL_PROP(unixLikeMouseWheel, true);
 	IMPLEMENT_FLOAT_PROP(horizontalScrollFactor, 1.0f);
+	IMPLEMENT_BOOL_PROP(noNumPad, false);
+	IMPLEMENT_BOOL_PROP(rightShiftContextMenu, false);
 }
 
 bool Config::readFile() {
