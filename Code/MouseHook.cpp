@@ -75,7 +75,7 @@ LRESULT CALLBACK LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 	lParam = p.x | (p.y << 16);
 
-	if (!PostMessage(hWnd, originalMessage, wParam, lParam))
+	if (!PostMessage(hWnd, (UINT)originalMessage, wParam, lParam))
 		goto skip;
 
 	return 1;

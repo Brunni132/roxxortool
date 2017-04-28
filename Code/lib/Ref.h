@@ -11,7 +11,7 @@
 struct RefClass {
 	unsigned __ref_count;		// -1 => freed (an unmanaged object will be left at 0)
 	RefClass() : __ref_count(0) {}
-	~RefClass() { if ((int) __ref_count > 0) throw "Freeing an object that is still retained elsewhere"; }
+	~RefClass() { if ((int) __ref_count > 0) fputs("Freeing an object that is still retained elsewhere", stderr); }
 	// Not allowed if not redefined properly!!! (i.e. not copy the __ref_count)
 	RefClass(const RefClass& other);
 	RefClass& operator =(const RefClass&other);

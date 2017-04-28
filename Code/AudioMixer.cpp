@@ -31,7 +31,7 @@ vol_t AudioMixer::getVolume() {
 
 void AudioMixer::setVolume(vol_t newVolume) {
 	g_endpointVolume->SetMasterVolumeLevel(newVolume, NULL);
-	StatusWindow::showVolume(newVolume);
+	StatusWindow::showVolume(int(newVolume));
 }
 
 void AudioMixer::incrementVolume(float increment) {

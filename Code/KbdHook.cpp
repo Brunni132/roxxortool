@@ -111,6 +111,24 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			}
 		}
 
+		// Quit
+		if (config.closeWindowWithWinQ && lWinPressed) {
+			if (nKey == 'Q') {
+				SimulateKeyDown(VK_MENU);
+				SimulateKeyPress(VK_F4);
+				SimulateKeyUp(VK_MENU);
+				return 1;
+			}
+			else if (nKey == 'W') {
+				SimulateKeyUp(VK_LWIN);
+				SimulateKeyDown(VK_CONTROL);
+				SimulateKeyPress(VK_F4);
+				SimulateKeyUp(VK_CONTROL);
+				SimulateKeyDown(VK_LWIN);
+				return 1;
+			}
+		}
+
 		// External monitor brightness change
 		if (lWinPressed && lCtrlPressed) {
 			if (config.ddcCiBrightnessControl) {

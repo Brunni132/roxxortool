@@ -35,6 +35,8 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_FLOAT_PROP(horizontalScrollFactor, 1.0f);
 	IMPLEMENT_BOOL_PROP(noNumPad, false);
 	IMPLEMENT_BOOL_PROP(rightShiftContextMenu, false);
+	IMPLEMENT_BOOL_PROP(alwaysReadBrightness, true);
+	IMPLEMENT_BOOL_PROP(closeWindowWithWinQ, false);
 }
 
 bool Config::readFile() {
@@ -56,7 +58,7 @@ bool Config::readFile() {
 	JsonAllocator allocator;
 	JsonParseStatus status = json_parse(buffer, &endptr, &value, allocator);
 	if (status != JSON_PARSE_OK) {
-		fprintf(stderr, "Error at %ld, status: %d\n", endptr - buffer, status);
+		fprintf(stderr, "Error at %ld, status: %d\n", long(endptr - buffer), status);
 		return false;
 	}
 
@@ -78,9 +80,9 @@ void Config::parseNumberArray(unsigned short array[], unsigned maxLength, JsonVa
 	}
 	memset(array, 0, maxLength * sizeof(array[0]));
 	for (auto obj: val) {
-		if (index >= maxLength)
+		if (index >= int(maxLength))
 			break;
-		array[index++] = obj->value.toNumber();
+		array[index++] = short(obj->value.toNumber());
 	}
 }
 

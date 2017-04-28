@@ -4,9 +4,6 @@
 #include "WMI.h"
 #include "StatusWindow.h"
 
-// Always perform a read before altering the brightness
-#define ALWAYS_RELOAD_BRIGHTNESS 1
-
 // [int(pow(i / 110.0, 2) * 100) for i in range(10, 111)]
 static const int macBrightnessGamma[] = {
 	0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 4, 4, 4, 5, 5, 6, 6, 6, 7, 7, 8, 9, 9, 10, 10, 11, 11, 12, 13, 13, 14, 15, 16, 16,
@@ -101,7 +98,7 @@ void Monitor::init(int autoApplyGammaCurveDelay) {
 	SetMonitorContrast = (BOOL (WINAPI*)(HANDLE,DWORD))GetProcAddress(lib, "SetMonitorContrast");
 	SetMonitorRedGreenOrBlueGain = (BOOL (WINAPI*)(HANDLE,MC_GAIN_TYPE,DWORD))GetProcAddress(lib, "SetMonitorRedGreenOrBlueGain");
 	// Read once
-	if (!ALWAYS_RELOAD_BRIGHTNESS)
+	if (!config.alwaysReadBrightness)
 		increaseBrightnessBy(0);
 	autoApplyTimer(NULL, 0, 0, 0);
 	if (autoApplyGammaCurveDelay)
@@ -257,10 +254,12 @@ void Monitor::increaseBrightnessBy(int by) {
 	GetMonitorInfo(hMonitor, &monitorInfo);
 	PHYSICAL_MONITOR *monitors = getHandleToPhysicalMonitors(hMonitor, &numMonitors);
 	MonitorInfo *mi = getMonitorInfoForName(monitorInfo.szDevice);
-	if (!mi->inited || (ALWAYS_RELOAD_BRIGHTNESS && mi->currentBrightness >= mi->minBrightness)) {
+	if (!mi->inited || (config.alwaysReadBrightness && mi->currentBrightness >= mi->minBrightness)) {
 		sc_get(mi, monitors->hPhysicalMonitor, &monitorInfo);
 		// Round up
-		mi->currentBrightness = (int) (mi->currentBrightness / by) * by;
+		if (by != 0) {
+			mi->currentBrightness = (int)(mi->currentBrightness / by) * by;
+		}
 	}
 	if (mi->inited) {
 		mi->currentBrightness += by;
@@ -280,7 +279,7 @@ void Monitor::decreaseBrightnessBy(int by) {
 	GetMonitorInfo(hMonitor, &monitorInfo);
 	PHYSICAL_MONITOR *monitors = getHandleToPhysicalMonitors(hMonitor, &numMonitors);
 	MonitorInfo *mi = getMonitorInfoForName(monitorInfo.szDevice);
-	if (!mi->inited || (ALWAYS_RELOAD_BRIGHTNESS && mi->currentBrightness >= mi->minBrightness))
+	if (!mi->inited || (config.alwaysReadBrightness && mi->currentBrightness >= mi->minBrightness))
 		sc_get(mi, monitors->hPhysicalMonitor, &monitorInfo);
 	if (mi->inited) {
 		mi->currentBrightness -= by;

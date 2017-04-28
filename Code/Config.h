@@ -43,6 +43,9 @@ struct Config: public RefClass {
 	bool noNumPad;
 	// Also bring the context menu when pressing on Right Shift
 	bool rightShiftContextMenu;
+	// Always perform a read before altering the brightness
+	bool alwaysReadBrightness;
+	bool closeWindowWithWinQ;
 
 	// Reload the values from the config file. Will affect all members of this instance. Must be called at least once before use of the instance.
 	bool readFile();
