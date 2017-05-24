@@ -84,6 +84,7 @@ static void CALLBACK autoApplyTimer(HWND, UINT, UINT_PTR, DWORD);
 static const int MAX_MONITORS_NUM = 128;
 static MonitorInfo *monitors[MAX_MONITORS_NUM];
 static int currentMonitors = 0;
+static DWORD lastReadTime;
 
 /******** Actual code ********/
 // Create the screen control structure
@@ -98,7 +99,7 @@ void Monitor::init(int autoApplyGammaCurveDelay) {
 	SetMonitorContrast = (BOOL (WINAPI*)(HANDLE,DWORD))GetProcAddress(lib, "SetMonitorContrast");
 	SetMonitorRedGreenOrBlueGain = (BOOL (WINAPI*)(HANDLE,MC_GAIN_TYPE,DWORD))GetProcAddress(lib, "SetMonitorRedGreenOrBlueGain");
 	// Read once
-	if (!config.alwaysReadBrightness)
+	if (config.brightnessCacheDuration != 0)
 		increaseBrightnessBy(0);
 	autoApplyTimer(NULL, 0, 0, 0);
 	if (autoApplyGammaCurveDelay)
@@ -246,6 +247,17 @@ static MonitorInfo *getMonitorInfoForName(const char *szDeviceName) {
 	return monitors[currentMonitors++];
 }
 
+static bool shouldReadBrightnessNow(MonitorInfo *mi) {
+	if (!mi->inited) return true;
+	if (mi->currentBrightness < mi->minBrightness) return false;
+	if (config.brightnessCacheDuration == 0) return true;
+	// Reread after selected duration
+	DWORD nowTime = GetTickCount(), last = lastReadTime;
+	bool shouldRead = nowTime - lastReadTime >= DWORD(config.brightnessCacheDuration);
+	lastReadTime = nowTime;
+	return shouldRead;
+}
+
 void Monitor::increaseBrightnessBy(int by) {
 	DWORD numMonitors;
 	HMONITOR hMonitor = getCurrentMonitor();
@@ -254,7 +266,7 @@ void Monitor::increaseBrightnessBy(int by) {
 	GetMonitorInfo(hMonitor, &monitorInfo);
 	PHYSICAL_MONITOR *monitors = getHandleToPhysicalMonitors(hMonitor, &numMonitors);
 	MonitorInfo *mi = getMonitorInfoForName(monitorInfo.szDevice);
-	if (!mi->inited || (config.alwaysReadBrightness && mi->currentBrightness >= mi->minBrightness)) {
+	if (shouldReadBrightnessNow(mi)) {
 		sc_get(mi, monitors->hPhysicalMonitor, &monitorInfo);
 		// Round up
 		if (by != 0) {
@@ -279,7 +291,7 @@ void Monitor::decreaseBrightnessBy(int by) {
 	GetMonitorInfo(hMonitor, &monitorInfo);
 	PHYSICAL_MONITOR *monitors = getHandleToPhysicalMonitors(hMonitor, &numMonitors);
 	MonitorInfo *mi = getMonitorInfoForName(monitorInfo.szDevice);
-	if (!mi->inited || (config.alwaysReadBrightness && mi->currentBrightness >= mi->minBrightness))
+	if (shouldReadBrightnessNow(mi))
 		sc_get(mi, monitors->hPhysicalMonitor, &monitorInfo);
 	if (mi->inited) {
 		mi->currentBrightness -= by;

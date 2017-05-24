@@ -114,19 +114,30 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		// Quit
 		if (config.closeWindowWithWinQ && lWinPressed) {
 			if (nKey == 'Q') {
-				SimulateKeyDown(VK_MENU);
-				SimulateKeyPress(VK_F4);
-				SimulateKeyUp(VK_MENU);
+				//HWND window = GetForegroundWindow();
+				//SendMessage(window, WM_SYSCOMMAND, SC_CLOSE, 0);
+				keybd_event(VK_CONTROL, 0, 0, 0);  //CONTROL, to avoid bringing the menu
+				keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, 0); //WIN
+				keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);  //CONTROL, to avoid bringing the menu
+				keybd_event(VK_MENU, 0, 0, 0);  //ALT
+				keybd_event(VK_F4, 0, 0, 0);  //F4
+				keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, 0); //ALT
+				keybd_event(VK_F4, 0, KEYEVENTF_KEYUP, 0); //F4
+
+				keybd_event(VK_LWIN, 0, 0, 0); //WIN
+				keybd_event(VK_CONTROL, 0, 0, 0);  //CONTROL, to avoid bringing the menu
+				keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);  //CONTROL, to avoid bringing the menu
 				return 1;
 			}
-			else if (nKey == 'W') {
-				SimulateKeyUp(VK_LWIN);
-				SimulateKeyDown(VK_CONTROL);
-				SimulateKeyPress(VK_F4);
-				SimulateKeyUp(VK_CONTROL);
-				SimulateKeyDown(VK_LWIN);
-				return 1;
-			}
+			//else if (nKey == 'W') {
+			//	keybd_event(VK_CONTROL, 0, 0, 0);  //CONTROL, to avoid bringing the menu
+			//	keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, 0); //WIN
+			//	keybd_event(VK_F4, 0, 0, 0);  //F4
+			//	keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);  //CONTROL, to avoid bringing the menu
+			//	keybd_event(VK_F4, 0, KEYEVENTF_KEYUP, 0); //F4
+			//	keybd_event(VK_LWIN, 0, 0, 0); //WIN
+			//	return 1;
+			//}
 		}
 
 		// External monitor brightness change
@@ -168,7 +179,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			return 1;
 		}
 		if (config.winHHidesWindow && lWinPressed && nKey == 'H') {
+			keybd_event(VK_CONTROL, 0, 0, 0);  //CONTROL, to avoid bringing the menu
 			ShowWindow(GetForegroundWindow(), SW_FORCEMINIMIZE);
+			keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);  //CONTROL, to avoid bringing the menu
 			return 1;
 		}
 	}

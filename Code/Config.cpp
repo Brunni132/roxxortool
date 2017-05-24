@@ -35,7 +35,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_FLOAT_PROP(horizontalScrollFactor, 1.0f);
 	IMPLEMENT_BOOL_PROP(noNumPad, false);
 	IMPLEMENT_BOOL_PROP(rightShiftContextMenu, false);
-	IMPLEMENT_BOOL_PROP(alwaysReadBrightness, true);
+	IMPLEMENT_INT_PROP(brightnessCacheDuration, 60000);
 	IMPLEMENT_BOOL_PROP(closeWindowWithWinQ, false);
 }
 
@@ -66,7 +66,7 @@ bool Config::readFile() {
 	process();
 
 	// Parse file itself
-	for (auto obj: value)
+	for (auto obj : value)
 		process(obj);
 
 //	writeSampleFile("config.json");
@@ -79,7 +79,7 @@ void Config::parseNumberArray(unsigned short array[], unsigned maxLength, JsonVa
 		return;
 	}
 	memset(array, 0, maxLength * sizeof(array[0]));
-	for (auto obj: val) {
+	for (auto obj : val) {
 		if (index >= int(maxLength))
 			break;
 		array[index++] = short(obj->value.toNumber());

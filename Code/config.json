@@ -1,5 +1,4 @@
 {
-	"alwaysReadBrightness": false,
 	"autoApplyGammaCurveDelay": 0,
 	"brightnessIncrementQuantity": 5,
 	"ddcCiBrightnessControl": true,
