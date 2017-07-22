@@ -20,11 +20,20 @@ static void TEMP_log(const char *format, ...) {
 	}
 }
 
+// TODO move around
+// Codes: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html or https://www.codeproject.com/Articles/7305/Keyboard-Events-Simulation-using-keybd-event-funct
+static void kbddown(int vkCode, BYTE scanCode, int flags = 0) {
+	keybd_event(vkCode, scanCode, flags, 0);
+}
 
-static void SimulateKeyAction(int code, int state);
-static void SimulateKeyDown(int code);
-static void SimulateKeyUp(int code);
-static void SimulateKeyPress(int code);
+static void kbdup(int vkCode, BYTE scanCode, int flags = 0) {
+	keybd_event(vkCode, scanCode + 0x80, flags | KEYEVENTF_KEYUP, 0);
+}
+
+static void kbdpress(int vkCode, BYTE scanCode, int flags = 0) {
+	kbddown(vkCode, scanCode, flags);
+	kbdup(vkCode, scanCode, flags);
+}
 
 static const struct { int original; int modified; } keyboardEatTable[] = {
 	VK_LEFT, VK_HOME,
@@ -45,6 +54,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		return CallNextHookEx(NULL, nCode, wParam, lParam);
 	}
 
+	// TODO Florian -- replace all this with reading the scan code (in kbd)
 	KBDLLHOOKSTRUCT *kbd = (KBDLLHOOKSTRUCT*) lParam;
 	int nKey = kbd->vkCode;
 	int processed = 0;
@@ -87,7 +97,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				if (WindowsExplorer::isActive()) {
 					WindowsExplorer::toggleShowHideFolders();
 					// Refresh the explorer
-					SimulateKeyPress(VK_F5);
+					kbdpress(VK_F5, 0, 0);
 				}
 			}
 		}
@@ -106,7 +116,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 			// Relâche la touche, il ne faut pas que Windows la prenne
 			if (processed != 0) {
-				SimulateKeyAction(processed, 0);
+				kbdup(processed, 0);
 				return 1;
 			}
 		}
@@ -116,17 +126,17 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			if (nKey == 'Q') {
 				//HWND window = GetForegroundWindow();
 				//SendMessage(window, WM_SYSCOMMAND, SC_CLOSE, 0);
-				keybd_event(VK_CONTROL, 0, 0, 0);  //CONTROL, to avoid bringing the menu
-				keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, 0); //WIN
-				keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);  //CONTROL, to avoid bringing the menu
-				keybd_event(VK_MENU, 0, 0, 0);  //ALT
-				keybd_event(VK_F4, 0, 0, 0);  //F4
-				keybd_event(VK_MENU, 0, KEYEVENTF_KEYUP, 0); //ALT
-				keybd_event(VK_F4, 0, KEYEVENTF_KEYUP, 0); //F4
+				kbddown(VK_LCONTROL, 0); //CONTROL, to avoid bringing the menu
+				kbdup(VK_LWIN, 0); // WIN
+				kbdup(VK_LCONTROL, 0); // CONTROL, to avoid bringing the menu
+				kbddown(VK_LMENU, 0); //ALT
+				kbddown(VK_F4, 0); // +F4
+				kbdup(VK_LMENU, 0);
+				kbdup(VK_F4, 0);
 
-				keybd_event(VK_LWIN, 0, 0, 0); //WIN
-				keybd_event(VK_CONTROL, 0, 0, 0);  //CONTROL, to avoid bringing the menu
-				keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);  //CONTROL, to avoid bringing the menu
+				kbddown(VK_LWIN, 0); // Restore WIN
+				kbddown(VK_LCONTROL, 0); //CONTROL, to avoid bringing the menu
+				kbdup(VK_LCONTROL, 0);
 				return 1;
 			}
 			//else if (nKey == 'W') {
@@ -174,14 +184,13 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 
 		if (config.winFOpensYourFiles && lWinPressed && nKey == 'F') {
+			kbdpress(VK_LCONTROL, 0);
 			WindowsExplorer::showHomeFolderWindow();
-			SimulateKeyPress(VK_LCONTROL);
 			return 1;
 		}
 		if (config.winHHidesWindow && lWinPressed && nKey == 'H') {
-			keybd_event(VK_CONTROL, 0, 0, 0);  //CONTROL, to avoid bringing the menu
+			kbdpress(VK_LCONTROL, 0); // To avoid bringing the menu
 			ShowWindow(GetForegroundWindow(), SW_FORCEMINIMIZE);
-			keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);  //CONTROL, to avoid bringing the menu
 			return 1;
 		}
 	}
@@ -195,8 +204,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			} else if (wParam == WM_KEYUP && bringMenuAtNextKeyUp) {
 				// Au keyup, on presse un context menu
 				bringMenuAtNextKeyUp = false;
-				SimulateKeyUp(nKey);
-				SimulateKeyPress(93);
+				kbdup(nKey, 0);
+				kbdpress(VK_APPS, 0);
 				return 1;
 			}
 		} else if (nKey != VK_LCONTROL) {
@@ -240,12 +249,12 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			if (!needToReleaseCtrl && !lShiftPressed && !lCtrlPressed && config.multiDesktopLikeApplicationSwitcher) {
 				needToReleaseCtrl = true;
 				// Press Ctrl (http://www.codeproject.com/Articles/7305/Keyboard-Events-Simulation-using-keybd-event-funct)
-				keybd_event(VK_CONTROL, 0x9d, 0, 0);
+				kbddown(VK_LCONTROL, 0x9d);
 			}
 		}
 		if (needToReleaseCtrl && nKey == VK_LWIN && wParam == WM_KEYUP) {
 			// Release Ctrl
-			keybd_event(VK_CONTROL, 0x9d, KEYEVENTF_KEYUP, 0);
+			kbdup(VK_LCONTROL, 0x9d);
 			needToReleaseCtrl = false;
 		}
 	}
@@ -258,8 +267,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				pressedAnotherKeySince = false;
 			// Au keyup, on presse un context menu (93)
 			else if (wParam == WM_KEYUP  && rShiftWasPressed && !pressedAnotherKeySince) {
-				//				SimulateKeyUp(VK_RCONTROL);		// Fix for the apps which do not accept context menu with CTRL pressed
-				SimulateKeyPress(93);
+//				SimulateKeyUp(VK_RCONTROL);		// Fix for the apps which do not accept context menu with CTRL pressed
+				kbdpress(VK_APPS, 0);
 			}
 		}
 		else if (wParam == WM_KEYDOWN)
@@ -271,8 +280,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		if (nKey == VK_RCONTROL) {
 			// Au keyup, on presse un context menu (93)
 			if (wParam == WM_KEYUP  && ctrlKeyWasPressed) {
-				//				SimulateKeyUp(VK_RCONTROL);		// Fix for the apps which do not accept context menu with CTRL pressed
-				SimulateKeyPress(93);
+//				SimulateKeyUp(VK_RCONTROL);		// Fix for the apps which do not accept context menu with CTRL pressed
+				kbdpress(VK_APPS, 0);
 			}
 		}
 	}
@@ -281,17 +290,17 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (nKey >= VK_NUMPAD0 && nKey <= VK_NUMPAD9 && config.multiDesktopLikeApplicationSwitcher) {
 		if ((lCtrlPressed || rCtrlPressed) && wParam == WM_KEYDOWN) {
 			if (numkeysDown == 0 && !lWinPressed) {
-				SimulateKeyDown(VK_LWIN);
+				kbddown(VK_LWIN, 0);
 				winKeyWasForced = true;
 			}
-			SimulateKeyDown(nKey - VK_NUMPAD0 + '0');
+			kbddown(nKey - VK_NUMPAD0 + '0', 0);
 			numkeysDown++;
 			return 1;
 		} else if (wParam == WM_KEYUP) {
 			if (numkeysDown > 0) {
-				SimulateKeyUp(nKey - VK_NUMPAD0 + '0');
+				kbdup(nKey - VK_NUMPAD0 + '0', 0);
 				if (--numkeysDown == 0 && winKeyWasForced) {
-					SimulateKeyUp(VK_LWIN);
+					kbdup(VK_LWIN, 0);
 					winKeyWasForced = false;
 				}
 				return 1;
@@ -303,16 +312,16 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		if (lCtrlPressed && lWinPressed && wParam == WM_KEYDOWN) {
 			switch (nKey) {
 			case VK_HOME:
-				SimulateKeyDown(VK_MEDIA_STOP);
+				kbdpress(VK_MEDIA_STOP, 0);
 				return 1;
 			case VK_END:
-				SimulateKeyDown(VK_MEDIA_PLAY_PAUSE);
+				kbdpress(VK_MEDIA_PLAY_PAUSE, 0);
 				return 1;
 			case VK_PRIOR:
-				SimulateKeyDown(VK_MEDIA_PREV_TRACK);
+				kbdpress(VK_MEDIA_PREV_TRACK, 0);
 				return 1;
 			case VK_NEXT:
-				SimulateKeyDown(VK_MEDIA_NEXT_TRACK);
+				kbdpress(VK_MEDIA_NEXT_TRACK, 0);
 				return 1;
 			case VK_UP:
 				AudioMixer::incrementVolume(config.volumeIncrementQuantity);
@@ -328,39 +337,14 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
-void SimulateKeyDown(int code) {
-	keybd_event(code,
-		0x45,
-		KEYEVENTF_EXTENDEDKEY | 0,
-		0);
-}
-
-void SimulateKeyUp(int code) {
-	keybd_event(code,
-		0x45,
-		KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP,
-		0);
-}
-
-void SimulateKeyPress(int code) {
-	SimulateKeyDown(code);
-	SimulateKeyUp(code);
-}
-
-void SimulateKeyAction(int code, int state) {
-	if (state)
-		// Simulate a key press
-		keybd_event(code, 0x45, KEYEVENTF_EXTENDEDKEY, 0);
-	else
-		// Simulate a key release
-		keybd_event(code, 0x45, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0);
-}
-
 void KbdHook::start() {
-	SimulateKeyUp(VK_LCONTROL);
-	SimulateKeyUp(VK_RCONTROL);
-	SimulateKeyUp(VK_LWIN);
-	SimulateKeyUp(VK_RWIN);
+	kbdup(VK_LCONTROL, 0);
+	kbdup(VK_RCONTROL, 0);
+	kbdup(VK_LWIN, 0);
+	kbdup(VK_RWIN, 0);
+	kbdup(VK_APPS, 0);
+	kbdup(VK_LMENU, 0);
+	kbdup(VK_RMENU, 0);
 	SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
 	if (config.ddcCiBrightnessControl)
 		Monitor::init(config.autoApplyGammaCurveDelay);
