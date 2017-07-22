@@ -178,9 +178,11 @@ static void sc_get(MonitorInfo *mi, HANDLE hPhysicalMonitor, MONITORINFO *monito
 	mi->useWmi = !GetMonitorBrightness(hPhysicalMonitor, (LPDWORD)&mi->minBrightness, (LPDWORD)&mi->currentBrightness, (LPDWORD)&mi->maxBrightness);
 	GetGammaRampForDevice(mi->deviceName, mi->gammaRamp);
 	if (mi->useWmi) {
-		int maxBright, previousBrightness = mi->currentBrightness;
+		int maxBright = 100, previousBrightness = mi->currentBrightness;
 		bool success = Wmi::GetBrightnessInfo(&mi->currentBrightness, &maxBright);
 		if (success) {
+			// FIXME: should read the level list and not assume 100 (the Levels can be 15 for instance).
+			maxBright = 101;
 			if (config.iAmAMac) {
 				// Translate to non linear using the table
 				for (int i = 0; i < numberof(macBrightnessGamma); i++)
@@ -193,7 +195,7 @@ static void sc_get(MonitorInfo *mi, HANDLE hPhysicalMonitor, MONITORINFO *monito
 						break;
 					}
 			}
-			mi->maxBrightness = maxBright - 1;
+			mi->minBrightness = 0, mi->maxBrightness = maxBright - 1;
 		} else {
 			mi->maxBrightness = mi->minBrightness = mi->currentBrightness = 0;
 		}

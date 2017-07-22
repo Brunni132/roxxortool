@@ -4,6 +4,15 @@
 #include "WMI.h"
 
 // http://stexbar.googlecode.com/svn-history/r264/trunk/Misc/SKBright/src/Utils.cpp
+// PS C : \Users\florian > Get - Ciminstance - Namespace root / WMI - ClassName WmiMonitorBrightness
+//
+//
+// Active : True
+//	CurrentBrightness : 70
+//	InstanceName : DISPLAY\SDC3853\4 & 3b1d693f & 3 & UID265988_0
+//	Level : {1, 2, 3, 4...}
+// Levels: 100
+//	PSComputerName :
 bool Wmi::GetBrightnessInfo(int *brightness, int *levels) {
 	bool ret = false;
 
