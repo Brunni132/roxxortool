@@ -43,6 +43,8 @@ static const struct { int original; int modified; } keyboardEatTable[] = {
 	VK_BACK, VK_DELETE
 };
 
+static HHOOK g_hPreviousHook;
+
 
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	static bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, lShiftPressed = false, rShiftPressed = false;
@@ -51,7 +53,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 	// Not something for us
 	if (nCode != HC_ACTION) {
-		return CallNextHookEx(NULL, nCode, wParam, lParam);
+		return CallNextHookEx(g_hPreviousHook, nCode, wParam, lParam);
 	}
 
 	// TODO Florian -- replace all this with reading the scan code (in kbd)
@@ -334,7 +336,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	}
 
 	// wParam will contain the virtual key code.  
-	return CallNextHookEx(NULL, nCode, wParam, lParam);
+	return CallNextHookEx(g_hPreviousHook, nCode, wParam, lParam);
 }
 
 void KbdHook::start() {
@@ -342,10 +344,10 @@ void KbdHook::start() {
 	kbdup(VK_RCONTROL, 0);
 	kbdup(VK_LWIN, 0);
 	kbdup(VK_RWIN, 0);
-	kbdup(VK_APPS, 0);
+	//kbdup(VK_APPS, 0);
 	kbdup(VK_LMENU, 0);
 	kbdup(VK_RMENU, 0);
-	SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
+	g_hPreviousHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
 	if (config.ddcCiBrightnessControl)
 		Monitor::init(config.autoApplyGammaCurveDelay);
 }
