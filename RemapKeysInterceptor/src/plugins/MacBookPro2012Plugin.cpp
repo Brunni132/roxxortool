@@ -1,28 +1,8 @@
 #include <stdio.h>
-#include "Main.h"
-#include "PluginContext.h"
-#include "utils.h"
+#include "MacBookPro2012Plugin.h"
 
 #define MAC_KEYBOARD L"HID\\VID_05AC&PID_0254&REV_0219&MI_00&Col01"
 
-struct RemappingEntry {
-	unsigned source, dest;
-};
-
-typedef const RemappingEntry* RemappingTable;
-
-static bool processRemappingTable(RemappingPluginContext &context, RemappingTable table, int tableCount) {
-	unsigned scanCode = context.strokeId;
-	if (!scanCode) return false;
-	for (int i = 0; i < tableCount; i += 1) {
-		if (scanCode == table[i].source) {
-			return context.replaceKey(table[i].dest);
-		}
-	}
-	return false;
-}
-
-/////////////////////////////////////// Remapping plugins ///////////////////////////////////////
 bool macRemappingPlugin(RemappingPluginContext &context) {
 	static const RemappingEntry basicRemappings[] = {
 		{ SC_LALT, SC_LCONTROL },
@@ -64,22 +44,4 @@ bool virtualFnRemappingPlugin(RemappingPluginContext &context) {
 		}
 	}
 	return false;
-}
-
-bool roxxorRemappingPlugin(RemappingPluginContext &context) {
-	return false;
-}
-
-static const RemappingPlugin plugins[] = {
-	{ virtualFnRemappingPlugin, false },
-	{ macRemappingPlugin, true },
-	{ roxxorRemappingPlugin, false },
-};
-
-
-int main() {
-	RemappingPluginContext context;
-	raise_process_priority();
-	context.runMainLoop(plugins, numberof(plugins));
-	return 0;
 }
