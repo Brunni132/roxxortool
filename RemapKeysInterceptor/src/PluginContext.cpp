@@ -1,10 +1,16 @@
 #include "PluginContext.h"
 #include <stdio.h>
 
-static unsigned translateToStrokeId(InterceptionKeyStroke& stroke);
-static void translateIdToStroke(unsigned strokeId, InterceptionKeyStroke& destStroke);
+RemappingPluginContext::RemappingPluginContext() : eaten(false), scannedKey(*(InterceptionKeyStroke*)strokeBuffer), strokeBufferCount(1) {
+}
 
-RemappingPluginContext::RemappingPluginContext() : eaten(false) {
+InterceptionKeyStroke& RemappingPluginContext::queueNewKey() {
+	if (strokeBufferCount + 1 >= numberof(strokeBuffer)) throw "Full stroke buffer";
+	InterceptionKeyStroke& newKey = (InterceptionKeyStroke&)strokeBuffer[strokeBufferCount++];
+	newKey.code = 0;
+	newKey.state = 0;
+	newKey.information = 0;
+	return newKey;
 }
 
 std::wstring RemappingPluginContext::getHardwareId() {
@@ -22,8 +28,9 @@ std::wstring RemappingPluginContext::getHardwareId() {
 }
 
 void RemappingPluginContext::prepareForNewStroke() {
-	strokeId = translateToStrokeId(stroke);
+	strokeId = translateToStrokeId(scannedKey);
 	eaten = false;
+	strokeBufferCount = 1;
 	cachedHardwareId = L"";
 }
 
@@ -31,7 +38,7 @@ bool RemappingPluginContext::replaceKey(unsigned newStrokeId) {
 	if (newStrokeId != strokeId) {
 		//printf("Remapping %x to %x\n", strokeId, newStrokeId);
 		strokeId = newStrokeId;
-		translateIdToStroke(strokeId, stroke);
+		translateIdToStroke(strokeId, scannedKey);
 	}
 	return true;
 }
@@ -44,22 +51,23 @@ void RemappingPluginContext::runMainLoop(const RemappingPlugin *plugins, unsigne
 	}
 	interception_set_filter(context, interception_is_keyboard, INTERCEPTION_FILTER_KEY_DOWN | INTERCEPTION_FILTER_KEY_UP | INTERCEPTION_FILTER_KEY_E0 | INTERCEPTION_FILTER_KEY_E1);
 
-	while (interception_receive(context, device = interception_wait(context), (InterceptionStroke *)&stroke, 1) > 0) {
+	while (interception_receive(context, device = interception_wait(context), strokeBuffer, 1) > 0) {
 		bool processed = false;
 		prepareForNewStroke();
-		//printf("A: %x %x %x -> %x\n", stroke.code, stroke.state, stroke.information, pluginContext.strokeId);
+		//printf("A: %x %x %x -> %x\n", scannedKey.code, scannedKey.state, scannedKey.information, this->strokeId);
 
 		for (unsigned i = 0; i < pluginCount; i += 1) {
 			if (!processed || !plugins[i].onlyIfNotProcessedYet) {
 				processed |= plugins[i].handler(*this);
 			}
-			if (eaten) {
-				break;
-			}
+			if (eaten) break;
 		}
 
 		if (!eaten) {
-			interception_send(context, device, (InterceptionStroke *)&stroke, 1);
+			interception_send(context, device, strokeBuffer, strokeBufferCount);
+		}
+		else if (strokeBufferCount > 1) {
+			interception_send(context, device, strokeBuffer + 1, strokeBufferCount - 1);
 		}
 	}
 

@@ -13,7 +13,9 @@ enum ScanCode {
 
 	SC_CAPITAL = 0x3A,
 	SC_LSHIFT = 0x2A,
+	SC_RSHIFT = 0x36,
 	SC_LCONTROL = 0x1D,
+	SC_RCONTROL = SC_E0 | 0x1D,
 	SC_LALT = 0x38, // LALT has state 0 (down) / 1 (up) and RALT has state 2 (down) / 3 (up)
 	SC_INTERNATIONAL1 = 0x7B,
 	SC_INTERNATIONAL3 = 0x70,
@@ -33,7 +35,23 @@ enum ScanCode {
 	SC_PGUP = SC_E0 | 0x49,
 	SC_PGDN = SC_E0 | 0x51,
 	SC_DELETE = SC_E0 | 0x53,
-	//SC_TEMP_HACK = 0x56,
+	SC_CONTEXTMENU = SC_E0 | 0x5D,
+
+	SC_Q = 0x10,
+	SC_W = 0x11,
+	SC_H = 0x23,
+	SC_0 = 0x01,
+	SC_9 = 0x0A,
+	SC_NUMPAD0 = 0x52,
+	SC_NUMPAD1 = 0x4F,
+	SC_NUMPAD2 = 0x50,
+	SC_NUMPAD3 = 0x51,
+	SC_NUMPAD4 = 0x4B,
+	SC_NUMPAD5 = 0x4C,
+	SC_NUMPAD6 = 0x4D,
+	SC_NUMPAD7 = 0x47,
+	SC_NUMPAD8 = 0x48,
+	SC_NUMPAD9 = 0x49,
 };
 
 struct RemappingPlugin {
@@ -44,7 +62,6 @@ struct RemappingPlugin {
 
 struct RemappingPluginContext {
 	unsigned strokeId;
-	bool eaten;
 
 	RemappingPluginContext();
 	bool eatKey() {
@@ -52,18 +69,37 @@ struct RemappingPluginContext {
 	}
 	std::wstring getHardwareId();
 	bool isPressingKey() const {
-		return !(stroke.state & 1);
+		return !(scannedKey.state & 1);
 	}
 	bool isDepressingKey() const {
-		return (stroke.state & 1) != 0;
+		return (scannedKey.state & 1) != 0;
 	}
+	InterceptionKeyStroke& queueNewKey();
 	bool replaceKey(unsigned newStrokeId);
 	void runMainLoop(const RemappingPlugin *plugins, unsigned pluginCount);
 
 private:
 	InterceptionContext context;
 	InterceptionDevice device;
-	InterceptionKeyStroke stroke;
+	// Read only one, can write up to 31 other entries to the output (1..31, 0 being reserved for the read stroke)
+	InterceptionStroke strokeBuffer[32];
+	// To optimize multiple queries via getHardwareId()
 	std::wstring cachedHardwareId;
+	// If the key is eaten, strokeBuffer[0] is not sent to output
+	bool eaten;
+	// Number of strokes, always >= 1 (read stroke only)
+	unsigned strokeBufferCount;
+
 	void prepareForNewStroke();
+
+	// First key stroke (strokeBuffer[0]), the one scanned
+	InterceptionKeyStroke& scannedKey;
+	// Additional strokes (for buffering purposes)
+	//InterceptionKeyStroke& keyStrokes(unsigned no) {
+	//	if (no >= numberof(strokeBuffer)) throw "Illegal access";
+	//	return *(InterceptionKeyStroke*)(&strokeBuffer[no]);
+	//}
 };
+
+extern unsigned translateToStrokeId(InterceptionKeyStroke& stroke);
+extern void translateIdToStroke(unsigned strokeId, InterceptionKeyStroke& destStroke);
