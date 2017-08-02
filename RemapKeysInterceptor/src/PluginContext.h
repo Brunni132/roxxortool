@@ -52,6 +52,7 @@ enum ScanCode {
 	SC_NUMPAD7 = 0x47,
 	SC_NUMPAD8 = 0x48,
 	SC_NUMPAD9 = 0x49,
+	SC_F4 = 0x3E,
 };
 
 struct RemappingPlugin {
@@ -82,7 +83,7 @@ private:
 	InterceptionContext context;
 	InterceptionDevice device;
 	// Read only one, can write up to 31 other entries to the output (1..31, 0 being reserved for the read stroke)
-	InterceptionStroke strokeBuffer[32];
+	InterceptionKeyStroke strokeBuffer[32];
 	// To optimize multiple queries via getHardwareId()
 	std::wstring cachedHardwareId;
 	// If the key is eaten, strokeBuffer[0] is not sent to output

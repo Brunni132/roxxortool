@@ -51,7 +51,7 @@ void RemappingPluginContext::runMainLoop(const RemappingPlugin *plugins, unsigne
 	}
 	interception_set_filter(context, interception_is_keyboard, INTERCEPTION_FILTER_KEY_DOWN | INTERCEPTION_FILTER_KEY_UP | INTERCEPTION_FILTER_KEY_E0 | INTERCEPTION_FILTER_KEY_E1);
 
-	while (interception_receive(context, device = interception_wait(context), strokeBuffer, 1) > 0) {
+	while (interception_receive(context, device = interception_wait(context), (InterceptionStroke*)strokeBuffer, 1) > 0) {
 		bool processed = false;
 		prepareForNewStroke();
 		//printf("A: %x %x %x -> %x\n", scannedKey.code, scannedKey.state, scannedKey.information, this->strokeId);
@@ -64,10 +64,14 @@ void RemappingPluginContext::runMainLoop(const RemappingPlugin *plugins, unsigne
 		}
 
 		if (!eaten) {
-			interception_send(context, device, strokeBuffer, strokeBufferCount);
+			//for (int i = 0; i < strokeBufferCount; i += 1) {
+			//	InterceptionKeyStroke &k = (InterceptionKeyStroke&)strokeBuffer[i];
+			//	printf("%d: %x %x %x \n", i, k.code, k.state, k.information);
+			//}
+			interception_send(context, device, (InterceptionStroke*)strokeBuffer, strokeBufferCount);
 		}
 		else if (strokeBufferCount > 1) {
-			interception_send(context, device, strokeBuffer + 1, strokeBufferCount - 1);
+			interception_send(context, device, (InterceptionStroke*)(strokeBuffer + 1), strokeBufferCount - 1);
 		}
 	}
 
