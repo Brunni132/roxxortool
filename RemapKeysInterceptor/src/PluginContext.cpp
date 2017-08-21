@@ -1,12 +1,12 @@
 #include "PluginContext.h"
 #include <stdio.h>
 
-RemappingPluginContext::RemappingPluginContext() : eaten(false), scannedKey(*(InterceptionKeyStroke*)strokeBuffer), strokeBufferCount(1) {
+RemappingPluginContext::RemappingPluginContext() : eaten(false), strokeCount(1) {
 }
 
 InterceptionKeyStroke& RemappingPluginContext::queueNewKey() {
-	if (strokeBufferCount + 1 >= numberof(strokeBuffer)) throw "Full stroke buffer";
-	InterceptionKeyStroke& newKey = (InterceptionKeyStroke&)strokeBuffer[strokeBufferCount++];
+	if (strokeCount + 1 >= numberof(strokes)) throw "Full stroke buffer";
+	InterceptionKeyStroke& newKey = strokes[strokeCount++];
 	newKey.code = 0;
 	newKey.state = 0;
 	newKey.information = 0;
@@ -28,9 +28,9 @@ std::wstring RemappingPluginContext::getHardwareId() {
 }
 
 void RemappingPluginContext::prepareForNewStroke() {
-	strokeId = translateToStrokeId(scannedKey);
+	strokeId = translateToStrokeId(strokes[0]);
 	eaten = false;
-	strokeBufferCount = 1;
+	strokeCount = 1;
 	cachedHardwareId = L"";
 }
 
@@ -38,7 +38,7 @@ bool RemappingPluginContext::replaceKey(unsigned newStrokeId) {
 	if (newStrokeId != strokeId) {
 		//printf("Remapping %x to %x\n", strokeId, newStrokeId);
 		strokeId = newStrokeId;
-		translateIdToStroke(strokeId, scannedKey);
+		translateIdToStroke(strokeId, strokes[0]);
 	}
 	return true;
 }
@@ -51,7 +51,7 @@ void RemappingPluginContext::runMainLoop(const RemappingPlugin *plugins, unsigne
 	}
 	interception_set_filter(context, interception_is_keyboard, INTERCEPTION_FILTER_KEY_DOWN | INTERCEPTION_FILTER_KEY_UP | INTERCEPTION_FILTER_KEY_E0 | INTERCEPTION_FILTER_KEY_E1);
 
-	while (interception_receive(context, device = interception_wait(context), (InterceptionStroke*)strokeBuffer, 1) > 0) {
+	while (interception_receive(context, device = interception_wait(context), (InterceptionStroke*)strokes, 1) > 0) {
 		bool processed = false;
 		prepareForNewStroke();
 		//printf("A: %x %x %x -> %x\n", scannedKey.code, scannedKey.state, scannedKey.information, this->strokeId);
@@ -68,10 +68,10 @@ void RemappingPluginContext::runMainLoop(const RemappingPlugin *plugins, unsigne
 			//	InterceptionKeyStroke &k = (InterceptionKeyStroke&)strokeBuffer[i];
 			//	printf("%d: %x %x %x \n", i, k.code, k.state, k.information);
 			//}
-			interception_send(context, device, (InterceptionStroke*)strokeBuffer, strokeBufferCount);
+			interception_send(context, device, (InterceptionStroke*)strokes, strokeCount);
 		}
-		else if (strokeBufferCount > 1) {
-			interception_send(context, device, (InterceptionStroke*)(strokeBuffer + 1), strokeBufferCount - 1);
+		else if (strokeCount > 1) {
+			interception_send(context, device, (InterceptionStroke*)(strokes + 1), strokeCount - 1);
 		}
 	}
 

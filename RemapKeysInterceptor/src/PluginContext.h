@@ -70,10 +70,10 @@ struct RemappingPluginContext {
 	}
 	std::wstring getHardwareId();
 	bool isPressingKey() const {
-		return !(scannedKey.state & 1);
+		return !(strokes[0].state & 1);
 	}
 	bool isDepressingKey() const {
-		return (scannedKey.state & 1) != 0;
+		return (strokes[0].state & 1) != 0;
 	}
 	InterceptionKeyStroke& queueNewKey();
 	bool replaceKey(unsigned newStrokeId);
@@ -83,23 +83,15 @@ private:
 	InterceptionContext context;
 	InterceptionDevice device;
 	// Read only one, can write up to 31 other entries to the output (1..31, 0 being reserved for the read stroke)
-	InterceptionKeyStroke strokeBuffer[32];
+	InterceptionKeyStroke strokes[32];
 	// To optimize multiple queries via getHardwareId()
 	std::wstring cachedHardwareId;
 	// If the key is eaten, strokeBuffer[0] is not sent to output
 	bool eaten;
 	// Number of strokes, always >= 1 (read stroke only)
-	unsigned strokeBufferCount;
+	unsigned strokeCount;
 
 	void prepareForNewStroke();
-
-	// First key stroke (strokeBuffer[0]), the one scanned
-	InterceptionKeyStroke& scannedKey;
-	// Additional strokes (for buffering purposes)
-	//InterceptionKeyStroke& keyStrokes(unsigned no) {
-	//	if (no >= numberof(strokeBuffer)) throw "Illegal access";
-	//	return *(InterceptionKeyStroke*)(&strokeBuffer[no]);
-	//}
 };
 
 extern unsigned translateToStrokeId(InterceptionKeyStroke& stroke);

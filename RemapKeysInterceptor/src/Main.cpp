@@ -6,7 +6,7 @@
 const RemappingPlugin plugins[] = {
 	{ virtualFnRemappingPlugin, false },
 	{ macRemappingPlugin, true },
-	{ roxxorRemappingPlugin, false },
+	//{ roxxorRemappingPlugin, false },
 };
 
 int main() {

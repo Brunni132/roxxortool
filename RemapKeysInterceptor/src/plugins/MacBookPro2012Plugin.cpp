@@ -12,8 +12,8 @@ bool macRemappingPlugin(RemappingPluginContext &context) {
 		{ SC_JPYEN, SC_TILDE },
 		{ SC_JPUNDERSCORE, SC_TILDE },
 		//{ SC_CAPITAL, SC_LCONTROL },
-		//{ SC_RWIN, SC_RALT },
-		//{ SC_INTERNATIONAL3, SC_RWIN }, // JP-eigo to LAlt
+		{ SC_RWIN, SC_RALT },
+		{ SC_INTERNATIONAL3, SC_RWIN }, // JP-eigo to LAlt
 		//{ 0xC1, 0xC0 }, // JP-[_] to `
 	};
 	if (context.getHardwareId() == MAC_KEYBOARD) {
