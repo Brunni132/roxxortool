@@ -52,7 +52,27 @@ enum ScanCode {
 	SC_NUMPAD7 = 0x47,
 	SC_NUMPAD8 = 0x48,
 	SC_NUMPAD9 = 0x49,
+	SC_F1 = 0x3B,
+	SC_F2 = 0x3C,
+	SC_F3 = 0x3D,
 	SC_F4 = 0x3E,
+	SC_F5 = 0x3f,
+	SC_F6 = 0x40,
+	SC_F7 = 0x41,
+	SC_F8 = 0x42,
+	SC_F9 = 0x43,
+	SC_F10 = 0x44,
+	SC_F11 = 0x57,
+	SC_F12 = 0x58,
+
+	// http://www.quadibloc.com/comp/scan.htm
+	SC_VOLUMEMUTE = SC_E0 | 0x20,
+	SC_VOLUMEDOWN = SC_E0 | 0x2E,
+	SC_VOLUMEUP = SC_E0 | 0x30,
+	SC_PLAY = SC_E0 | 0x22,
+	SC_STOP = SC_E0 | 0x24,
+	SC_NEXTTRACK = SC_E0 | 0x19,
+	SC_PREVTRACK = SC_E0 | 0x10,
 };
 
 struct RemappingPlugin {

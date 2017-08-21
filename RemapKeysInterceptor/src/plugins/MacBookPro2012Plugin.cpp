@@ -29,6 +29,12 @@ bool virtualFnRemappingPlugin(RemappingPluginContext &context) {
 		{ SC_UP, SC_PGUP },
 		{ SC_DOWN, SC_PGDN },
 		{ SC_BACKSPACE, SC_DELETE },
+		{ SC_F7, SC_PREVTRACK },
+		{ SC_F8, SC_PLAY },
+		{ SC_F9, SC_NEXTTRACK },
+		{ SC_F10, SC_VOLUMEMUTE },
+		{ SC_F11, SC_VOLUMEDOWN },
+		{ SC_F12, SC_VOLUMEUP },
 	};
 	static const unsigned virtualFnKey = SC_CAPITAL;
 	static bool virtualFnIsDown = false;
