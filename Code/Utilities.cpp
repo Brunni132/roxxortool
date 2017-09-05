@@ -12,7 +12,7 @@ void CALLBACK PerformOnTimer(HWND, UINT, UINT_PTR idEvent, DWORD) {
 	}
 }
 
-void RunAfterDelay(std::function<void()> code) {
+void RunAfterDelay(std::function<void()> code, int delayMs) {
 	queue.push_back(code);
-	SetTimer(NULL, eventId++, 0, PerformOnTimer);
+	SetTimer(NULL, eventId++, delayMs, PerformOnTimer);
 }

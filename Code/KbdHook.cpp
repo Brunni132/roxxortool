@@ -316,7 +316,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			winTWasGenerated = true;
 			RunAfterDelay([] {
 				kbdpress(VK_END, 0);
-			});
+			}, 50);
 			return 1;
 		}
 	}
