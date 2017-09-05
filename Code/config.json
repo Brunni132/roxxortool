@@ -20,5 +20,6 @@
 	"noNumPad": true,
 	"rightShiftContextMenu": false,
 	"closeWindowWithWinQ": true,
-	"altGraveToStickyAltTab": true
+	"altGraveToStickyAltTab": true,
+	"winTSelectsLastTask": true
 }

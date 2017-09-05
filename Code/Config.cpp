@@ -37,6 +37,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_INT_PROP(brightnessCacheDuration, 60000);
 	IMPLEMENT_BOOL_PROP(closeWindowWithWinQ, false);
 	IMPLEMENT_BOOL_PROP(altGraveToStickyAltTab, false);
+	IMPLEMENT_BOOL_PROP(winTSelectsLastTask, false);
 }
 
 bool Config::readFile() {

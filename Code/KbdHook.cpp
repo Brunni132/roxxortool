@@ -83,6 +83,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 	}
 
+	// Ignore injected input
+	if (kbd->flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED)) {
+		return CallNextHookEx(g_hPreviousHook, nCode, wParam, lParam);
+	}
+
 	if (wParam == WM_KEYDOWN) {
 		// Insert -> start screen saver & lock
 		if (config.startScreenSaverWithInsert) {
@@ -299,6 +304,20 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			}
 			// Do not propagate the ` char
 			if (wParam == WM_SYSKEYDOWN || wParam == WM_SYSKEYUP) return 1;
+		}
+	}
+
+	if (config.winTSelectsLastTask) {
+		static bool winTWasGenerated = false;
+		winTWasGenerated = winTWasGenerated && lWinPressed;
+		if (lWinPressed && nKey == 'T' && wParam == WM_KEYDOWN && !winTWasGenerated) {
+			kbdpress('T', 0);
+			kbdpress('T', 0);
+			winTWasGenerated = true;
+			RunAfterDelay([] {
+				kbdpress(VK_END, 0);
+			});
+			return 1;
 		}
 	}
 
