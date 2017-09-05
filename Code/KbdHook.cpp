@@ -192,28 +192,28 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 		if (config.winHHidesWindow && lWinPressed && nKey == 'H') {
 			kbdpress(VK_LCONTROL, 0); // To avoid bringing the menu
-			ShowWindow(GetForegroundWindow(), SW_FORCEMINIMIZE);
+			ShowWindow(GetForegroundWindow(), SW_MINIMIZE);
 			return 1;
 		}
 	}
 
-	if (config.altGrContextMenu) {
-		static bool bringMenuAtNextKeyUp = false;
-		// Remappe Alt droit => context menu
-		if (nKey == VK_RMENU) {
-			if (wParam == WM_SYSKEYDOWN) {
-				bringMenuAtNextKeyUp = true;
-			} else if (wParam == WM_KEYUP && bringMenuAtNextKeyUp) {
-				// Au keyup, on presse un context menu
-				bringMenuAtNextKeyUp = false;
-				kbdup(nKey, 0);
-				kbdpress(VK_APPS, 0);
-				return 1;
-			}
-		} else if (nKey != VK_LCONTROL) {
-			bringMenuAtNextKeyUp = false;
-		}
-	}
+	//if (config.altGrContextMenu) {
+	//	static bool bringMenuAtNextKeyUp = false;
+	//	// Remappe Alt droit => context menu
+	//	if (nKey == VK_RMENU) {
+	//		if (wParam == WM_SYSKEYDOWN) {
+	//			bringMenuAtNextKeyUp = true;
+	//		} else if (wParam == WM_KEYUP && bringMenuAtNextKeyUp) {
+	//			// Au keyup, on presse un context menu
+	//			bringMenuAtNextKeyUp = false;
+	//			kbdup(nKey, 0);
+	//			kbdpress(VK_APPS, 0);
+	//			return 1;
+	//		}
+	//	} else if (nKey != VK_LCONTROL) {
+	//		bringMenuAtNextKeyUp = false;
+	//	}
+	//}
 
 	if (config.iAmAMac) {
 		// Eat accidental left/right presses after home/end on Mac
@@ -285,6 +285,20 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 //				SimulateKeyUp(VK_RCONTROL);		// Fix for the apps which do not accept context menu with CTRL pressed
 				kbdpress(VK_APPS, 0);
 			}
+		}
+	}
+
+	if (config.altGraveToStickyAltTab) {
+		// ` = OEM_3 (0xC0)
+		if (nKey == VK_OEM_3) {
+			// SYSKEYDOWN means Alt is pressed
+			if (wParam == WM_SYSKEYDOWN) {
+				kbddown(VK_CONTROL, 0);
+				kbdpress(VK_TAB, 0);
+				kbdup(VK_CONTROL, 0);
+			}
+			// Do not propagate the ` char
+			if (wParam == WM_SYSKEYDOWN || wParam == WM_SYSKEYUP) return 1;
 		}
 	}
 

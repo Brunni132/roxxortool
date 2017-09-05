@@ -13,7 +13,6 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	unsigned short defaultGammaCurve[3 * 256];
 	memset(defaultGammaCurve, 0, sizeof(defaultGammaCurve));
 	IMPLEMENT_BOOL_PROP(rightCtrlContextMenu, false);
-	IMPLEMENT_BOOL_PROP(altGrContextMenu, false);
 	IMPLEMENT_BOOL_PROP(toggleHideFolders, true);
 	IMPLEMENT_BOOL_PROP(startScreenSaverWithInsert, false);
 	IMPLEMENT_BOOL_PROP(smoothVolumeControl, true);
@@ -37,6 +36,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(rightShiftContextMenu, false);
 	IMPLEMENT_INT_PROP(brightnessCacheDuration, 60000);
 	IMPLEMENT_BOOL_PROP(closeWindowWithWinQ, false);
+	IMPLEMENT_BOOL_PROP(altGraveToStickyAltTab, false);
 }
 
 bool Config::readFile() {

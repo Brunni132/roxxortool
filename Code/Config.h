@@ -7,8 +7,6 @@ extern char originalExeCommand[1024];
 struct Config: public RefClass {
 	// The right control key becomes the context menu key
 	bool rightCtrlContextMenu;
-	// Also bring the context menu when pressing on AltGr
-	bool altGrContextMenu;
 	// Toggle hidden folder view in explorer by pressing Ctrl+H
 	bool toggleHideFolders;
 	// Start screensaver using Insert key
@@ -46,6 +44,7 @@ struct Config: public RefClass {
 	// Keep the current brightness in cache for the following duration before rereading it (milliseconds)
 	long brightnessCacheDuration;
 	bool closeWindowWithWinQ;
+	bool altGraveToStickyAltTab;
 
 	// Reload the values from the config file. Will affect all members of this instance. Must be called at least once before use of the instance.
 	bool readFile();

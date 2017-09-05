@@ -20,4 +20,5 @@
 	"noNumPad": true,
 	"rightShiftContextMenu": false,
 	"closeWindowWithWinQ": true,
+	"altGraveToStickyAltTab": true
 }
