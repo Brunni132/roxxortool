@@ -27,8 +27,10 @@ void disableAnimationsForDurationOfWinTab() {
 	if (!isWinTabCheckTimerActive) {
 		isWinTabCheckTimerActive = true;
 		SystemParametersInfo(SPI_GETCLIENTAREAANIMATION, NULL, &wereClientAnimationsEnabled, 0);
-		// TODO pas besoin du UPDATEWININIFILE
-		SystemParametersInfo(SPI_SETCLIENTAREAANIMATION, NULL, (PVOID)0, /*SPIF_UPDATEINIFILE |*/ SPIF_SENDCHANGE);
-		SetTimer(NULL, 0x1001, CHECK_DELAY, winTabCheckTimerProc);
+		if (wereClientAnimationsEnabled) {
+			// TODO pas besoin du UPDATEWININIFILE
+			SystemParametersInfo(SPI_SETCLIENTAREAANIMATION, NULL, (PVOID)0, /*SPIF_UPDATEINIFILE |*/ SPIF_SENDCHANGE);
+			SetTimer(NULL, 0x1001, CHECK_DELAY, winTabCheckTimerProc);
+		}
 	}
 }
