@@ -38,6 +38,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(closeWindowWithWinQ, false);
 	IMPLEMENT_BOOL_PROP(altGraveToStickyAltTab, false);
 	IMPLEMENT_BOOL_PROP(winTSelectsLastTask, false);
+	IMPLEMENT_BOOL_PROP(disableWinTabAnimation, false);
 }
 
 bool Config::readFile() {

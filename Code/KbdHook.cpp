@@ -6,6 +6,7 @@
 #include "WindowsExplorer.h"
 #include "Utilities.h"
 #include "StatusWindow.h"
+#include "DisableAnimationsForWinTab.h"
 
 static void TEMP_log(const char *format, ...) {
 	char vbuf[256];
@@ -44,7 +45,6 @@ static const struct { int original; int modified; } keyboardEatTable[] = {
 };
 
 static HHOOK g_hPreviousHook;
-
 
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	static bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, lShiftPressed = false, rShiftPressed = false;
@@ -294,7 +294,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	}
 
 	if (config.altGraveToStickyAltTab) {
-		// ` = OEM_3 (0xC0)
+		//` = OEM_3 (0xC0)
 		if (nKey == VK_OEM_3) {
 			// SYSKEYDOWN means Alt is pressed
 			if (wParam == WM_SYSKEYDOWN) {
@@ -304,6 +304,13 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			}
 			// Do not propagate the ` char
 			if (wParam == WM_SYSKEYDOWN || wParam == WM_SYSKEYUP) return 1;
+		}
+	}
+
+	// TODO parameter
+	if (config.disableWinTabAnimation) {
+		if (nKey == VK_TAB && lWinPressed && wParam == WM_KEYDOWN) {
+			disableAnimationsForDurationOfWinTab();
 		}
 	}
 
