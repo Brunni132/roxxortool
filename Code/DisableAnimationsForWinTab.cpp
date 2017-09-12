@@ -17,7 +17,7 @@ static void CALLBACK winTabCheckTimerProc(HWND, UINT, UINT_PTR idEvent, DWORD) {
 		KillTimer(NULL, idEvent);
 		// Restore animations
 		// TODO pas besoin du UPDATEWININIFILE
-		SystemParametersInfo(SPI_SETCLIENTAREAANIMATION, NULL, (PVOID)(wereClientAnimationsEnabled ? 1 : 0), /*SPIF_UPDATEINIFILE |*/ SPIF_SENDCHANGE);
+		SystemParametersInfo(SPI_SETCLIENTAREAANIMATION, NULL, (PVOID)(intptr_t)(wereClientAnimationsEnabled ? 1 : 0), /*SPIF_UPDATEINIFILE |*/ SPIF_SENDCHANGE);
 		isWinTabCheckTimerActive = false;
 		return;
 	}

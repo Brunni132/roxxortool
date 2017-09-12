@@ -84,9 +84,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	}
 
 	// Ignore injected input
-	if (kbd->flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED)) {
-		return CallNextHookEx(g_hPreviousHook, nCode, wParam, lParam);
-	}
+	//if (kbd->flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED)) {
+	//	return CallNextHookEx(g_hPreviousHook, nCode, wParam, lParam);
+	//}
 
 	if (wParam == WM_KEYDOWN) {
 		// Insert -> start screen saver & lock
