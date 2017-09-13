@@ -315,16 +315,15 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	}
 
 	if (config.winTSelectsLastTask) {
-		static bool winTWasGenerated = false;
-		winTWasGenerated = winTWasGenerated && lWinPressed;
-		if (lWinPressed && nKey == 'T' && wParam == WM_KEYDOWN && !winTWasGenerated) {
+		//static bool winTWasGenerated = false;
+		//winTWasGenerated = winTWasGenerated && lWinPressed;
+		if (lWinPressed && nKey == 'T' && wParam == WM_KEYDOWN /*&& !winTWasGenerated*/) {
 			kbdpress('T', 0);
-			kbdpress('T', 0);
-			winTWasGenerated = true;
+			//kbdpress('T', 0);
+			//winTWasGenerated = true;
 			RunAfterDelay([] {
 				kbdpress(VK_END, 0);
-			}, 50);
-			return 1;
+			}, 0);
 		}
 	}
 
