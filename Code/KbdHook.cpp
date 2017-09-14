@@ -84,7 +84,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	}
 
 	// Ignore injected input
-	//if (kbd->flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED)) {
+	bool injected = (kbd->flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED));
+	//if (injected) {
 	//	return CallNextHookEx(g_hPreviousHook, nCode, wParam, lParam);
 	//}
 
@@ -282,16 +283,16 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			pressedAnotherKeySince = true;
 	}
 
-	if (config.rightCtrlContextMenu) {
-		// Remappe Ctrl droit => context menu
-		if (nKey == VK_RCONTROL) {
-			// Au keyup, on presse un context menu (93)
-			if (wParam == WM_KEYUP  && ctrlKeyWasPressed) {
-//				SimulateKeyUp(VK_RCONTROL);		// Fix for the apps which do not accept context menu with CTRL pressed
-				kbdpress(VK_APPS, 0);
-			}
-		}
-	}
+//	if (config.rightCtrlContextMenu) {
+//		// Remappe Ctrl droit => context menu
+//		if (nKey == VK_RCONTROL) {
+//			// Au keyup, on presse un context menu (93)
+//			if (wParam == WM_KEYUP  && ctrlKeyWasPressed) {
+////				SimulateKeyUp(VK_RCONTROL);		// Fix for the apps which do not accept context menu with CTRL pressed
+//				kbdpress(VK_APPS, 0);
+//			}
+//		}
+//	}
 
 	if (config.altGraveToStickyAltTab) {
 		//` = OEM_3 (0xC0)
@@ -315,10 +316,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	}
 
 	if (config.winTSelectsLastTask) {
-		//static bool winTWasGenerated = false;
-		//winTWasGenerated = winTWasGenerated && lWinPressed;
-		if (lWinPressed && nKey == 'T' && wParam == WM_KEYDOWN /*&& !winTWasGenerated*/) {
-			//winTWasGenerated = true;
+		if (lWinPressed && nKey == 'T' && wParam == WM_KEYDOWN && !injected) {
 			RunAfterDelay([] {
 				kbdpress('T', 0);
 				kbdpress(VK_END, 0);
