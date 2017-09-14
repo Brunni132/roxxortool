@@ -318,10 +318,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		//static bool winTWasGenerated = false;
 		//winTWasGenerated = winTWasGenerated && lWinPressed;
 		if (lWinPressed && nKey == 'T' && wParam == WM_KEYDOWN /*&& !winTWasGenerated*/) {
-			kbdpress('T', 0);
-			//kbdpress('T', 0);
 			//winTWasGenerated = true;
 			RunAfterDelay([] {
+				kbdpress('T', 0);
 				kbdpress(VK_END, 0);
 			}, 0);
 		}
