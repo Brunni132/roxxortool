@@ -319,28 +319,28 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		static bool inFunction = false;
 		if (lWinPressed && nKey == 'T' && wParam == WM_KEYDOWN && !injected) {
 			// Check that we are still in the task bar and restart function (Win+T from start) if not
-			if (inFunction) {
-				char className[128];
-				GetClassNameA(GetForegroundWindow(), className, 128);
-				if (strcmp(className, "Shell_TrayWnd")) {
-					inFunction = false;
-				}
-			}
-			// Second press on T without releasing it -> goes 3 tasks backwards
-			if (inFunction) {
-				kbddown(VK_SHIFT, 0);
-				for (int i = 0; i < 3; i += 1) kbdpress('T', 0);
-				kbdup(VK_SHIFT, 0);
-				return -1;
-			}
-			else {
+			// if (inFunction) {
+			// 	char className[128];
+			// 	GetClassNameA(GetForegroundWindow(), className, 128);
+			// 	if (strcmp(className, "Shell_TrayWnd")) {
+			// 		inFunction = false;
+			// 	}
+			// }
+			// // Second press on T without releasing it -> goes 3 tasks backwards
+			// if (inFunction) {
+			// 	kbddown(VK_SHIFT, 0);
+			// 	for (int i = 0; i < 3; i += 1) kbdpress('T', 0);
+			// 	kbdup(VK_SHIFT, 0);
+			// 	return -1;
+			// }
+			// else {
 				// First press on Win+T
 				inFunction = true;
 				RunAfterDelay([] {
 					kbdpress('T', 0);
 					kbdpress(VK_END, 0);
 				}, 0);
-			}
+			// }
 		}
 	}
 
