@@ -221,8 +221,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 					inFunction = false;
 				}
 			}
-			if (inFunction && nKey >= '4' && nKey <= '7') {
-				moveToTask(1 + (nKey - '4') * 10, START, lWinPressed);
+			if (inFunction && nKey >= '5' && nKey <= '7') {
+				moveToTask(11 + (nKey - '5') * 10, START, lWinPressed);
 				return -1;
 			}
 			if (lWinPressed && nKey == 'T' && !injected) {
