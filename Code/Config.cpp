@@ -6,6 +6,7 @@
 #define IMPLEMENT_INT_PROP(name, default)	if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) name = (int) obj->value.toNumber();
 #define IMPLEMENT_FLOAT_PROP(name, default)	if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) name = (float) obj->value.toNumber();
 #define IMPLEMENT_ARRAY_PROP(name, default)	if (serializer) serializer->put(""#name, name, numberof(name)); else if (!obj) memcpy(name, default, sizeof(name)); else if (!strcmp(obj->key, ""#name)) parseNumberArray(name, numberof(name), obj->value);
+//#define IMPLEMENT_STRING_MAP_PROP(name, default)	if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (obj && !strcmp(obj->key, ""#name)) parseStringMap(name);
 
 Config config;
 

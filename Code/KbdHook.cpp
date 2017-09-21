@@ -31,6 +31,28 @@ static const struct { int original; int modified; } keyboardEatTable[] = {
 	VK_BACK, VK_DELETE
 };
 
+enum Location { START, CURRENT, END };
+
+static void moveToTask(int taskNo, Location from, bool lWinPressed) {
+	if (from == START) kbdpress(VK_HOME, 0);
+	else if (from == END) kbdpress(VK_END, 0);
+	if (taskNo == 0 || taskNo == 1) return;
+
+	RunAfterDelay([=] {
+		bool needLWin = !lWinPressed;
+		if (needLWin) kbddown(VK_LWIN, 0);
+		if (taskNo <= 0) {
+			kbddown(VK_SHIFT, 0);
+			for (int i = 0; i < -1 - taskNo; i += 1) kbdpress('T', 0);
+			kbdup(VK_SHIFT, 0);
+		}
+		else {
+			for (int i = 0; i < taskNo - 1; i += 1) kbdpress('T', 0);
+		}
+		if (needLWin) kbdup(VK_LWIN, 0);
+	});
+}
+
 static HHOOK g_hPreviousHook;
 
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
@@ -199,41 +221,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 					inFunction = false;
 				}
 			}
-			if (inFunction) {
-				if (nKey == '1') {
-					kbdpress(VK_HOME, 0);
-					return -1;
-				}
-				else if (nKey == '3') {
-					bool needLWin = !lWinPressed;
-					if (needLWin) kbddown(VK_LWIN, 0);
-					kbddown(VK_SHIFT, 0);
-					for (int i = 0; i < 5; i += 1) kbdpress('T', 0);
-					kbdup(VK_SHIFT, 0);
-					if (needLWin) kbdup(VK_LWIN, 0);
-					return -1;
-				}
-				else if (nKey == '5') {
-					kbdpress(VK_HOME, 0);
-					RunAfterDelay([] {
-						bool needLWin = !lWinPressed;
-						if (needLWin) kbddown(VK_LWIN, 0);
-						for (int i = 0; i < 10; i += 1) kbdpress('T', 0);
-						if (needLWin) kbdup(VK_LWIN, 0);
-					}, 0);
-					return -1;
-				}
-				else if (nKey == '7') {
-					bool needLWin = !lWinPressed;
-					if (needLWin) kbddown(VK_LWIN, 0);
-					for (int i = 0; i < 5; i += 1) kbdpress('T', 0);
-					if (needLWin) kbdup(VK_LWIN, 0);
-					return -1;
-				}
-				else if (nKey == '9') {
-					kbdpress(VK_END, 0);
-					return -1;
-				}
+			if (inFunction && nKey >= '4' && nKey <= '7') {
+				moveToTask(1 + (nKey - '4') * 10, START, lWinPressed);
+				return -1;
 			}
 			if (lWinPressed && nKey == 'T' && !injected) {
 				inFunction = true;

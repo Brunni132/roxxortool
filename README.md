@@ -24,11 +24,10 @@ This tool focuses on very basic functionality that is usually not covered by oth
 - `winHHidesWindow`: press Win+H to minimize the current window. Does the same as Win+Down with the extra "restore size" step if the window was maximized.
 - `closeWindowWithWinQ`: press Win+Q to issue an Alt+F4 (better explained this way ^^), basically closing the active window when allowed by the app. Much more comfortable combination to use, especially after coming back from Mac (note though that this only closes the current window, not the full app, but in most cases it's still closer to Mac's Win+Q than Win+W).
 - `winTSelectsLastTask`: press Win+T to switch focus to the taskbar, selecting the LAST task in the list (note: the system does it already but selects the FIRST one instead, or sometimes doesn't work on the first press). Since my taskbar has a lot of pinned shortcuts and the last ones are not accessible through Win+[0-9], this is a poor man's solution. Once you pressed Win+T, you may then navigate using the following keys from the alphanumeric pad:
-	- 1: select first item
-	- 3: move 5 items backward
+	- 4: select first item
 	- 5: select 11th item (first one inaccessible with Win+[0-9])
-	- 7: move 5 items ahead
-	- 9: select last item
+	- 6: select 21st item
+	- 7: select 31st item
 - `disableWinTabAnimation`: when pressing Win+Tab (and not using another combination, such as swiping up with three/four fingers on your precision touchpad) the Task View appears without animation. Huge hack as it is, it actually removes animations then calls the Task View screen, then periodically checks that it is still active; when it's not it reenables animations. Note that this is done in a safe way, i.e. not persisted to your user profile.
 
 Additional (not as good, please shout out if you use them else I might remove them in the future):
