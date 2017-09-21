@@ -8,19 +8,6 @@
 #include "StatusWindow.h"
 #include "DisableAnimationsForWinTab.h"
 
-static void TEMP_log(const char *format, ...) {
-	char vbuf[256];
-	va_list arg_ptr;
-	va_start(arg_ptr, format);
-	vsnprintf(vbuf, sizeof(vbuf), format, arg_ptr);
-	FILE *f = fopen("log.txt", "a");
-	if (f) {
-		fputs(vbuf, f);
-		fputc('\n', f);
-		fclose(f);
-	}
-}
-
 // TODO move around
 // Codes: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html or https://www.codeproject.com/Articles/7305/Keyboard-Events-Simulation-using-keybd-event-funct
 static void kbddown(int vkCode, BYTE scanCode, int flags = 0) {
@@ -203,31 +190,58 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 
 		if (config.winTSelectsLastTask) {
-			// static bool inFunction = false;
+			 static bool inFunction = false;
 			// // Check that we are still in the task bar and restart function (Win+T from start) if not
-			// if (inFunction) {
-			// 	char className[128];
-			// 	GetClassNameA(GetForegroundWindow(), className, 128);
-			// 	if (strcmp(className, "Shell_TrayWnd")) {
-			// 		inFunction = false;
-			// 	}
-			// }
-			if (lWinPressed && nKey == 'T' && !injected) {
-				// Second press on T without releasing it -> goes 3 tasks backwards
-				// if (inFunction) {
-				// 	kbddown(VK_SHIFT, 0);
-				// 	for (int i = 0; i < 3; i += 1) kbdpress('T', 0);
-				// 	kbdup(VK_SHIFT, 0);
-				// 	return -1;
-				// }
-				// else {
-					// inFunction = true;
-					// First press on Win+T
+			 if (inFunction) {
+			 	char className[128];
+			 	GetClassNameA(GetForegroundWindow(), className, 128);
+				if (strcmp(className, "Shell_TrayWnd")) {
+					inFunction = false;
+				}
+			}
+			if (inFunction) {
+				if (nKey == '1') {
+					kbdpress(VK_HOME, 0);
+					return -1;
+				}
+				else if (nKey == '3') {
+					bool needLWin = !lWinPressed;
+					if (needLWin) kbddown(VK_LWIN, 0);
+					kbddown(VK_SHIFT, 0);
+					for (int i = 0; i < 5; i += 1) kbdpress('T', 0);
+					kbdup(VK_SHIFT, 0);
+					if (needLWin) kbdup(VK_LWIN, 0);
+					return -1;
+				}
+				else if (nKey == '5') {
+					kbdpress(VK_HOME, 0);
 					RunAfterDelay([] {
-						kbdpress('T', 0);
-						kbdpress(VK_END, 0);
+						bool needLWin = !lWinPressed;
+						if (needLWin) kbddown(VK_LWIN, 0);
+						for (int i = 0; i < 10; i += 1) kbdpress('T', 0);
+						if (needLWin) kbdup(VK_LWIN, 0);
 					}, 0);
-				// }
+					return -1;
+				}
+				else if (nKey == '7') {
+					bool needLWin = !lWinPressed;
+					if (needLWin) kbddown(VK_LWIN, 0);
+					for (int i = 0; i < 5; i += 1) kbdpress('T', 0);
+					if (needLWin) kbdup(VK_LWIN, 0);
+					return -1;
+				}
+				else if (nKey == '9') {
+					kbdpress(VK_END, 0);
+					return -1;
+				}
+			}
+			if (lWinPressed && nKey == 'T' && !injected) {
+				inFunction = true;
+				// First press on Win+T
+				RunAfterDelay([] {
+					kbdpress('T', 0);
+					kbdpress(VK_END, 0);
+				}, 0);
 			}
 		}
 	}

@@ -38,6 +38,13 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 		MessageBox(NULL, "Unable to read config.json", "Cannot start", MB_ICONEXCLAMATION);
 		exit(EXIT_FAILURE);
 	}
+
+#ifdef _DEBUG
+	AllocConsole();
+	AttachConsole(GetCurrentProcessId());
+	freopen("CON", "w", stdout);
+#endif
+
 	AudioMixer::init();
 	KbdHook::start();
 	if (config.unixLikeMouseWheel)
