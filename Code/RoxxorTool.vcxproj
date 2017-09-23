@@ -114,7 +114,7 @@
       <AdditionalDependencies>userenv.lib;wbemuuid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreLinkEvent>
-      <Command>rem taskkill /F /FI "imagename eq RoxxorTool.exe"</Command>
+      <Command>nircmd.exe elevate taskkill /F /FI "imagename eq RoxxorTool.exe"</Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -157,6 +157,13 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>userenv.lib;wbemuuid.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
+    <PreLinkEvent>
+      <Command>nircmd.exe elevate taskkill /F /FI "imagename eq RoxxorTool.exe"</Command>
+    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AudioMixer.cpp" />
