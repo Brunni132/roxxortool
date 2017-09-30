@@ -231,7 +231,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				RunAfterDelay([] {
 					kbdpress('T', 0);
 					kbdpress(VK_END, 0);
-				}, 0);
+				}, 10);
 			}
 		}
 	}
