@@ -36,6 +36,7 @@ enum Location { START, CURRENT, END };
 static void moveToTask(int taskNo, Location from, bool lWinPressed) {
 	if (from == START) kbdpress(VK_HOME, 0);
 	else if (from == END) kbdpress(VK_END, 0);
+	else if (from == CURRENT) taskNo += sgn(taskNo);
 	if (taskNo == 0 || taskNo == 1) return;
 
 	RunAfterDelay([=] {
@@ -221,9 +222,19 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 					inFunction = false;
 				}
 			}
-			if (inFunction && nKey >= '5' && nKey <= '7') {
-				moveToTask(11 + (nKey - '5') * 10, START, lWinPressed);
-				return -1;
+			if (inFunction) {
+				if (nKey >= '5' && nKey <= '7') {
+					moveToTask(11 + (nKey - '5') * 10, START, lWinPressed);
+					return -1;
+				}
+				else if (nKey == VK_PRIOR) {
+					moveToTask(-5, CURRENT, lWinPressed);
+					return -1;
+				}
+				else if (nKey == VK_NEXT) {
+					moveToTask(+5, CURRENT, lWinPressed);
+					return -1;
+				}
 			}
 			if (lWinPressed && nKey == 'T' && !injected) {
 				inFunction = true;

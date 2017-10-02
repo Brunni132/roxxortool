@@ -162,7 +162,7 @@
       </Command>
     </PreBuildEvent>
     <PreLinkEvent>
-      <Command>nircmd.exe elevate taskkill /F /FI "imagename eq RoxxorTool.exe"</Command>
+      <Command>rem nircmd.exe elevate taskkill /F /FI "imagename eq RoxxorTool.exe"</Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
