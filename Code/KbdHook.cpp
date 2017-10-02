@@ -123,11 +123,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		if (config.smoothVolumeControl) {
 			if (nKey == 0xae) {
 				// Molette -
-				AudioMixer::decrementVolume(config.volumeIncrementQuantity);
+				RunAfterDelay([] { AudioMixer::decrementVolume(config.volumeIncrementQuantity); });
 				processed = 0xae;
 			} else if (nKey == 0xaf) {
 				// Molette +
-				AudioMixer::incrementVolume(config.volumeIncrementQuantity);
+				RunAfterDelay([] { AudioMixer::incrementVolume(config.volumeIncrementQuantity); });
 				processed = 0xaf;
 			}
 

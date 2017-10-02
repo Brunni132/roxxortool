@@ -85,6 +85,7 @@ static const int MAX_MONITORS_NUM = 128;
 static MonitorInfo *monitors[MAX_MONITORS_NUM];
 static int currentMonitors = 0;
 static DWORD lastReadTime;
+static bool hasBeenAttenuatedOnce = false;
 
 /******** Actual code ********/
 // Create the screen control structure
@@ -99,9 +100,9 @@ void Monitor::init(int autoApplyGammaCurveDelay) {
 	SetMonitorContrast = (BOOL (WINAPI*)(HANDLE,DWORD))GetProcAddress(lib, "SetMonitorContrast");
 	SetMonitorRedGreenOrBlueGain = (BOOL (WINAPI*)(HANDLE,MC_GAIN_TYPE,DWORD))GetProcAddress(lib, "SetMonitorRedGreenOrBlueGain");
 	// Read once
-	if (config.brightnessCacheDuration != 0)
-		increaseBrightnessBy(0);
-	autoApplyTimer(NULL, 0, 0, 0);
+	//if (config.brightnessCacheDuration != 0)
+	//	increaseBrightnessBy(0);
+	//autoApplyTimer(NULL, 0, 0, 0);
 	if (autoApplyGammaCurveDelay)
 		SetTimer(NULL, 0x1000, autoApplyGammaCurveDelay, autoApplyTimer);
 }
@@ -309,6 +310,9 @@ void CALLBACK autoApplyTimer(HWND, UINT, UINT_PTR, DWORD) {
 	for (int i = 0; i < currentMonitors; i++) {
 		MonitorInfo *mi = monitors[i];
 		int attenuation = mi->minBrightness - mi->currentBrightness;
-		SetGammaRampForDevice(mi->deviceName, mi->gammaRamp, min(100, 100 - attenuation), false);
+		if (attenuation >= 0 || hasBeenAttenuatedOnce) {
+			SetGammaRampForDevice(mi->deviceName, mi->gammaRamp, min(100, 100 - attenuation), false);
+			hasBeenAttenuatedOnce = true;
+		}
 	}
 }
