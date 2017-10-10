@@ -184,7 +184,7 @@ static void sc_get(MonitorInfo *mi, HANDLE hPhysicalMonitor, MONITORINFO *monito
 		if (success) {
 			// FIXME: should read the level list and not assume 100 (the Levels can be 15 for instance).
 			maxBright = 101;
-			if (config.iAmAMac) {
+			if (config.wmiLogarithmicBrightness) {
 				// Translate to non linear using the table
 				for (int i = 0; i < numberof(macBrightnessGamma); i++)
 					if (macBrightnessGamma[i] >= mi->currentBrightness) {
@@ -219,7 +219,7 @@ static void sc_set(MonitorInfo *mi, HANDLE hPhysicalMonitor, MONITORINFO *monito
 		// Use brightness level
 		int monitorBrightness = max(min(mi->currentBrightness, mi->maxBrightness), mi->minBrightness);
 		if (mi->useWmi) {
-			if (config.iAmAMac) {
+			if (config.wmiLogarithmicBrightness) {
 				monitorBrightness = macBrightnessGamma[monitorBrightness];
 			}
 			Wmi::SetBrightness(monitorBrightness);

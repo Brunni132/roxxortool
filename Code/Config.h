@@ -17,6 +17,8 @@ struct Config: public RefClass {
 	float volumeIncrementQuantity;
 	// Brightness control if a monitor supporting DDC/CI is connected using Ctrl+Win+Left/Right
 	bool ddcCiBrightnessControl;
+	// Set that to true on a Mac, it will use a logarithmic scale ofr the brightness setting.
+	bool wmiLogarithmicBrightness;
 	int brightnessIncrementQuantity;
 	// in milliseconds; 0 = disable
 	int autoApplyGammaCurveDelay;
@@ -28,9 +30,8 @@ struct Config: public RefClass {
 	unsigned short customGammaCurveArray[3 * 256];
 	float customGammaCurveGamma;
 	bool reloadConfigWithCtrlWinR;
-	// Mac specifics - The right alt key becomes the context menu key
-	// Allows to use the Mac keys Left Win+left/right/up/down to move the cursor
-	// Allows to use left win+number as ctrl+win+number (right is still accessible)
+	// Mac specifics
+	// Eat accidental left/right presses after home/end on Mac
 	bool iAmAMac;
 	bool multiDesktopLikeApplicationSwitcher;
 	bool winFOpensYourFiles;

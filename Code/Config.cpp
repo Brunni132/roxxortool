@@ -19,6 +19,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(smoothVolumeControl, true);
 	IMPLEMENT_FLOAT_PROP(volumeIncrementQuantity, 1.5f);
 	IMPLEMENT_BOOL_PROP(ddcCiBrightnessControl, true);
+	IMPLEMENT_BOOL_PROP(wmiLogarithmicBrightness, false);
 	IMPLEMENT_INT_PROP(brightnessIncrementQuantity, 5);
 	IMPLEMENT_INT_PROP(autoApplyGammaCurveDelay, 0);
 	IMPLEMENT_BOOL_PROP(useSoftMediaKeys, false);
