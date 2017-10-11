@@ -47,7 +47,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 	AudioMixer::init();
 	KbdHook::start();
-	if (config.unixLikeMouseWheel)
+	if (config.unixLikeMouseWheel || config.altTabWithMouseButtons)
 		MouseHook::start();
 
 	// Main message loop:

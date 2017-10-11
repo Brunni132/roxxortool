@@ -48,6 +48,7 @@ struct Config: public RefClass {
 	bool altGraveToStickyAltTab;
 	bool winTSelectsLastTask;
 	bool disableWinTabAnimation;
+	bool altTabWithMouseButtons;
 
 	// Reload the values from the config file. Will affect all members of this instance. Must be called at least once before use of the instance.
 	bool readFile();

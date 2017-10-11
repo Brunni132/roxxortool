@@ -8,17 +8,16 @@
 #include "StatusWindow.h"
 #include "DisableAnimationsForWinTab.h"
 
-// TODO move around
 // Codes: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html or https://www.codeproject.com/Articles/7305/Keyboard-Events-Simulation-using-keybd-event-funct
-static void kbddown(int vkCode, BYTE scanCode, int flags = 0) {
+void kbddown(int vkCode, BYTE scanCode, int flags) {
 	keybd_event(vkCode, scanCode, flags, 0);
 }
 
-static void kbdup(int vkCode, BYTE scanCode, int flags = 0) {
+void kbdup(int vkCode, BYTE scanCode, int flags) {
 	keybd_event(vkCode, scanCode + 0x80, flags | KEYEVENTF_KEYUP, 0);
 }
 
-static void kbdpress(int vkCode, BYTE scanCode, int flags = 0) {
+void kbdpress(int vkCode, BYTE scanCode, int flags) {
 	kbddown(vkCode, scanCode, flags);
 	kbdup(vkCode, scanCode, flags);
 }

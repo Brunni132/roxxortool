@@ -1,6 +1,7 @@
 #include "Precompiled.h"
 #include "MouseHook.h"
 #include "Config.h"
+#include "Utilities.h"
 #include <CommCtrl.h>
 
 #define SHIFTED 0x8000
@@ -84,6 +85,32 @@ skip:
 	return CallNextHookEx(hHook, nCode, wParam, lParam);
 }
 
+LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lParam) {
+	static bool firstButtonIsDown = false, secondButtonIsDown = false, eatNext = false;
+	if (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP) {
+		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
+		bool isDown = wParam == WM_XBUTTONDOWN;
+		if (mllStruct->mouseData == XBUTTON1)
+			firstButtonIsDown = isDown;
+		else if (mllStruct->mouseData == XBUTTON2)
+			secondButtonIsDown = isDown;
+
+		// Second button released -> alt tab
+		if (wParam == WM_XBUTTONUP && (mllStruct->mouseData >> 16 & 0xffff) == XBUTTON2) {
+			kbddown(VK_LCONTROL, 0);
+			kbddown(VK_LMENU, 0);
+			kbdpress(VK_TAB, 0);
+			kbdup(VK_LCONTROL, 0);
+			kbdup(VK_LMENU, 0);
+		}
+	}
+
+	return CallNextHookEx(hHook, nCode, wParam, lParam);
+}
+
 void MouseHook::start() {
-	hHook = SetWindowsHookEx(WH_MOUSE_LL, LowLevelMouseProc, GetModuleHandle(NULL), 0);
+	if (config.altTabWithMouseButtons)
+		hHook = SetWindowsHookEx(WH_MOUSE_LL, LowLevelMouseProc_AltTab, GetModuleHandle(NULL), 0);
+	else
+		hHook = SetWindowsHookEx(WH_MOUSE_LL, LowLevelMouseProc, GetModuleHandle(NULL), 0);
 }
