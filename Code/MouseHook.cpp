@@ -86,57 +86,6 @@ skip:
 	return CallNextHookEx(hHook, nCode, wParam, lParam);
 }
 
-//static int ignoreNextEvents = 0;
-//
-//static void triggerBackButton(int x, int y) {
-//	printf("Triggering back\n");
-//	RunAfterDelay([=] {
-//		ignoreNextEvents = 2;
-//		mouse_event(MOUSEEVENTF_XDOWN, x, y, XBUTTON2, 0);
-//		mouse_event(MOUSEEVENTF_XUP, x, y, XBUTTON2, 0);
-//	});
-//}
-//
-//
-//LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lParam) {
-//	if (ignoreNextEvents > 0) {
-//		ignoreNextEvents--;
-//		return CallNextHookEx(hHook, nCode, wParam, lParam);
-//	}
-//	if (nCode >= 0 && (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP)) {
-//		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
-//		static bool triggerBack = false, ignoreNextX1Up = false;
-//		static bool x1pressed = false, x2pressed = false;
-//		bool isDown = wParam == WM_XBUTTONDOWN;
-//		int button = mllStruct->mouseData >> 16;
-//		if (button & XBUTTON1) {
-//			x1pressed = isDown;
-//			// Eat those if we're in down mode
-//			if (x2pressed) {
-//				// Will trigger a back click at the end
-//				if (isDown) triggerBack = ignoreNextX1Up = true;
-//				return 1;
-//			}
-//			// X1 may be released after X2
-//			if (!isDown && ignoreNextX1Up) {
-//				ignoreNextX1Up = false;
-//				return 1;
-//			}
-//		}
-//		// Eat up like down buttons
-//		if (button & XBUTTON2) {
-//			x2pressed = isDown;
-//			if (isDown) triggerBack = false; // appswitcher by default
-//			else if (triggerBack) triggerBackButton(mllStruct->pt.x, mllStruct->pt.y);
-//			else triggerTaskView();
-//			return 1;
-//		}
-//	}
-//	return CallNextHookEx(hHook, nCode, wParam, lParam);
-//}
-
-static DWORD downTimestamp = 0;
-
 static void triggerTaskView() {
 	RunAfterDelay([=] {
 		kbddown(VK_LCONTROL, 0);
@@ -144,16 +93,16 @@ static void triggerTaskView() {
 		kbdpress(VK_TAB, 0);
 		kbdup(VK_LCONTROL, 0);
 		kbdup(VK_LMENU, 0);
-	}, 10);
+	});
 }
 
-static void cancelTaskView(int x, int y) {
-	kbdpress(VK_ESCAPE, 0);
-	RunAfterDelay([=] {
-		mouse_event(MOUSEEVENTF_XDOWN, x, y, XBUTTON2, 0);
-		mouse_event(MOUSEEVENTF_XUP, x, y, XBUTTON2, 0);
-	}, 10);
-}
+//static void cancelTaskView(int x, int y) {
+//	kbdpress(VK_ESCAPE, 0);
+//	RunAfterDelay([=] {
+//		mouse_event(MOUSEEVENTF_XDOWN, x, y, XBUTTON2, 0);
+//		mouse_event(MOUSEEVENTF_XUP, x, y, XBUTTON2, 0);
+//	}, 10);
+//}
 
 LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (nCode >= 0 && (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP)) {
@@ -164,15 +113,18 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 			bool isDown = wParam == WM_XBUTTONDOWN;
 			int button = mllStruct->mouseData >> 16;
 			if (button & XBUTTON2) {
-				if (isDown) {
+				if (isDown)
 					downTime = GetTickCount();
-					triggerTaskView();
-				}
 				else {
-					DWORD diff = GetTickCount() - downTime;
-					if (diff >= CLICK_TIME_FOR_TASK_SWITCHER)
-						cancelTaskView(mllStruct->pt.x, mllStruct->pt.y);
+					if (GetTickCount() - downTime < CLICK_TIME_FOR_TASK_SWITCHER)
+						triggerTaskView();
+					else
+						RunAfterDelay([=] {
+							mouse_event(MOUSEEVENTF_XDOWN, mllStruct->pt.x, mllStruct->pt.y, XBUTTON2, 0);
+							mouse_event(MOUSEEVENTF_XUP, mllStruct->pt.x, mllStruct->pt.y, XBUTTON2, 0);
+						}, 0);
 				}
+				return 1;
 			}
 		}
 	}
