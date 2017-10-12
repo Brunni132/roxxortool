@@ -5,6 +5,7 @@
 #include <CommCtrl.h>
 
 #define SHIFTED 0x8000
+const DWORD CLICK_TIME_FOR_TASK_SWITCHER = 200;
 
 static HHOOK hHook;
 
@@ -85,26 +86,81 @@ skip:
 	return CallNextHookEx(hHook, nCode, wParam, lParam);
 }
 
-LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lParam) {
-	static bool firstButtonIsDown = false, secondButtonIsDown = false, eatNext = false;
-	if (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP) {
-		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
-		bool isDown = wParam == WM_XBUTTONDOWN;
-		if (mllStruct->mouseData == XBUTTON1)
-			firstButtonIsDown = isDown;
-		else if (mllStruct->mouseData == XBUTTON2)
-			secondButtonIsDown = isDown;
+//static int ignoreNextEvents = 0;
+//
+//static void triggerBackButton(int x, int y) {
+//	printf("Triggering back\n");
+//	RunAfterDelay([=] {
+//		ignoreNextEvents = 2;
+//		mouse_event(MOUSEEVENTF_XDOWN, x, y, XBUTTON2, 0);
+//		mouse_event(MOUSEEVENTF_XUP, x, y, XBUTTON2, 0);
+//	});
+//}
+//
+//
+//LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lParam) {
+//	if (ignoreNextEvents > 0) {
+//		ignoreNextEvents--;
+//		return CallNextHookEx(hHook, nCode, wParam, lParam);
+//	}
+//	if (nCode >= 0 && (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP)) {
+//		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
+//		static bool triggerBack = false, ignoreNextX1Up = false;
+//		static bool x1pressed = false, x2pressed = false;
+//		bool isDown = wParam == WM_XBUTTONDOWN;
+//		int button = mllStruct->mouseData >> 16;
+//		if (button & XBUTTON1) {
+//			x1pressed = isDown;
+//			// Eat those if we're in down mode
+//			if (x2pressed) {
+//				// Will trigger a back click at the end
+//				if (isDown) triggerBack = ignoreNextX1Up = true;
+//				return 1;
+//			}
+//			// X1 may be released after X2
+//			if (!isDown && ignoreNextX1Up) {
+//				ignoreNextX1Up = false;
+//				return 1;
+//			}
+//		}
+//		// Eat up like down buttons
+//		if (button & XBUTTON2) {
+//			x2pressed = isDown;
+//			if (isDown) triggerBack = false; // appswitcher by default
+//			else if (triggerBack) triggerBackButton(mllStruct->pt.x, mllStruct->pt.y);
+//			else triggerTaskView();
+//			return 1;
+//		}
+//	}
+//	return CallNextHookEx(hHook, nCode, wParam, lParam);
+//}
 
-		// Second button released -> alt tab
-		if (wParam == WM_XBUTTONUP && (mllStruct->mouseData >> 16 & 0xffff) == XBUTTON2) {
-			kbddown(VK_LCONTROL, 0);
-			kbddown(VK_LMENU, 0);
-			kbdpress(VK_TAB, 0);
-			kbdup(VK_LCONTROL, 0);
-			kbdup(VK_LMENU, 0);
+static void triggerTaskView() {
+	RunAfterDelay([] {
+		kbddown(VK_LCONTROL, 0);
+		kbddown(VK_LMENU, 0);
+		kbdpress(VK_TAB, 0);
+		kbdup(VK_LCONTROL, 0);
+		kbdup(VK_LMENU, 0);
+	});
+}
+
+LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lParam) {
+	if (nCode >= 0 && (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP)) {
+		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
+		static DWORD downTime;
+		bool isDown = wParam == WM_XBUTTONDOWN;
+		int button = mllStruct->mouseData >> 16;
+		if (button & XBUTTON2) {
+			if (isDown) {
+				downTime = GetTickCount();
+			}
+			else {
+				DWORD diff = GetTickCount() - downTime;
+				if (diff < CLICK_TIME_FOR_TASK_SWITCHER) triggerTaskView();
+			}
 		}
 	}
-
 	return CallNextHookEx(hHook, nCode, wParam, lParam);
 }
 

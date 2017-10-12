@@ -12,7 +12,7 @@
                 "${workspaceRoot}/RoxxorTool.vcxproj",
                 "/property:GenerateFullPaths=true",
                 "/t:build",
-                "/p:Configuration=Release",
+                "/p:Configuration=Debug",
                 "/p:Platform=x64"
             ],
             "group": "build",

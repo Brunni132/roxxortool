@@ -5,12 +5,12 @@
             "name": "(Windows) Launch",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "enter program name, for example ${workspaceRoot}/a.exe",
+            "program": "RoxxorTool.exe",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceRoot}",
+            "cwd": "${workspaceRoot}\\x64\\Debug",
             "environment": [],
             "externalConsole": true
-        }
+        },
     ]
 }
