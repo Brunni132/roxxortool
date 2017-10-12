@@ -41,8 +41,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(altGraveToStickyAltTab, false);
 	IMPLEMENT_BOOL_PROP(winTSelectsLastTask, false);
 	IMPLEMENT_BOOL_PROP(disableWinTabAnimation, false);
-	// TODO Florian -- false by default
-	IMPLEMENT_BOOL_PROP(altTabWithMouseButtons, true);
+	IMPLEMENT_BOOL_PROP(altTabWithMouseButtons, false);
 }
 
 bool Config::readFile() {
