@@ -135,29 +135,44 @@ skip:
 //	return CallNextHookEx(hHook, nCode, wParam, lParam);
 //}
 
+static DWORD downTimestamp = 0;
+
 static void triggerTaskView() {
-	RunAfterDelay([] {
+	RunAfterDelay([=] {
 		kbddown(VK_LCONTROL, 0);
 		kbddown(VK_LMENU, 0);
 		kbdpress(VK_TAB, 0);
 		kbdup(VK_LCONTROL, 0);
 		kbdup(VK_LMENU, 0);
-	});
+	}, 10);
+}
+
+static void cancelTaskView(int x, int y) {
+	kbdpress(VK_ESCAPE, 0);
+	RunAfterDelay([=] {
+		mouse_event(MOUSEEVENTF_XDOWN, x, y, XBUTTON2, 0);
+		mouse_event(MOUSEEVENTF_XUP, x, y, XBUTTON2, 0);
+	}, 10);
 }
 
 LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (nCode >= 0 && (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP)) {
 		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
-		static DWORD downTime;
-		bool isDown = wParam == WM_XBUTTONDOWN;
-		int button = mllStruct->mouseData >> 16;
-		if (button & XBUTTON2) {
-			if (isDown) {
-				downTime = GetTickCount();
-			}
-			else {
-				DWORD diff = GetTickCount() - downTime;
-				if (diff < CLICK_TIME_FOR_TASK_SWITCHER) triggerTaskView();
+		if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED) {}
+		else {
+			static DWORD downTime;
+			bool isDown = wParam == WM_XBUTTONDOWN;
+			int button = mllStruct->mouseData >> 16;
+			if (button & XBUTTON2) {
+				if (isDown) {
+					downTime = GetTickCount();
+					triggerTaskView();
+				}
+				else {
+					DWORD diff = GetTickCount() - downTime;
+					if (diff >= CLICK_TIME_FOR_TASK_SWITCHER)
+						cancelTaskView(mllStruct->pt.x, mllStruct->pt.y);
+				}
 			}
 		}
 	}
