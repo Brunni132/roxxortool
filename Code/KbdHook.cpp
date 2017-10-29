@@ -32,6 +32,15 @@ static const struct { int original; int modified; } keyboardEatTable[] = {
 
 enum Location { START, CURRENT, END };
 
+static void switchToHiragana() {
+	kbddown(VK_RSHIFT, 0);
+	kbdpress(VK_CAPITAL, 0);
+	kbdup(VK_RSHIFT, 0);
+	kbddown(VK_RCONTROL, 0);
+	kbdpress(VK_CAPITAL, 0);
+	kbdup(VK_RCONTROL, 0);
+}
+
 static void moveToTask(int taskNo, Location from, bool lWinPressed) {
 	if (from == START) kbdpress(VK_HOME, 0);
 	else if (from == END) kbdpress(VK_END, 0);
@@ -242,6 +251,22 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 					kbdpress('T', 0);
 					kbdpress(VK_END, 0);
 				}, 10);
+			}
+		}
+	}
+
+	if (wParam == WM_KEYUP) {
+		if (config.selectHiraganaByDefault) {
+			static bool shouldSwitchToHiragana = false;
+			if (!lWinPressed && shouldSwitchToHiragana) {
+				shouldSwitchToHiragana = false;
+				RunAfterDelay([] {
+					switchToHiragana();
+				}, 50);
+			}
+			if (nKey == VK_SPACE && lWinPressed) {
+				// Execute when both have been released
+				shouldSwitchToHiragana = true;
 			}
 		}
 	}

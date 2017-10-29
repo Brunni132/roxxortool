@@ -30,6 +30,7 @@ This tool focuses on very basic functionality that is usually not covered by oth
 	- Note that Home and End are provided by the system to move to the first or last task. You may as well use a directional key to wrap around the last entry and select the first entry easily (for example if your taskbar is at the bottom, press Right once).
 - `disableWinTabAnimation`: when pressing Win+Tab (and not using another combination, such as swiping up with three/four fingers on your precision touchpad) the Task View appears without animation. Huge hack as it is, it actually removes animations then calls the Task View screen, then periodically checks that it is still active; when it's not it reenables animations. Note that this is done in a safe way, i.e. not persisted to your user profile.
 - `altTabWithMouseButtons`: press the forward button on your mouse to open the app selector. Press for longer (200ms or more) to do a standard forward command.
+- `selectHiraganaByDefault`: if set, when switching between languages with Win+Space, sends a Ctrl+Caps right behind so that hiragana mode is enabled if IME is japanese (for others doesn't do anything; for other complex IME you may not want to use this feature as it's tailored for Japanese and doesn't have a way to check what you're currently using).
 
 Additional (not as good, please shout out if you use them else I might remove them in the future):
 
