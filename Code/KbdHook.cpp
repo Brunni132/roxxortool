@@ -41,31 +41,30 @@ static void switchToHiragana() {
 	kbdup(VK_RCONTROL, 0);
 }
 
-static void moveToTask(int taskNo, Location from, bool lWinPressed) {
+static void moveToTask(int taskNo, Location from) {
 	if (from == START) kbdpress(VK_HOME, 0);
 	else if (from == END) kbdpress(VK_END, 0);
 	else if (from == CURRENT) taskNo += sgn(taskNo);
 	if (taskNo == 0 || taskNo == 1) return;
 
 	RunAfterDelay([=] {
-		bool needLWin = !lWinPressed;
-		if (needLWin) kbddown(VK_LWIN, 0);
+		kbddown(VK_RWIN, 0);
 		if (taskNo <= 0) {
-			kbddown(VK_SHIFT, 0);
+			kbddown(VK_RSHIFT, 0);
 			for (int i = 0; i < -1 - taskNo; i += 1) kbdpress('T', 0);
-			kbdup(VK_SHIFT, 0);
+			kbdup(VK_RSHIFT, 0);
 		}
 		else {
 			for (int i = 0; i < taskNo - 1; i += 1) kbdpress('T', 0);
 		}
-		if (needLWin) kbdup(VK_LWIN, 0);
+		kbdup(VK_RWIN, 0);
 	});
 }
 
 static HHOOK g_hPreviousHook;
 
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
-	static bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, lShiftPressed = false, rShiftPressed = false;
+	static bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, lShiftPressed = false, rShiftPressed = false, lAltPressed = false;
 	static int numkeysDown = 0;
 	static bool winKeyWasForced = false;
 
@@ -97,6 +96,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			break;
 		case VK_RSHIFT:
 			rShiftPressed = wParam == WM_KEYDOWN;
+			break;
+		case VK_LMENU:
+			lAltPressed = wParam == WM_KEYDOWN;
 			break;
 		}
 	}
@@ -150,30 +152,22 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		// Quit
 		if (config.closeWindowWithWinQ && lWinPressed) {
 			if (nKey == 'Q') {
+				bool needAlt = !lAltPressed;
 				//HWND window = GetForegroundWindow();
 				//SendMessage(window, WM_SYSCOMMAND, SC_CLOSE, 0);
-				kbddown(VK_LCONTROL, 0); //CONTROL, to avoid bringing the menu
+				kbddown(VK_RCONTROL, 0); //CONTROL, to avoid bringing the menu
 				kbdup(VK_LWIN, 0); // WIN
-				kbdup(VK_LCONTROL, 0); // CONTROL, to avoid bringing the menu
-				kbddown(VK_LMENU, 0); //ALT
+				kbdup(VK_RCONTROL, 0); // CONTROL, to avoid bringing the menu
+				if (needAlt) kbddown(VK_LMENU, 0); //ALT
 				kbddown(VK_F4, 0); // +F4
-				kbdup(VK_LMENU, 0);
+				if (needAlt) kbdup(VK_LMENU, 0);
 				kbdup(VK_F4, 0);
 
 				kbddown(VK_LWIN, 0); // Restore WIN
-				kbddown(VK_LCONTROL, 0); //CONTROL, to avoid bringing the menu
-				kbdup(VK_LCONTROL, 0);
+				kbddown(VK_RCONTROL, 0); //CONTROL, to avoid bringing the menu
+				kbdup(VK_RCONTROL, 0);
 				return 1;
 			}
-			//else if (nKey == 'W') {
-			//	keybd_event(VK_CONTROL, 0, 0, 0);  //CONTROL, to avoid bringing the menu
-			//	keybd_event(VK_LWIN, 0, KEYEVENTF_KEYUP, 0); //WIN
-			//	keybd_event(VK_F4, 0, 0, 0);  //F4
-			//	keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0);  //CONTROL, to avoid bringing the menu
-			//	keybd_event(VK_F4, 0, KEYEVENTF_KEYUP, 0); //F4
-			//	keybd_event(VK_LWIN, 0, 0, 0); //WIN
-			//	return 1;
-			//}
 		}
 
 		// External monitor brightness change
@@ -232,15 +226,15 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			}
 			if (inFunction) {
 				if (nKey >= '5' && nKey <= '7') {
-					moveToTask(11 + (nKey - '5') * 10, START, lWinPressed);
+					moveToTask(11 + (nKey - '5') * 10, START);
 					return -1;
 				}
 				else if (nKey == VK_PRIOR) {
-					moveToTask(-5, CURRENT, lWinPressed);
+					moveToTask(-5, CURRENT);
 					return -1;
 				}
 				else if (nKey == VK_NEXT) {
-					moveToTask(+5, CURRENT, lWinPressed);
+					moveToTask(+5, CURRENT);
 					return -1;
 				}
 			}
@@ -270,24 +264,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			}
 		}
 	}
-
-	//if (config.altGrContextMenu) {
-	//	static bool bringMenuAtNextKeyUp = false;
-	//	// Remappe Alt droit => context menu
-	//	if (nKey == VK_RMENU) {
-	//		if (wParam == WM_SYSKEYDOWN) {
-	//			bringMenuAtNextKeyUp = true;
-	//		} else if (wParam == WM_KEYUP && bringMenuAtNextKeyUp) {
-	//			// Au keyup, on presse un context menu
-	//			bringMenuAtNextKeyUp = false;
-	//			kbdup(nKey, 0);
-	//			kbdpress(VK_APPS, 0);
-	//			return 1;
-	//		}
-	//	} else if (nKey != VK_LCONTROL) {
-	//		bringMenuAtNextKeyUp = false;
-	//	}
-	//}
 
 	if (config.iAmAMac) {
 		// Eat accidental left/right presses after home/end on Mac
@@ -325,12 +301,12 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			if (!needToReleaseCtrl && !lShiftPressed && !lCtrlPressed && config.multiDesktopLikeApplicationSwitcher) {
 				needToReleaseCtrl = true;
 				// Press Ctrl (http://www.codeproject.com/Articles/7305/Keyboard-Events-Simulation-using-keybd-event-funct)
-				kbddown(VK_LCONTROL, 0x9d);
+				kbddown(VK_RCONTROL, 0x9d);
 			}
 		}
 		if (needToReleaseCtrl && nKey == VK_LWIN && wParam == WM_KEYUP) {
 			// Release Ctrl
-			kbdup(VK_LCONTROL, 0x9d);
+			kbdup(VK_RCONTROL, 0x9d);
 			needToReleaseCtrl = false;
 		}
 	}
@@ -338,7 +314,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (config.rightShiftContextMenu) {
 		static bool pressedAnotherKeySince = false;
 		// Remappe Alt droit => context menu
-		if (nKey == VK_RSHIFT) {
+		if (nKey == VK_RSHIFT && !injected) {
 			if (wParam == WM_KEYDOWN)
 				pressedAnotherKeySince = false;
 			// Au keyup, on presse un context menu (93)
@@ -351,25 +327,14 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			pressedAnotherKeySince = true;
 	}
 
-//	if (config.rightCtrlContextMenu) {
-//		// Remappe Ctrl droit => context menu
-//		if (nKey == VK_RCONTROL) {
-//			// Au keyup, on presse un context menu (93)
-//			if (wParam == WM_KEYUP  && ctrlKeyWasPressed) {
-////				SimulateKeyUp(VK_RCONTROL);		// Fix for the apps which do not accept context menu with CTRL pressed
-//				kbdpress(VK_APPS, 0);
-//			}
-//		}
-//	}
-
 	if (config.altGraveToStickyAltTab) {
 		//` = OEM_3 (0xC0)
 		if (nKey == VK_OEM_3) {
 			// SYSKEYDOWN means Alt is pressed
 			if (wParam == WM_SYSKEYDOWN) {
-				kbddown(VK_CONTROL, 0);
+				kbddown(VK_RCONTROL, 0);
 				kbdpress(VK_TAB, 0);
-				kbdup(VK_CONTROL, 0);
+				kbdup(VK_RCONTROL, 0);
 			}
 			// Do not propagate the ` char
 			if (wParam == WM_SYSKEYDOWN || wParam == WM_SYSKEYUP) return 1;
@@ -387,7 +352,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (nKey >= VK_NUMPAD0 && nKey <= VK_NUMPAD9 && config.multiDesktopLikeApplicationSwitcher) {
 		if ((lCtrlPressed || rCtrlPressed) && wParam == WM_KEYDOWN) {
 			if (numkeysDown == 0 && !lWinPressed) {
-				kbddown(VK_LWIN, 0);
+				kbddown(VK_RWIN, 0);
 				winKeyWasForced = true;
 			}
 			kbddown(nKey - VK_NUMPAD0 + '0', 0);
@@ -397,7 +362,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			if (numkeysDown > 0) {
 				kbdup(nKey - VK_NUMPAD0 + '0', 0);
 				if (--numkeysDown == 0 && winKeyWasForced) {
-					kbdup(VK_LWIN, 0);
+					kbdup(VK_RWIN, 0);
 					winKeyWasForced = false;
 				}
 				return 1;
