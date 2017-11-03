@@ -43,9 +43,9 @@ static void switchToHiragana() {
 	if (needsShift) kbddown(VK_RSHIFT, 0);
 	kbdpress(VK_CAPITAL, 0);
 	if (needsShift) kbdup(VK_RSHIFT, 0);
-	if (needsControl) kbddown(VK_LCONTROL, 0);
+	if (needsControl) kbddown(VK_RCONTROL, 0);
 	kbdpress(VK_CAPITAL, 0);
-	if (needsControl) kbdup(VK_LCONTROL, 0);
+	if (needsControl) kbdup(VK_RCONTROL, 0);
 }
 
 static void moveToTask(int taskNo, Location from) {
@@ -162,7 +162,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				bool needAlt = !lAltPressed;
 				//HWND window = GetForegroundWindow();
 				//SendMessage(window, WM_SYSCOMMAND, SC_CLOSE, 0);
-				if (!ctrlPressed()) kbdpress(VK_LCONTROL, 0); // CONTROL, to avoid bringing the menu
+				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // CONTROL, to avoid bringing the menu
 				kbdup(VK_LWIN, 0); // Temporarily disable WIN
 				if (needAlt) kbddown(VK_LMENU, 0); // ALT
 				kbddown(VK_F4, 0); // +F4
@@ -170,7 +170,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				kbdup(VK_F4, 0);
 
 				kbddown(VK_LWIN, 0); // Restore WIN
-				if (!ctrlPressed()) kbdpress(VK_LCONTROL, 0); // CONTROL, to avoid bringing the menu
+				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // CONTROL, to avoid bringing the menu
 				return 1;
 			}
 		}
@@ -209,12 +209,12 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 
 		if (config.winFOpensYourFiles && lWinPressed && nKey == 'F') {
-			if (!ctrlPressed()) kbdpress(VK_LCONTROL, 0);
+			if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0);
 			WindowsExplorer::showHomeFolderWindow();
 			return 1;
 		}
 		if (config.winHHidesWindow && lWinPressed && nKey == 'H') {
-			if (!ctrlPressed()) kbdpress(VK_LCONTROL, 0); // To avoid bringing the menu
+			if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // To avoid bringing the menu
 			ShowWindow(GetForegroundWindow(), SW_MINIMIZE);
 			return 1;
 		}
@@ -336,9 +336,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			// SYSKEYDOWN means Alt is pressed
 			if (wParam == WM_SYSKEYDOWN) {
 				bool needsCtrl = !ctrlPressed();
-				if (needsCtrl) kbddown(VK_LCONTROL, 0);
+				if (needsCtrl) kbddown(VK_RCONTROL, 0);
 				kbdpress(VK_TAB, 0);
-				if (needsCtrl) kbdup(VK_LCONTROL, 0);
+				if (needsCtrl) kbdup(VK_RCONTROL, 0);
 			}
 			// Do not propagate the ` char
 			if (wParam == WM_SYSKEYDOWN || wParam == WM_SYSKEYUP) return 1;
