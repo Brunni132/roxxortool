@@ -8,6 +8,12 @@
 #include "StatusWindow.h"
 #include "DisableAnimationsForWinTab.h"
 
+static bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, lShiftPressed = false, rShiftPressed = false, lAltPressed = false;
+static bool ctrlPressed() { return lCtrlPressed || rCtrlPressed; }
+static bool winPressed() { return lWinPressed; }
+static bool shiftPressed() { return lShiftPressed || rShiftPressed; }
+static bool altPressed() { return lAltPressed; }
+
 // Codes: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html or https://www.codeproject.com/Articles/7305/Keyboard-Events-Simulation-using-keybd-event-funct
 void kbddown(int vkCode, BYTE scanCode, int flags) {
 	keybd_event(vkCode, scanCode, flags, 0);
@@ -33,41 +39,39 @@ static const struct { int original; int modified; } keyboardEatTable[] = {
 enum Location { START, CURRENT, END };
 
 static void switchToHiragana() {
-	kbddown(VK_RSHIFT, 0);
+	bool needsShift = !shiftPressed(), needsControl = !ctrlPressed();
+	if (needsShift) kbddown(VK_RSHIFT, 0);
 	kbdpress(VK_CAPITAL, 0);
-	kbdup(VK_RSHIFT, 0);
-	kbddown(VK_RCONTROL, 0);
+	if (needsShift) kbdup(VK_RSHIFT, 0);
+	if (needsControl) kbddown(VK_LCONTROL, 0);
 	kbdpress(VK_CAPITAL, 0);
-	kbdup(VK_RCONTROL, 0);
+	if (needsControl) kbdup(VK_LCONTROL, 0);
 }
 
 static void moveToTask(int taskNo, Location from) {
+	bool needsWin = !winPressed(), needsShift = !shiftPressed();
 	if (from == START) kbdpress(VK_HOME, 0);
 	else if (from == END) kbdpress(VK_END, 0);
 	else if (from == CURRENT) taskNo += sgn(taskNo);
 	if (taskNo == 0 || taskNo == 1) return;
 
 	RunAfterDelay([=] {
-		kbddown(VK_RWIN, 0);
+		if (needsWin) kbddown(VK_RWIN, 0);
 		if (taskNo <= 0) {
-			kbddown(VK_RSHIFT, 0);
+			if (needsShift) kbddown(VK_RSHIFT, 0);
 			for (int i = 0; i < -1 - taskNo; i += 1) kbdpress('T', 0);
-			kbdup(VK_RSHIFT, 0);
+			if (needsShift) kbdup(VK_RSHIFT, 0);
 		}
 		else {
 			for (int i = 0; i < taskNo - 1; i += 1) kbdpress('T', 0);
 		}
-		kbdup(VK_RWIN, 0);
+		if (needsWin) kbdup(VK_RWIN, 0);
 	});
 }
 
 static HHOOK g_hPreviousHook;
 
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
-	static bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, lShiftPressed = false, rShiftPressed = false, lAltPressed = false;
-	static int numkeysDown = 0;
-	static bool winKeyWasForced = false;
-
 	// Not something for us
 	if (nCode != HC_ACTION) {
 		return CallNextHookEx(g_hPreviousHook, nCode, wParam, lParam);
@@ -105,8 +109,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 	// Ignore injected input
 	bool injected = (kbd->flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED));
-	//if (injected) {
-	//	return CallNextHookEx(g_hPreviousHook, nCode, wParam, lParam);
+	//if (wParam == WM_KEYDOWN) {
+	//	printf("Down: %d %d\n", nKey, kbd->scanCode);
+	//}
+	//if (wParam == WM_KEYUP) {
+	//	printf("Up: %d %d\n", nKey, kbd->scanCode);
 	//}
 
 	if (wParam == WM_KEYDOWN) {
@@ -155,17 +162,15 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				bool needAlt = !lAltPressed;
 				//HWND window = GetForegroundWindow();
 				//SendMessage(window, WM_SYSCOMMAND, SC_CLOSE, 0);
-				kbddown(VK_RCONTROL, 0); //CONTROL, to avoid bringing the menu
-				kbdup(VK_LWIN, 0); // WIN
-				kbdup(VK_RCONTROL, 0); // CONTROL, to avoid bringing the menu
-				if (needAlt) kbddown(VK_LMENU, 0); //ALT
+				if (!ctrlPressed()) kbdpress(VK_LCONTROL, 0); // CONTROL, to avoid bringing the menu
+				kbdup(VK_LWIN, 0); // Temporarily disable WIN
+				if (needAlt) kbddown(VK_LMENU, 0); // ALT
 				kbddown(VK_F4, 0); // +F4
 				if (needAlt) kbdup(VK_LMENU, 0);
 				kbdup(VK_F4, 0);
 
 				kbddown(VK_LWIN, 0); // Restore WIN
-				kbddown(VK_RCONTROL, 0); //CONTROL, to avoid bringing the menu
-				kbdup(VK_RCONTROL, 0);
+				if (!ctrlPressed()) kbdpress(VK_LCONTROL, 0); // CONTROL, to avoid bringing the menu
 				return 1;
 			}
 		}
@@ -204,12 +209,12 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 
 		if (config.winFOpensYourFiles && lWinPressed && nKey == 'F') {
-			kbdpress(VK_LCONTROL, 0);
+			if (!ctrlPressed()) kbdpress(VK_LCONTROL, 0);
 			WindowsExplorer::showHomeFolderWindow();
 			return 1;
 		}
 		if (config.winHHidesWindow && lWinPressed && nKey == 'H') {
-			kbdpress(VK_LCONTROL, 0); // To avoid bringing the menu
+			if (!ctrlPressed()) kbdpress(VK_LCONTROL, 0); // To avoid bringing the menu
 			ShowWindow(GetForegroundWindow(), SW_MINIMIZE);
 			return 1;
 		}
@@ -295,32 +300,30 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	}
 
 	// LWin+[0-9] -> Ctrl+Win+[0-9]
-	if (config.noNumPad) {
-		static bool needToReleaseCtrl = false;
-		if (lWinPressed && nKey >= '0' && nKey <= '9' && wParam == WM_KEYDOWN && !winKeyWasForced) {
-			if (!needToReleaseCtrl && !lShiftPressed && !lCtrlPressed && config.multiDesktopLikeApplicationSwitcher) {
-				needToReleaseCtrl = true;
+	if (config.noNumPad && !injected) {
+		if (lWinPressed && nKey >= '0' && nKey <= '9' && wParam == WM_KEYDOWN) {
+			if (!shiftPressed() && !ctrlPressed() && config.multiDesktopLikeApplicationSwitcher) {
 				// Press Ctrl (http://www.codeproject.com/Articles/7305/Keyboard-Events-Simulation-using-keybd-event-funct)
-				kbddown(VK_RCONTROL, 0x9d);
+				kbddown(VK_RCONTROL, 0);
+				kbddown(nKey, 0);
+				kbdup(VK_RCONTROL, 0);
+				return 1;
 			}
-		}
-		if (needToReleaseCtrl && nKey == VK_LWIN && wParam == WM_KEYUP) {
-			// Release Ctrl
-			kbdup(VK_RCONTROL, 0x9d);
-			needToReleaseCtrl = false;
 		}
 	}
 
 	if (config.rightShiftContextMenu) {
 		static bool pressedAnotherKeySince = false;
 		// Remappe Alt droit => context menu
-		if (nKey == VK_RSHIFT && !injected) {
-			if (wParam == WM_KEYDOWN)
+		if (nKey == VK_RSHIFT) {
+			if (wParam == WM_KEYDOWN && !injected) {
 				pressedAnotherKeySince = false;
-			// Au keyup, on presse un context menu (93)
-			else if (wParam == WM_KEYUP  && rShiftWasPressed && !pressedAnotherKeySince) {
-//				SimulateKeyUp(VK_RCONTROL);		// Fix for the apps which do not accept context menu with CTRL pressed
-				kbdpress(VK_APPS, 0);
+			}
+			else if (wParam == WM_KEYUP && !pressedAnotherKeySince) {
+				// Au keyup, on presse un context menu (93)
+				RunAfterDelay([] {
+					kbdpress(VK_APPS, 0);
+				});
 			}
 		}
 		else if (wParam == WM_KEYDOWN)
@@ -332,9 +335,10 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		if (nKey == VK_OEM_3) {
 			// SYSKEYDOWN means Alt is pressed
 			if (wParam == WM_SYSKEYDOWN) {
-				kbddown(VK_RCONTROL, 0);
+				bool needsCtrl = !ctrlPressed();
+				if (needsCtrl) kbddown(VK_LCONTROL, 0);
 				kbdpress(VK_TAB, 0);
-				kbdup(VK_RCONTROL, 0);
+				if (needsCtrl) kbdup(VK_LCONTROL, 0);
 			}
 			// Do not propagate the ` char
 			if (wParam == WM_SYSKEYDOWN || wParam == WM_SYSKEYUP) return 1;
@@ -348,25 +352,15 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 	}
 
-	// Win+[NUMPAD0-9] -> Win+[0-9]
 	if (nKey >= VK_NUMPAD0 && nKey <= VK_NUMPAD9 && config.multiDesktopLikeApplicationSwitcher) {
-		if ((lCtrlPressed || rCtrlPressed) && wParam == WM_KEYDOWN) {
-			if (numkeysDown == 0 && !lWinPressed) {
-				kbddown(VK_RWIN, 0);
-				winKeyWasForced = true;
-			}
-			kbddown(nKey - VK_NUMPAD0 + '0', 0);
-			numkeysDown++;
+		if (wParam == WM_KEYDOWN && ctrlPressed()) {
+			int taskId = nKey - VK_NUMPAD0 + '0';
+			bool needsWin = !winPressed();
+			// Ctrl+Win+[taskId]
+			if (needsWin) kbddown(VK_RWIN, 0);
+			kbdpress(taskId, 0);
+			if (needsWin) kbdup(VK_RWIN, 0);
 			return 1;
-		} else if (wParam == WM_KEYUP) {
-			if (numkeysDown > 0) {
-				kbdup(nKey - VK_NUMPAD0 + '0', 0);
-				if (--numkeysDown == 0 && winKeyWasForced) {
-					kbdup(VK_RWIN, 0);
-					winKeyWasForced = false;
-				}
-				return 1;
-			}
 		}
 	}
 
@@ -407,6 +401,8 @@ void KbdHook::start() {
 	//kbdup(VK_APPS, 0);
 	kbdup(VK_LMENU, 0);
 	kbdup(VK_RMENU, 0);
+	kbdup(VK_LSHIFT, 0);
+	kbdup(VK_RSHIFT, 0);
 	g_hPreviousHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
 	if (config.ddcCiBrightnessControl)
 		Monitor::init(config.autoApplyGammaCurveDelay);
