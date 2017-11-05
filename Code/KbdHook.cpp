@@ -156,25 +156,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			}
 		}
 
-		// Quit
-		if (config.closeWindowWithWinQ && lWinPressed) {
-			if (nKey == 'Q') {
-				bool needAlt = !lAltPressed;
-				//HWND window = GetForegroundWindow();
-				//SendMessage(window, WM_SYSCOMMAND, SC_CLOSE, 0);
-				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // CONTROL, to avoid bringing the menu
-				kbdup(VK_LWIN, 0); // Temporarily disable WIN
-				if (needAlt) kbddown(VK_LMENU, 0); // ALT
-				kbddown(VK_F4, 0); // +F4
-				if (needAlt) kbdup(VK_LMENU, 0);
-				kbdup(VK_F4, 0);
-
-				kbddown(VK_LWIN, 0); // Restore WIN
-				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // CONTROL, to avoid bringing the menu
-				return 1;
-			}
-		}
-
 		// External monitor brightness change
 		if (lWinPressed && lCtrlPressed) {
 			if (config.ddcCiBrightnessControl) {
@@ -216,6 +197,16 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		if (config.winHHidesWindow && lWinPressed && nKey == 'H') {
 			if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // To avoid bringing the menu
 			ShowWindow(GetForegroundWindow(), SW_MINIMIZE);
+			return 1;
+		}
+
+		if (config.closeWindowWithWinQ && lWinPressed && nKey == 'Q') {
+			bool needAlt = !lAltPressed;
+			if (needAlt) kbddown(VK_LMENU, 0);
+			kbdup(VK_LWIN, 0); // Temporarily release WIN since Win+Alt+F4 does nothing
+			kbdpress(VK_F4, 0); // +F4
+			kbddown(VK_LWIN, 0); // Re-enable WIN
+			if (needAlt) kbdup(VK_LMENU, 0);
 			return 1;
 		}
 
