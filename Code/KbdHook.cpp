@@ -252,6 +252,12 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				shouldSwitchToHiragana = false;
 				RunAfterDelay([] {
 					switchToHiragana();
+					RunAfterDelay([] {
+						bool needsControl = !ctrlPressed();
+						if (needsControl) kbddown(VK_RCONTROL, 0);
+						kbdpress(VK_CAPITAL, 0);
+						if (needsControl) kbdup(VK_RCONTROL, 0);
+					}, 500);
 				}, 50);
 			}
 			if (nKey == VK_SPACE && lWinPressed) {
