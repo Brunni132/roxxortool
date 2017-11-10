@@ -2,6 +2,7 @@
 #include "KbdHook.h"
 #include "AudioMixer.h"
 #include "Config.h"
+#include "Main.h"
 #include "Monitor.h"
 #include "WindowsExplorer.h"
 #include "Utilities.h"
@@ -69,12 +70,12 @@ static void moveToTask(int taskNo, Location from) {
 	});
 }
 
-static HHOOK g_hPreviousHook;
+static HHOOK g_hHook;
 
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	// Not something for us
 	if (nCode != HC_ACTION) {
-		return CallNextHookEx(g_hPreviousHook, nCode, wParam, lParam);
+		return CallNextHookEx(NULL, nCode, wParam, lParam);
 	}
 
 	// TODO Florian -- replace all this with reading the scan code (in kbd)
@@ -176,15 +177,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			}
 			// Reexecute ourselves on Ctrl+Win+R
 			if (config.reloadConfigWithCtrlWinR && nKey == 'R') {
-				TCHAR reexecute[1024];
-				PROCESS_INFORMATION pi;
-				STARTUPINFO si;
-				ZeroMemory(&si, sizeof(si));
-				si.cb = sizeof si;
-				GetModuleFileName(NULL, reexecute, 1024);
-				CreateProcess(reexecute, NULL,
-					NULL, NULL, FALSE, 0, NULL,
-					NULL, &si, &pi);
+				RunAfterDelay([] {
+					Main::editConfigAndRelaunch();
+				});
 				return 1;
 			}
 		}
@@ -267,6 +262,51 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			}
 		}
 	}
+
+	// TEMP
+	//if (true) {
+	//	struct Key {
+	//		DWORD vkCode, scanCode;
+	//	};
+	//	printf("%x %x\n", kbd->vkCode, kbd->scanCode);
+	//	if (kbd->vkCode == 0xff && kbd->scanCode == 0x79) { // 変換
+	//		if (wParam == WM_KEYDOWN)
+	//			keybd_event(0xa4, 0x38, kbd->flags, kbd->dwExtraInfo);
+	//		else
+	//			keybd_event(0xa4, 0x38, kbd->flags | KEYEVENTF_KEYUP, kbd->dwExtraInfo);
+	//		return 1;
+	//	}
+	//	if (kbd->vkCode == 0xeb && kbd->scanCode == 0x7b) { // 無変換
+	//		if (wParam == WM_KEYDOWN)
+	//			keybd_event(0xa4, 0x38, kbd->flags, kbd->dwExtraInfo);
+	//		else
+	//			keybd_event(0xa4, 0x38, kbd->flags | KEYEVENTF_KEYUP, kbd->dwExtraInfo);
+	//		return 1;
+	//	}
+	//}
+
+	//if (true) {
+	//	static bool capsIsDown;
+	//	if (nKey == VK_CAPITAL) {
+	//		capsIsDown = wParam == WM_KEYDOWN;
+	//		return 1;
+	//	}
+	//	if (nKey == 'J' && wParam == WM_KEYDOWN) {
+	//		TCHAR name[1024];
+	//		HKL keyboards[10];
+	//		int count = GetKeyboardLayoutList(10, keyboards);
+	//		for (int i = 0; i < count; i++)
+	//			printf("Keybd: %x\n", keyboards[i]);
+	//		// printf("Enabled: %x", ActivateKeyboardLayout(keyboards[1], KLF_ACTIVATE | KLF_SETFORPROCESS));
+	//		SystemParametersInfo(SPI_SETDEFAULTINPUTLANG, 0, keyboards[0], SPIF_SENDCHANGE);
+	//		//GetKeyboardLayoutName(name);
+	//		//HKL hkl1 = LoadKeyboardLayout("00000409", KLF_REPLACELANG | KLF_ACTIVATE | KLF_SUBSTITUTE_OK | KLF_REORDER);
+	//		//ActivateKeyboardLayout(hkl1, 0);
+	//		//printf("Current keyboard: %s\n", name);
+	//		return 1;
+	//	}
+
+	//}
 
 	if (config.iAmAMac) {
 		// Eat accidental left/right presses after home/end on Mac
@@ -388,7 +428,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	}
 
 	// wParam will contain the virtual key code.  
-	return CallNextHookEx(g_hPreviousHook, nCode, wParam, lParam);
+	return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
 void KbdHook::start() {
@@ -401,7 +441,11 @@ void KbdHook::start() {
 	kbdup(VK_RMENU, 0);
 	kbdup(VK_LSHIFT, 0);
 	kbdup(VK_RSHIFT, 0);
-	g_hPreviousHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
+	g_hHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
 	if (config.ddcCiBrightnessControl)
 		Monitor::init(config.autoApplyGammaCurveDelay);
+}
+
+void KbdHook::terminate() {
+	UnhookWindowsHookEx(g_hHook);
 }

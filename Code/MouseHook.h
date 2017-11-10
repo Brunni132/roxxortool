@@ -2,4 +2,5 @@
 
 namespace MouseHook {
 	void start();
+	void terminate();
 }

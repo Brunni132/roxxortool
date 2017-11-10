@@ -1,6 +1,7 @@
 #include "Precompiled.h"
 #include "Config.h"
 #include "AudioMixer.h"
+#include "Main.h"
 #include "KbdHook.h"
 #include "MouseHook.h"
 
@@ -24,6 +25,23 @@ static void killAlreadyExisting() {
 			}
 
 	CloseHandle(snapshot);
+}
+
+void Main::editConfigAndRelaunch() {
+	// Stop the hooks so we can type and use the mouse
+	KbdHook::terminate();
+	MouseHook::terminate();
+	// Edit file
+	system("notepad config.json");
+	TCHAR reexecute[1024];
+	PROCESS_INFORMATION pi;
+	STARTUPINFO si;
+	ZeroMemory(&si, sizeof(si));
+	si.cb = sizeof si;
+	GetModuleFileName(NULL, reexecute, 1024);
+	CreateProcess(reexecute, NULL,
+		NULL, NULL, FALSE, 0, NULL,
+		NULL, &si, &pi);
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance,
@@ -57,6 +75,8 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	}
 
 	AudioMixer::terminate();
+	KbdHook::terminate();
+	MouseHook::terminate();
 	return (int) msg.wParam;
 }
 

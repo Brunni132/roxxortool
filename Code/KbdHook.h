@@ -3,5 +3,6 @@
 
 namespace KbdHook {
 	void start();
+	void terminate();
 }
 

@@ -203,6 +203,7 @@
     <ClInclude Include="lib\gason.h" />
     <ClInclude Include="lib\JsonSerializer.h" />
     <ClInclude Include="lib\Ref.h" />
+    <ClInclude Include="Main.h" />
     <ClInclude Include="Monitor.h" />
     <ClInclude Include="MouseHook.h" />
     <ClInclude Include="Precompiled.h" />

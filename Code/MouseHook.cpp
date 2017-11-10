@@ -137,3 +137,7 @@ void MouseHook::start() {
 	else
 		hHook = SetWindowsHookEx(WH_MOUSE_LL, LowLevelMouseProc, GetModuleHandle(NULL), 0);
 }
+
+void MouseHook::terminate() {
+	UnhookWindowsHookEx(hHook);
+}
