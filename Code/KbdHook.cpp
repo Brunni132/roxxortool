@@ -256,6 +256,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 						bool needsControl = !ctrlPressed();
 						if (needsControl) kbddown(VK_RCONTROL, 0);
 						kbdpress(VK_CAPITAL, 0);
+						kbdpress(VK_CAPITAL, 0);
 						if (needsControl) kbdup(VK_RCONTROL, 0);
 					}, 500);
 				}, 50);
