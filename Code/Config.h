@@ -36,8 +36,6 @@ struct Config: public RefClass {
 	bool multiDesktopLikeApplicationSwitcher;
 	bool winFOpensYourFiles;
 	bool winHHidesWindow;
-	bool unixLikeMouseWheel;
-	float horizontalScrollFactor;
 	// Uses LWin+[0-9] instead of Ctrl+[num0-num9] to switch tasks
 	bool noNumPad;
 	// Also bring the context menu when pressing on Right Shift
