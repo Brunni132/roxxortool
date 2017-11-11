@@ -85,40 +85,45 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	bool ctrlKeyWasPressed = lCtrlPressed || rCtrlPressed, rShiftWasPressed = rShiftPressed;
 
 	// Special keys
-	if (wParam == WM_KEYDOWN || wParam == WM_KEYUP) {
+	if (wParam == WM_KEYDOWN || wParam == WM_KEYUP || wParam == WM_SYSKEYDOWN || wParam == WM_SYSKEYUP) {
+		bool isDown = wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN;
 		switch (nKey) {
 		case VK_LCONTROL:
-			lCtrlPressed = wParam == WM_KEYDOWN;
+			lCtrlPressed = isDown;
 			break;
 		case VK_RCONTROL:
-			rCtrlPressed = wParam == WM_KEYDOWN;
+			rCtrlPressed = isDown;
 			break;
 		case VK_LSHIFT:
-			lShiftPressed = wParam == WM_KEYDOWN;
+			lShiftPressed = isDown;
 			break;
 		case VK_RSHIFT:
-			rShiftPressed = wParam == WM_KEYDOWN;
+			rShiftPressed = isDown;
 			break;
 		case VK_LWIN:
-			lWinPressed = wParam == WM_KEYDOWN;
+			lWinPressed = isDown;
 			break;
 		case VK_RWIN:
-			rWinPressed = wParam == WM_KEYDOWN;
+			rWinPressed = isDown;
 			break;
 		case VK_LMENU:
-			lAltPressed = wParam == WM_KEYDOWN;
+			lAltPressed = isDown;
 			break;
 		}
 	}
 
 	// Ignore injected input
 	bool injected = (kbd->flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED));
-	//if (wParam == WM_KEYDOWN) {
-	//	printf("Down: %d %d\n", nKey, kbd->scanCode);
-	//}
-	//if (wParam == WM_KEYUP) {
-	//	printf("Up: %d %d\n", nKey, kbd->scanCode);
-	//}
+//#ifdef _DEBUG
+//	if (wParam == WM_KEYDOWN)
+//		printf("Down%s: %x %x\n", injected? " (inj.)" : "", nKey, kbd->scanCode);
+//	if (wParam == WM_KEYUP)
+//		printf("Up%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
+//	if (wParam == WM_SYSKEYDOWN)
+//		printf("Sysdown%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
+//	if (wParam == WM_SYSKEYUP)
+//		printf("Sysup%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
+//#endif
 
 	if (wParam == WM_KEYDOWN) {
 		// Insert -> start screen saver & lock
@@ -373,13 +378,12 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 	if (config.altGraveToStickyAltTab) {
 		//` = OEM_3 (0xC0)
-		if (nKey == VK_OEM_3) {
+		if (nKey == VK_OEM_3 && !ctrlPressed()) {
 			// SYSKEYDOWN means Alt is pressed
 			if (wParam == WM_SYSKEYDOWN) {
-				bool needsCtrl = !ctrlPressed();
-				if (needsCtrl) kbddown(VK_RCONTROL, 0);
+				kbddown(VK_RCONTROL, 0);
 				kbdpress(VK_TAB, 0);
-				if (needsCtrl) kbdup(VK_RCONTROL, 0);
+				kbdup(VK_RCONTROL, 0);
 			}
 			// Do not propagate the ` char
 			if (wParam == WM_SYSKEYDOWN || wParam == WM_SYSKEYUP) return 1;

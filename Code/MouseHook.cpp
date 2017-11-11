@@ -48,11 +48,12 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 						cancelTaskView(clickPosition);
 					}
 				}, CLICK_TIME_FOR_TASK_SWITCHER);
+				return 1;
 			}
 			else if (isGoingUp) {
 				isDown = false;
+				return 1;
 			}
-
 		}
 	}
 	return CallNextHookEx(hHook, nCode, wParam, lParam);

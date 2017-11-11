@@ -1,5 +1,5 @@
 {
-	"altGraveToStickyAltTab": false,
+	"altGraveToStickyAltTab": true,
 	"altTabWithMouseButtons": true,
 	"autoApplyGammaCurveDelay": 0,
 	"brightnessCacheDuration": 2000,

@@ -32,7 +32,7 @@ void Main::editConfigAndRelaunch() {
 	KbdHook::terminate();
 	MouseHook::terminate();
 	// Edit file
-	system("notepad config.json");
+	system("echo You pressed Ctrl+Win+R & echo When you close the notepad, RoxxorTool will restart with the new parameters. & notepad config.json");
 	TCHAR reexecute[1024];
 	PROCESS_INFORMATION pi;
 	STARTUPINFO si;
