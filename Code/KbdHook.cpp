@@ -9,9 +9,9 @@
 #include "StatusWindow.h"
 #include "DisableAnimationsForWinTab.h"
 
-static bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, lShiftPressed = false, rShiftPressed = false, lAltPressed = false;
+static bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, rWinPressed = false, lShiftPressed = false, rShiftPressed = false, lAltPressed = false;
 static bool ctrlPressed() { return lCtrlPressed || rCtrlPressed; }
-static bool winPressed() { return lWinPressed; }
+static bool winPressed() { return lWinPressed || rWinPressed; }
 static bool shiftPressed() { return lShiftPressed || rShiftPressed; }
 static bool altPressed() { return lAltPressed; }
 
@@ -96,11 +96,14 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		case VK_LSHIFT:
 			lShiftPressed = wParam == WM_KEYDOWN;
 			break;
+		case VK_RSHIFT:
+			rShiftPressed = wParam == WM_KEYDOWN;
+			break;
 		case VK_LWIN:
 			lWinPressed = wParam == WM_KEYDOWN;
 			break;
-		case VK_RSHIFT:
-			rShiftPressed = wParam == WM_KEYDOWN;
+		case VK_RWIN:
+			rWinPressed = wParam == WM_KEYDOWN;
 			break;
 		case VK_LMENU:
 			lAltPressed = wParam == WM_KEYDOWN;
@@ -243,7 +246,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (wParam == WM_KEYUP) {
 		if (config.selectHiraganaByDefault) {
 			static bool shouldSwitchToHiragana = false;
-			if (!lWinPressed && shouldSwitchToHiragana) {
+			if (!winPressed() && shouldSwitchToHiragana) {
 				shouldSwitchToHiragana = false;
 				RunAfterDelay([] {
 					switchToHiragana();
@@ -256,7 +259,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 					}, 500);
 				}, 50);
 			}
-			if (nKey == VK_SPACE && lWinPressed) {
+			if (nKey == VK_SPACE && winPressed()) {
 				// Execute when both have been released
 				shouldSwitchToHiragana = true;
 			}
