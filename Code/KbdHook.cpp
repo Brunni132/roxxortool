@@ -213,13 +213,14 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			return 1;
 		}
 
-		if (config.winTSelectsLastTask) {
+		if (config.winTSelectsLastTask && !injected) {
 			 static bool inFunction = false;
 			// // Check that we are still in the task bar and restart function (Win+T from start) if not
 			 if (inFunction) {
 			 	char className[128];
 			 	GetClassNameA(GetForegroundWindow(), className, 128);
 				if (strcmp(className, "Shell_TrayWnd")) {
+					printf("Not anymore\n");
 					inFunction = false;
 				}
 			}
@@ -237,13 +238,15 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 					return -1;
 				}
 			}
-			if (lWinPressed && nKey == 'T' && !injected) {
+			else if (lWinPressed && nKey == 'T') {
 				inFunction = true;
+				kbdpress('B', 0);
 				// First press on Win+T
 				RunAfterDelay([] {
 					kbdpress('T', 0);
 					kbdpress(VK_END, 0);
 				}, 10);
+				return false;
 			}
 		}
 	}
