@@ -114,16 +114,16 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 	// Ignore injected input
 	bool injected = (kbd->flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED));
-//#ifdef _DEBUG
-//	if (wParam == WM_KEYDOWN)
-//		printf("Down%s: %x %x\n", injected? " (inj.)" : "", nKey, kbd->scanCode);
-//	if (wParam == WM_KEYUP)
-//		printf("Up%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
-//	if (wParam == WM_SYSKEYDOWN)
-//		printf("Sysdown%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
-//	if (wParam == WM_SYSKEYUP)
-//		printf("Sysup%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
-//#endif
+#ifdef _DEBUG
+	if (wParam == WM_KEYDOWN)
+		printf("Down%s: %x %x\n", injected? " (inj.)" : "", nKey, kbd->scanCode);
+	if (wParam == WM_KEYUP)
+		printf("Up%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
+	if (wParam == WM_SYSKEYDOWN)
+		printf("Sysdown%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
+	if (wParam == WM_SYSKEYUP)
+		printf("Sysup%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
+#endif
 
 	if (wParam == WM_KEYDOWN) {
 		// Insert -> start screen saver & lock
@@ -274,27 +274,30 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 	}
 
-	// TEMP
-	//if (true) {
-	//	struct Key {
-	//		DWORD vkCode, scanCode;
-	//	};
-	//	printf("%x %x\n", kbd->vkCode, kbd->scanCode);
-	//	if (kbd->vkCode == 0xff && kbd->scanCode == 0x79) { // 変換
-	//		if (wParam == WM_KEYDOWN)
-	//			keybd_event(0xa4, 0x38, kbd->flags, kbd->dwExtraInfo);
-	//		else
-	//			keybd_event(0xa4, 0x38, kbd->flags | KEYEVENTF_KEYUP, kbd->dwExtraInfo);
-	//		return 1;
-	//	}
-	//	if (kbd->vkCode == 0xeb && kbd->scanCode == 0x7b) { // 無変換
-	//		if (wParam == WM_KEYDOWN)
-	//			keybd_event(0xa4, 0x38, kbd->flags, kbd->dwExtraInfo);
-	//		else
-	//			keybd_event(0xa4, 0x38, kbd->flags | KEYEVENTF_KEYUP, kbd->dwExtraInfo);
-	//		return 1;
-	//	}
-	//}
+	if (config.japaneseMacBookPro && !injected) {
+		if (nKey == 0xEB) {
+			// 英 -> Lalt
+			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0xA4, 0x38);
+			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0xA4, 0x38);
+			return 1;
+		}
+		if (nKey == 0xA4) {
+			// Loption -> Ctrl
+			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0xA2, 0x1D);
+			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0xA2, 0x1D);
+			return 1;
+		}
+		if (nKey == 0x14) {
+			// Fn
+			return 1;
+		}
+		if (nKey == 0xA2) {
+			// Lctrl -> Caps
+			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0x14, 0x3A);
+			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0x14, 0x3A);
+			return 1;
+		}
+	}
 
 	//if (true) {
 	//	static bool capsIsDown;

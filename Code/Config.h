@@ -49,6 +49,7 @@ struct Config: public RefClass {
 	bool altTabWithMouseButtons;
 	// Sends Ctrl+Caps after Win+Space
 	bool selectHiraganaByDefault;
+	bool japaneseMacBookPro;
 
 	// Reload the values from the config file. Will affect all members of this instance. Must be called at least once before use of the instance.
 	bool readFile();

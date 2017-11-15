@@ -41,6 +41,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(disableWinTabAnimation, false);
 	IMPLEMENT_BOOL_PROP(altTabWithMouseButtons, false);
 	IMPLEMENT_BOOL_PROP(selectHiraganaByDefault, false);
+	IMPLEMENT_BOOL_PROP(japaneseMacBookPro, false);
 }
 
 bool Config::readFile() {
@@ -73,7 +74,7 @@ bool Config::readFile() {
 	for (auto obj : value)
 		process(obj);
 
-//	writeSampleFile("config.json");
+	writeSampleFile("sample.json");
 	return true;
 }
 void Config::parseNumberArray(unsigned short array[], unsigned maxLength, JsonValue &val) {
