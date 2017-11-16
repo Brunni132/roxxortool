@@ -276,6 +276,56 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	}
 
 	if (config.japaneseMacBookPro && !injected) {
+		static bool virtualFnIsDown = false;
+		static int fnRemappings[][2] = {
+			{ VK_LEFT, VK_HOME },
+			{ VK_RIGHT, VK_END },
+			{ VK_UP, VK_PRIOR },
+			{ VK_DOWN, VK_NEXT },
+			{ VK_BACK, VK_DELETE },
+			{ VK_F7, VK_MEDIA_PREV_TRACK },
+			{ VK_F8, VK_MEDIA_PLAY_PAUSE },
+			{ VK_F9, VK_MEDIA_NEXT_TRACK },
+			{ VK_F10, VK_VOLUME_MUTE },
+			{ VK_F11, VK_VOLUME_DOWN },
+			{ VK_F12, VK_VOLUME_UP },
+		};
+		static bool virtualKeysActive[numberof(fnRemappings)] = {0};
+		if (nKey == 0x14) {
+			// Fn
+			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) virtualFnIsDown = true;
+			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
+				virtualFnIsDown = false;
+				// Release all keys that were pressed during the time Fn was down
+				for (int i = 0; i < numberof(virtualKeysActive); i++) {
+					if (virtualKeysActive[i]) kbdup(fnRemappings[i][1], 0);
+					virtualKeysActive[i] = false;
+				}
+			}
+			return 1;
+		}
+		if (virtualFnIsDown) {
+			int foundIndex = -1;
+			for (int i = 0; i < numberof(fnRemappings); i++) {
+				if (nKey == fnRemappings[i][0]) {
+					foundIndex = i;
+					break;
+				}
+			}
+			if (foundIndex >= 0) {
+				int destKey = fnRemappings[foundIndex][1];
+				if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
+					virtualKeysActive[foundIndex] = true;
+					kbddown(destKey, 0);
+					return 1;
+				}
+				if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
+					virtualKeysActive[foundIndex] = false;
+					kbdup(destKey, 0);
+					return 1;
+				}
+			}
+		}
 		if (nKey == 0xEB) {
 			// 英 -> Lcommand
 			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0x5B, 0x5B);
@@ -302,10 +352,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			// Loption -> Ctrl
 			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0xA2, 0x1D);
 			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0xA2, 0x1D);
-			return 1;
-		}
-		if (nKey == 0x14) {
-			// Fn
 			return 1;
 		}
 		if (nKey == 0xA2 && kbd->scanCode == 0x1D) {
