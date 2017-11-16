@@ -75,7 +75,7 @@ bool Config::readFile() {
 	for (auto obj : value)
 		process(obj);
 
-	writeSampleFile("sample.json");
+	// writeSampleFile("sample.json");
 	return true;
 }
 void Config::parseNumberArray(unsigned short array[], unsigned maxLength, JsonValue &val) {
