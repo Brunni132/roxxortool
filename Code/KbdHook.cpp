@@ -281,6 +281,18 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0xA4, 0x38);
 			return 1;
 		}
+		if (nKey == 0xFF) {
+			// TODO -> Ralt
+			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
+				kbddown(0xA5, 0x38);
+				//kbddown(0xA2, 0x21D);
+			}
+			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
+				kbdup(0xA5, 0x38);
+				//kbdup(0xA2, 0x21D);
+			}
+			return 1;
+		}
 		if (nKey == 0xA4) {
 			// Loption -> Ctrl
 			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0xA2, 0x1D);
