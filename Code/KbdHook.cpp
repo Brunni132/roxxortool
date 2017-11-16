@@ -14,6 +14,7 @@ static bool ctrlPressed() { return lCtrlPressed || rCtrlPressed; }
 static bool winPressed() { return lWinPressed || rWinPressed; }
 static bool shiftPressed() { return lShiftPressed || rShiftPressed; }
 static bool altPressed() { return lAltPressed; }
+static void cancelAllKeys();
 
 // Codes: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html or https://www.codeproject.com/Articles/7305/Keyboard-Events-Simulation-using-keybd-event-funct
 void kbddown(int vkCode, BYTE scanCode, int flags) {
@@ -21,7 +22,7 @@ void kbddown(int vkCode, BYTE scanCode, int flags) {
 }
 
 void kbdup(int vkCode, BYTE scanCode, int flags) {
-	keybd_event(vkCode, scanCode + 0x80, flags | KEYEVENTF_KEYUP, 0);
+	keybd_event(vkCode, scanCode, flags | KEYEVENTF_KEYUP, 0);
 }
 
 void kbdpress(int vkCode, BYTE scanCode, int flags) {
@@ -276,20 +277,24 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 	if (config.japaneseMacBookPro && !injected) {
 		if (nKey == 0xEB) {
-			// 英 -> Lalt
+			// 英 -> Lcommand
+			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0x5B, 0x5B);
+			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0x5B, 0x5B);
+			return 1;
+		}
+		if (nKey == 0x5B) {
+			// Lcommand -> Lalt
 			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0xA4, 0x38);
 			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0xA4, 0x38);
 			return 1;
 		}
 		if (nKey == 0xFF) {
-			// TODO -> Ralt
+			// かな -> Ralt
 			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
-				kbddown(0xA5, 0x38);
-				//kbddown(0xA2, 0x21D);
+				kbddown(0xA5, 0x38, KEYEVENTF_EXTENDEDKEY);
 			}
 			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
-				kbdup(0xA5, 0x38);
-				//kbdup(0xA2, 0x21D);
+				kbdup(0xA5, 0x38, KEYEVENTF_EXTENDEDKEY);
 			}
 			return 1;
 		}
@@ -303,7 +308,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			// Fn
 			return 1;
 		}
-		if (nKey == 0xA2) {
+		if (nKey == 0xA2 && kbd->scanCode == 0x1D) {
 			// Lctrl -> Caps
 			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0x14, 0x3A);
 			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0x14, 0x3A);
@@ -456,7 +461,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
-void KbdHook::start() {
+void cancelAllKeys() {
 	kbdup(VK_LCONTROL, 0);
 	kbdup(VK_RCONTROL, 0);
 	kbdup(VK_LWIN, 0);
@@ -466,6 +471,10 @@ void KbdHook::start() {
 	kbdup(VK_RMENU, 0);
 	kbdup(VK_LSHIFT, 0);
 	kbdup(VK_RSHIFT, 0);
+}
+
+void KbdHook::start() {
+	cancelAllKeys();
 	g_hHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
 	if (config.ddcCiBrightnessControl)
 		Monitor::init(config.autoApplyGammaCurveDelay);
@@ -473,4 +482,5 @@ void KbdHook::start() {
 
 void KbdHook::terminate() {
 	UnhookWindowsHookEx(g_hHook);
+	cancelAllKeys();
 }
