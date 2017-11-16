@@ -45,6 +45,7 @@ struct Config: public RefClass {
 	bool closeWindowWithWinQ;
 	bool altGraveToStickyAltTab;
 	bool winTSelectsLastTask;
+	int winTTaskMoveBy;
 	bool disableWinTabAnimation;
 	bool altTabWithMouseButtons;
 	// Sends Ctrl+Caps after Win+Space

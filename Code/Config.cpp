@@ -38,6 +38,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(closeWindowWithWinQ, false);
 	IMPLEMENT_BOOL_PROP(altGraveToStickyAltTab, false);
 	IMPLEMENT_BOOL_PROP(winTSelectsLastTask, false);
+	IMPLEMENT_INT_PROP(winTTaskMoveBy, 4);
 	IMPLEMENT_BOOL_PROP(disableWinTabAnimation, false);
 	IMPLEMENT_BOOL_PROP(altTabWithMouseButtons, false);
 	IMPLEMENT_BOOL_PROP(selectHiraganaByDefault, false);

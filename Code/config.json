@@ -24,6 +24,7 @@
 	"winFOpensYourFiles": false,
 	"winHHidesWindow": false,
 	"winTSelectsLastTask": false,
+	"winTTaskMoveBy": 4,
 	"wmiLogarithmicBrightness": false,
 	"japaneseMacBookPro": true
 }

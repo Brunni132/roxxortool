@@ -230,11 +230,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 					return -1;
 				}
 				else if (nKey == VK_PRIOR) {
-					moveToTask(-5, CURRENT);
+					moveToTask(-config.winTTaskMoveBy, CURRENT);
 					return -1;
 				}
 				else if (nKey == VK_NEXT) {
-					moveToTask(+5, CURRENT);
+					moveToTask(+config.winTTaskMoveBy, CURRENT);
 					return -1;
 				}
 			}
