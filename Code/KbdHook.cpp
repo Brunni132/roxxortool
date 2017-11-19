@@ -40,6 +40,13 @@ static const struct { int original; int modified; } keyboardEatTable[] = {
 
 enum Location { START, CURRENT, END };
 
+void sendNextPageCommand() {
+	bool needsAlt = !altPressed();
+	if (needsAlt) kbddown(VK_LMENU, 0);
+	kbdpress(VK_RIGHT, 0);
+	if (needsAlt) kbdup(VK_LMENU, 0);
+}
+
 static void switchToHiragana() {
 	bool needsShift = !shiftPressed(), needsControl = !ctrlPressed();
 	if (needsShift) kbddown(VK_RSHIFT, 0);

@@ -21,18 +21,29 @@ static void triggerTaskView() {
 static void cancelTaskView(POINT mousePosition) {
 	kbdpress(VK_ESCAPE, 0);
 	RunAfterDelay([=] {
-		mouse_event(MOUSEEVENTF_XDOWN, mousePosition.x, mousePosition.y, XBUTTON2, 0);
-		mouse_event(MOUSEEVENTF_XUP, mousePosition.x, mousePosition.y, XBUTTON2, 0);
-	}, 10);
+		INPUT input;
+		ZeroMemory(&input, sizeof(input));
+		input.type = INPUT_MOUSE;
+		input.mi.mouseData = XBUTTON2;
+		input.mi.dwFlags = MOUSEEVENTF_XDOWN;
+		SendInput(1, &input, sizeof(input));
+
+		input.mi.dwFlags = MOUSEEVENTF_XUP;
+		SendInput(1, &input, sizeof(input));
+		//extern void sendNextPageCommand();
+		//sendNextPageCommand();
+	}, 100);
 }
 
 LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (nCode >= 0 && (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP)) {
 		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
-		//printf("w=%x flags=%x md=%x time=%x\n", wParam, mllStruct->flags, mllStruct->mouseData, mllStruct->time);
+#ifdef _DEBUG
+		printf("w=%x flags=%x md=%x time=%x\n", wParam, mllStruct->flags, mllStruct->mouseData, mllStruct->time);
+#endif
 		// Do not process injected
 		if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED)
-			return CallNextHookEx(hHook, nCode, wParam, lParam);
+			return CallNextHookEx(NULL, nCode, wParam, lParam);
 
 		static bool isDown = false;
 		static POINT clickPosition;
@@ -56,7 +67,7 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 			}
 		}
 	}
-	return CallNextHookEx(hHook, nCode, wParam, lParam);
+	return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
 void MouseHook::start() {
