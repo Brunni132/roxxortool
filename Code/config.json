@@ -26,5 +26,6 @@
 	"winTSelectsLastTask": false,
 	"winTTaskMoveBy": 4,
 	"wmiLogarithmicBrightness": false,
-	"japaneseMacBookPro": true
+	"japaneseMacBookPro": false,
+	"winSSuspendsSystem": false,
 }

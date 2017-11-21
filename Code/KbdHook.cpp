@@ -8,6 +8,7 @@
 #include "Utilities.h"
 #include "StatusWindow.h"
 #include "DisableAnimationsForWinTab.h"
+#include "PowrProf.h"
 
 static bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, rWinPressed = false, lShiftPressed = false, rShiftPressed = false, lAltPressed = false;
 static bool ctrlPressed() { return lCtrlPressed || rCtrlPressed; }
@@ -218,6 +219,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			kbdpress(VK_F4, 0); // +F4
 			kbddown(VK_LWIN, 0); // Re-enable WIN
 			if (needAlt) kbdup(VK_LMENU, 0);
+			return 1;
+		}
+
+		if (config.winSSuspendsSystem && !injected && nKey == 'S' && lWinPressed && !shiftPressed() && !ctrlPressed() && !altPressed()) {
+			SetSuspendState(false, false, false);
 			return 1;
 		}
 

@@ -43,6 +43,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(altTabWithMouseButtons, false);
 	IMPLEMENT_BOOL_PROP(selectHiraganaByDefault, false);
 	IMPLEMENT_BOOL_PROP(japaneseMacBookPro, false);
+	IMPLEMENT_BOOL_PROP(winSSuspendsSystem, false);
 }
 
 bool Config::readFile() {
