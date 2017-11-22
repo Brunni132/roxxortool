@@ -81,8 +81,12 @@ void StatusWindow::showBrightness(int brightnessLevel) {
 	showMessage();
 }
 
-void StatusWindow::showVolume(int volumeLevel) {
-	sprintf(text, "Volume: %d dB", volumeLevel);
+void StatusWindow::showVolume(double volumeLevel) {
+	// Int vs double
+	if (volumeLevel - floor(volumeLevel) < DBL_EPSILON)
+		sprintf(text, "Volume: %d dB", (int)volumeLevel);
+	else
+		sprintf(text, "Volume: %.1f dB", volumeLevel);
 	showMessage();
 }
 
