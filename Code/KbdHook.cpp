@@ -15,6 +15,9 @@ static bool ctrlPressed() { return lCtrlPressed || rCtrlPressed; }
 static bool winPressed() { return lWinPressed || rWinPressed; }
 static bool shiftPressed() { return lShiftPressed || rShiftPressed; }
 static bool altPressed() { return lAltPressed; }
+// Only those two, not the others
+static bool ctrlWinPressed() { return lCtrlPressed && lWinPressed && !rWinPressed && !rCtrlPressed && !shiftPressed() && !altPressed(); }
+static bool winOnlyPressed() { return lWinPressed && !rWinPressed && !ctrlPressed() && !shiftPressed() && !altPressed(); }
 static void cancelAllKeys();
 
 // Codes: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html or https://www.codeproject.com/Articles/7305/Keyboard-Events-Simulation-using-keybd-event-funct
@@ -183,7 +186,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	}
 
 	// Special keys
-	bool ctrlKeyWasPressed = lCtrlPressed || rCtrlPressed, rShiftWasPressed = rShiftPressed;
 	if (wParam == WM_KEYDOWN || wParam == WM_KEYUP || wParam == WM_SYSKEYDOWN || wParam == WM_SYSKEYUP) {
 		bool isDown = wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN;
 		switch (nKey) {
@@ -234,7 +236,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 		// Ctrl+H -> toggle hide/show hidden folders
 		if (config.toggleHideFolders) {
-			if (nKey == 'H' && ctrlKeyWasPressed) {
+			if (nKey == 'H' && ctrlPressed()) {
 				if (WindowsExplorer::isActive()) {
 					WindowsExplorer::toggleShowHideFolders();
 					// Refresh the explorer
@@ -264,7 +266,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 
 		// External monitor brightness change
-		if (lWinPressed && lCtrlPressed) {
+		if (ctrlWinPressed()) {
 			if (config.ddcCiBrightnessControl) {
 				if (nKey == VK_LEFT) {
 					int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
@@ -281,6 +283,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 					return 1;
 				}
 			}
+
 			// Reexecute ourselves on Ctrl+Win+R
 			if (config.reloadConfigWithCtrlWinR && nKey == 'R') {
 				RunAfterDelay([] {
@@ -288,38 +291,64 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				});
 				return 1;
 			}
-		}
 
-		if (config.winFOpensYourFiles && lWinPressed && nKey == 'F') {
-			if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0);
-			WindowsExplorer::showHomeFolderWindow();
-			return 1;
-		}
-		if (config.winHHidesWindow && lWinPressed && nKey == 'H') {
-			if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // To avoid bringing the menu
-			char className[128], title[128];
-			HWND hWnd = GetForegroundWindow();
-			GetClassNameA(hWnd, className, 128);
-			GetWindowTextA(hWnd, title, 128);
-			if (strcmp(className, "Windows.UI.Core.CoreWindow") /*|| strcmp(title, "Search")*/) {
-				ShowWindow(GetForegroundWindow(), SW_MINIMIZE);
+			if (config.useSoftMediaKeys) {
+				switch (nKey) {
+				case VK_HOME:
+					kbdpress(VK_MEDIA_STOP, 0);
+					return 1;
+				case VK_END:
+					kbdpress(VK_MEDIA_PLAY_PAUSE, 0);
+					return 1;
+				case VK_PRIOR:
+					kbdpress(VK_MEDIA_PREV_TRACK, 0);
+					return 1;
+				case VK_NEXT:
+					kbdpress(VK_MEDIA_NEXT_TRACK, 0);
+					return 1;
+				case VK_UP:
+					AudioMixer::incrementVolume(config.volumeIncrementQuantity);
+					return 1;
+				case VK_DOWN:
+					AudioMixer::decrementVolume(config.volumeIncrementQuantity);
+					return 1;
+				}
 			}
-			return 1;
 		}
 
-		if (config.closeWindowWithWinQ && lWinPressed && nKey == 'Q') {
-			bool needAlt = !lAltPressed;
-			if (needAlt) kbddown(VK_LMENU, 0);
-			kbdup(VK_LWIN, 0); // Temporarily release WIN since Win+Alt+F4 does nothing
-			kbdpress(VK_F4, 0); // +F4
-			kbddown(VK_LWIN, 0); // Re-enable WIN
-			if (needAlt) kbdup(VK_LMENU, 0);
-			return 1;
-		}
+		// Win only
+		if (winOnlyPressed()) {
+			if (config.winFOpensYourFiles && nKey == 'F') {
+				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0);
+				WindowsExplorer::showHomeFolderWindow();
+				return 1;
+			}
+			if (config.winHHidesWindow && nKey == 'H') {
+				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // To avoid bringing the menu
+				char className[128], title[128];
+				HWND hWnd = GetForegroundWindow();
+				GetClassNameA(hWnd, className, 128);
+				GetWindowTextA(hWnd, title, 128);
+				if (strcmp(className, "Windows.UI.Core.CoreWindow") /*|| strcmp(title, "Search")*/) {
+					ShowWindow(GetForegroundWindow(), SW_MINIMIZE);
+				}
+				return 1;
+			}
 
-		if (config.winSSuspendsSystem && !injected && nKey == 'S' && lWinPressed && !shiftPressed() && !ctrlPressed() && !altPressed()) {
-			SetSuspendState(false, false, false);
-			return 1;
+			if (config.closeWindowWithWinQ && nKey == 'Q') {
+				bool needAlt = !lAltPressed;
+				if (needAlt) kbddown(VK_LMENU, 0);
+				kbdup(VK_LWIN, 0); // Temporarily release WIN since Win+Alt+F4 does nothing
+				kbdpress(VK_F4, 0); // +F4
+				kbddown(VK_LWIN, 0); // Re-enable WIN
+				if (needAlt) kbdup(VK_LMENU, 0);
+				return 1;
+			}
+
+			if (config.winSSuspendsSystem && !injected && nKey == 'S') {
+				SetSuspendState(false, false, false);
+				return 1;
+			}
 		}
 
 		if (config.winTSelectsLastTask && !injected) {
@@ -347,7 +376,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 					return -1;
 				}
 			}
-			else if (lWinPressed && nKey == 'T') {
+			else if (winOnlyPressed() && nKey == 'T') {
 				inFunction = true;
 				kbdpress('B', 0);
 				// First press on Win+T
@@ -482,7 +511,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 	// TODO parameter
 	if (config.disableWinTabAnimation) {
-		if (nKey == VK_TAB && lWinPressed && wParam == WM_KEYDOWN) {
+		if (nKey == VK_TAB && winPressed() && wParam == WM_KEYDOWN) {
 			disableAnimationsForDurationOfWinTab();
 		}
 	}
@@ -496,31 +525,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			kbdpress(taskId, 0);
 			if (needsWin) kbdup(VK_RWIN, 0);
 			return 1;
-		}
-	}
-
-	if (config.useSoftMediaKeys) {
-		if (lCtrlPressed && lWinPressed && wParam == WM_KEYDOWN) {
-			switch (nKey) {
-			case VK_HOME:
-				kbdpress(VK_MEDIA_STOP, 0);
-				return 1;
-			case VK_END:
-				kbdpress(VK_MEDIA_PLAY_PAUSE, 0);
-				return 1;
-			case VK_PRIOR:
-				kbdpress(VK_MEDIA_PREV_TRACK, 0);
-				return 1;
-			case VK_NEXT:
-				kbdpress(VK_MEDIA_NEXT_TRACK, 0);
-				return 1;
-			case VK_UP:
-				AudioMixer::incrementVolume(config.volumeIncrementQuantity);
-				return 1;
-			case VK_DOWN:
-				AudioMixer::decrementVolume(config.volumeIncrementQuantity);
-				return 1;
-			}
 		}
 	}
 
