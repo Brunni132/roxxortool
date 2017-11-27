@@ -90,10 +90,100 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	// TODO Florian -- replace all this with reading the scan code (in kbd)
 	KBDLLHOOKSTRUCT *kbd = (KBDLLHOOKSTRUCT*) lParam;
 	int nKey = kbd->vkCode;
-	int processed = 0;
-	bool ctrlKeyWasPressed = lCtrlPressed || rCtrlPressed, rShiftWasPressed = rShiftPressed;
+	// Ignore injected input
+	bool injected = (kbd->flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED));
+
+	// Keyboard translation services, must be run before everyone else
+	if (config.japaneseMacBookPro && !injected) {
+		static bool virtualFnIsDown = false;
+		static int fnRemappings[][2] = {
+			{ VK_LEFT, VK_HOME },
+			{ VK_RIGHT, VK_END },
+			{ VK_UP, VK_PRIOR },
+			{ VK_DOWN, VK_NEXT },
+			{ VK_BACK, VK_DELETE },
+			{ VK_F7, VK_MEDIA_PREV_TRACK },
+			{ VK_F8, VK_MEDIA_PLAY_PAUSE },
+			{ VK_F9, VK_MEDIA_NEXT_TRACK },
+			{ VK_F10, VK_VOLUME_MUTE },
+			{ VK_F11, VK_VOLUME_DOWN },
+			{ VK_F12, VK_VOLUME_UP },
+		};
+		static bool virtualKeysActive[numberof(fnRemappings)] = { 0 };
+		if (nKey == 0x14) {
+			// Fn
+			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) virtualFnIsDown = true;
+			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
+				virtualFnIsDown = false;
+				// Release all keys that were pressed during the time Fn was down
+				for (int i = 0; i < numberof(virtualKeysActive); i++) {
+					if (virtualKeysActive[i]) kbdup(fnRemappings[i][1], 0);
+					virtualKeysActive[i] = false;
+				}
+			}
+			return 1;
+		}
+		if (virtualFnIsDown) {
+			int foundIndex = -1;
+			for (int i = 0; i < numberof(fnRemappings); i++) {
+				if (nKey == fnRemappings[i][0]) {
+					foundIndex = i;
+					break;
+				}
+			}
+			if (foundIndex >= 0) {
+				int destKey = fnRemappings[foundIndex][1];
+				if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
+					virtualKeysActive[foundIndex] = true;
+					kbddown(destKey, 0);
+					return 1;
+				}
+				if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
+					virtualKeysActive[foundIndex] = false;
+					kbdup(destKey, 0);
+					return 1;
+				}
+			}
+		}
+		if (nKey == 0xEB) {
+			// 英 -> Lcommand
+			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0x5B, 0x5B);
+			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0x5B, 0x5B);
+			return 1;
+		}
+		if (nKey == 0x5B) {
+			// Lcommand -> Lalt
+			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0xA4, 0x38);
+			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0xA4, 0x38);
+			return 1;
+		}
+		if (nKey == 0xFF) {
+			// かな -> Ralt
+			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
+				kbddown(0xA5, 0x38, KEYEVENTF_EXTENDEDKEY);
+			}
+			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
+				kbdup(0xA5, 0x38, KEYEVENTF_EXTENDEDKEY);
+			}
+			return 1;
+		}
+		if (nKey == 0xA4) {
+			// Loption -> Ctrl
+			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0xA2, 0x1D);
+			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0xA2, 0x1D);
+			return 1;
+		}
+		if (nKey == 0xA2 && kbd->scanCode == 0x1D) {
+			// Lctrl -> Caps
+			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0x14, 0x3A);
+			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0x14, 0x3A);
+			return 1;
+		}
+		// If a key has been remapped, we'll never go further (return 1)
+	}
 
 	// Special keys
+	bool ctrlKeyWasPressed = lCtrlPressed || rCtrlPressed, rShiftWasPressed = rShiftPressed;
 	if (wParam == WM_KEYDOWN || wParam == WM_KEYUP || wParam == WM_SYSKEYDOWN || wParam == WM_SYSKEYUP) {
 		bool isDown = wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN;
 		switch (nKey) {
@@ -121,8 +211,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 	}
 
-	// Ignore injected input
-	bool injected = (kbd->flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED));
 #ifdef _DEBUG
 	if (wParam == WM_KEYDOWN)
 		printf("Down%s: %x %x\n", injected? " (inj.)" : "", nKey, kbd->scanCode);
@@ -157,6 +245,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 		// Logarithmic volume management
 		if (config.smoothVolumeControl) {
+			int processed = 0;
 			if (nKey == 0xae) {
 				// Molette -
 				RunAfterDelay([] { AudioMixer::decrementVolume(config.volumeIncrementQuantity); });
@@ -167,7 +256,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				processed = 0xaf;
 			}
 
-			// Rel�che la touche, il ne faut pas que Windows la prenne
+			// Relâche la touche, il ne faut pas que Windows la prenne
 			if (processed != 0) {
 				kbdup(processed, 0);
 				return 1;
@@ -291,93 +380,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				// Execute when both have been released
 				shouldSwitchToHiragana = true;
 			}
-		}
-	}
-
-	if (config.japaneseMacBookPro && !injected) {
-		static bool virtualFnIsDown = false;
-		static int fnRemappings[][2] = {
-			{ VK_LEFT, VK_HOME },
-			{ VK_RIGHT, VK_END },
-			{ VK_UP, VK_PRIOR },
-			{ VK_DOWN, VK_NEXT },
-			{ VK_BACK, VK_DELETE },
-			{ VK_F7, VK_MEDIA_PREV_TRACK },
-			{ VK_F8, VK_MEDIA_PLAY_PAUSE },
-			{ VK_F9, VK_MEDIA_NEXT_TRACK },
-			{ VK_F10, VK_VOLUME_MUTE },
-			{ VK_F11, VK_VOLUME_DOWN },
-			{ VK_F12, VK_VOLUME_UP },
-		};
-		static bool virtualKeysActive[numberof(fnRemappings)] = {0};
-		if (nKey == 0x14) {
-			// Fn
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) virtualFnIsDown = true;
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
-				virtualFnIsDown = false;
-				// Release all keys that were pressed during the time Fn was down
-				for (int i = 0; i < numberof(virtualKeysActive); i++) {
-					if (virtualKeysActive[i]) kbdup(fnRemappings[i][1], 0);
-					virtualKeysActive[i] = false;
-				}
-			}
-			return 1;
-		}
-		if (virtualFnIsDown) {
-			int foundIndex = -1;
-			for (int i = 0; i < numberof(fnRemappings); i++) {
-				if (nKey == fnRemappings[i][0]) {
-					foundIndex = i;
-					break;
-				}
-			}
-			if (foundIndex >= 0) {
-				int destKey = fnRemappings[foundIndex][1];
-				if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
-					virtualKeysActive[foundIndex] = true;
-					kbddown(destKey, 0);
-					return 1;
-				}
-				if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
-					virtualKeysActive[foundIndex] = false;
-					kbdup(destKey, 0);
-					return 1;
-				}
-			}
-		}
-		if (nKey == 0xEB) {
-			// 英 -> Lcommand
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0x5B, 0x5B);
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0x5B, 0x5B);
-			return 1;
-		}
-		if (nKey == 0x5B) {
-			// Lcommand -> Lalt
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0xA4, 0x38);
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0xA4, 0x38);
-			return 1;
-		}
-		if (nKey == 0xFF) {
-			// かな -> Ralt
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
-				kbddown(0xA5, 0x38, KEYEVENTF_EXTENDEDKEY);
-			}
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
-				kbdup(0xA5, 0x38, KEYEVENTF_EXTENDEDKEY);
-			}
-			return 1;
-		}
-		if (nKey == 0xA4) {
-			// Loption -> Ctrl
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0xA2, 0x1D);
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0xA2, 0x1D);
-			return 1;
-		}
-		if (nKey == 0xA2 && kbd->scanCode == 0x1D) {
-			// Lctrl -> Caps
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0x14, 0x3A);
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0x14, 0x3A);
-			return 1;
 		}
 	}
 
