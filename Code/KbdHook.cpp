@@ -208,7 +208,13 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 		if (config.winHHidesWindow && lWinPressed && nKey == 'H') {
 			if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // To avoid bringing the menu
-			ShowWindow(GetForegroundWindow(), SW_MINIMIZE);
+			char className[128], title[128];
+			HWND hWnd = GetForegroundWindow();
+			GetClassNameA(hWnd, className, 128);
+			GetWindowTextA(hWnd, title, 128);
+			if (strcmp(className, "Windows.UI.Core.CoreWindow") /*|| strcmp(title, "Search")*/) {
+				ShowWindow(GetForegroundWindow(), SW_MINIMIZE);
+			}
 			return 1;
 		}
 
