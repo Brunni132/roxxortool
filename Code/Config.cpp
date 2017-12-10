@@ -44,6 +44,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(selectHiraganaByDefault, false);
 	IMPLEMENT_BOOL_PROP(japaneseMacBookPro, false);
 	IMPLEMENT_BOOL_PROP(winSSuspendsSystem, false);
+	IMPLEMENT_BOOL_PROP(frenchKeyboardEmulation, false);
 }
 
 bool Config::readFile() {

@@ -10,7 +10,7 @@
 #include "DisableAnimationsForWinTab.h"
 #include "PowrProf.h"
 
-static bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, rWinPressed = false, lShiftPressed = false, rShiftPressed = false, lAltPressed = false;
+static bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, rWinPressed = false, lShiftPressed = false, rShiftPressed = false, lAltPressed = false, rAltPressed = false;
 static bool ctrlPressed() { return lCtrlPressed || rCtrlPressed; }
 static bool winPressed() { return lWinPressed || rWinPressed; }
 static bool shiftPressed() { return lShiftPressed || rShiftPressed; }
@@ -80,6 +80,18 @@ static void moveToTask(int taskNo, Location from) {
 		}
 		if (needsWin) kbdup(VK_RWIN, 0);
 	});
+}
+
+void TEMP_sendKey(WORD vk, WORD scan, DWORD flags) {
+	INPUT down;
+	ZeroMemory(&down, sizeof(down));
+	down.type = 1; //INPUT_KEYBOARD
+	down.ki.wVk = vk;
+	down.ki.wScan = scan;
+	down.ki.time = 0;
+	down.ki.dwFlags = flags;
+	down.ki.dwExtraInfo = 0;
+	SendInput(1, &down, sizeof(INPUT));
 }
 
 static HHOOK g_hHook;
@@ -186,8 +198,10 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	}
 
 	// Special keys
-	if (wParam == WM_KEYDOWN || wParam == WM_KEYUP || wParam == WM_SYSKEYDOWN || wParam == WM_SYSKEYUP) {
-		bool isDown = wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN;
+	// TODO refactor and use that everywhere
+	bool isDown = wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN;
+	bool isUp = wParam == WM_KEYUP || wParam == WM_SYSKEYUP;
+	if (isDown || isUp) {
 		switch (nKey) {
 		case VK_LCONTROL:
 			lCtrlPressed = isDown;
@@ -210,6 +224,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		case VK_LMENU:
 			lAltPressed = isDown;
 			break;
+		case VK_RMENU:
+			rAltPressed = isDown;
+			break;
 		}
 	}
 
@@ -223,6 +240,23 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (wParam == WM_SYSKEYUP)
 		printf("Sysup%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
 #endif
+
+	if (config.frenchKeyboardEmulation) {
+		// Do not give AltGr to the system
+		if (isDown) {
+			if (nKey == VK_RMENU) return 1;
+			if (rAltPressed) {
+				if (nKey == 'E') {
+					TEMP_sendKey(0, 0x00e9, KEYEVENTF_UNICODE);
+					TEMP_sendKey(0, 0x00e9, KEYEVENTF_UNICODE | KEYEVENTF_KEYUP);
+					return 1;
+				}
+				else if (nKey == 'A') {
+
+				}
+			}
+		}
+	}
 
 	if (wParam == WM_KEYDOWN) {
 		// Insert -> start screen saver & lock
