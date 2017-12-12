@@ -242,10 +242,30 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 #endif
 
 	if (config.frenchKeyboardEmulation) {
-		// Do not give AltGr to the system
+		struct State {
+			short singleUnicodeChar;
+			struct {
+				int triggerKey;
+				short outputUnicodeChar;
+				short outputUnicodeCharWithShift;
+			} outputs[];
+		} states[] = {
+			{ '´', { {'E', 'é', 'É'}, {'A', 'á', 'Á'}, {'I', 'í', 'Í'}, {'O', 'ó', 'Ó'}, {'U', 'ú', 'Ú'}, {'Y', 'ý', 'Ý'}, {0} } },
+			{ '`', { {'E', 'è', 'È'}, {'A', 'à', 'À'}, {'I', 'ì', 'Ì'}, {'O', 'ò', 'Ò'}, {'U', 'ù', 'Ù'}, {'Y', 'ỳ', 'Ỳ'}, {0} } },
+			{ '¨', { {'E', 'ë', 'Ë'}, {'A', 'ä', 'Ä'}, {'I', 'ï', 'Ï'}, {'O', 'ö', 'Ö'}, {'U', 'ü', 'Ü'}, {'Y', 'ÿ', 'Ÿ'}, {0} } },
+			{ '^', { {'E', 'ê', 'Ê'}, {'A', 'â', 'Â'}, {'I', 'î', 'Î'}, {'O', 'ô', 'Ô'}, {'U', 'û', 'Û'}, {'Y', 'ŷ', 'Ŷ'}, {0} } },
+			{ '~', { {'N', 'ñ', 'Ñ'}, {'A', 'á', 'Á'}, {'I', 'í', 'Í'}, {'O', 'ó', 'Ó'}, {'U', 'ú', 'Ú'}, {'Y', 'ý', 'Ý'}, {0} } },
+		};
+		struct Trigger {
+			int triggerKey;
+			State *targetState;
+		};
 		if (isDown) {
+			// Do not give AltGr to the system
 			if (nKey == VK_RMENU) return 1;
 			if (rAltPressed) {
+				for (int i = 0; i < states)
+
 				if (nKey == 'E') {
 					TEMP_sendKey(0, 0x00e9, KEYEVENTF_UNICODE);
 					TEMP_sendKey(0, 0x00e9, KEYEVENTF_UNICODE | KEYEVENTF_KEYUP);
