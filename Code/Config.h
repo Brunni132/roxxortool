@@ -51,6 +51,8 @@ struct Config: public RefClass {
 	// Sends Ctrl+Caps after Win+Space
 	bool selectHiraganaByDefault;
 	bool japaneseMacBookPro;
+	bool japaneseMacKeyboard;
+	bool japaneseWindowsKeyboard;
 	bool winSSuspendsSystem;
 
 	// Reload the values from the config file. Will affect all members of this instance. Must be called at least once before use of the instance.
