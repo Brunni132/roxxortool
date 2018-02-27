@@ -21,12 +21,10 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(ddcCiBrightnessControl, true);
 	IMPLEMENT_BOOL_PROP(wmiLogarithmicBrightness, false);
 	IMPLEMENT_INT_PROP(brightnessIncrementQuantity, 5);
+	IMPLEMENT_BOOL_PROP(allowNegativeBrightness, true);
 	IMPLEMENT_INT_PROP(autoApplyGammaCurveDelay, 0);
 	IMPLEMENT_BOOL_PROP(useSoftMediaKeys, false);
 	IMPLEMENT_BOOL_PROP(forceReapplyGammaOnBrightnessChange, false);
-	IMPLEMENT_BOOL_PROP(useCustomGammaCurve, false);
-	IMPLEMENT_ARRAY_PROP(customGammaCurveArray, defaultGammaCurve);
-	IMPLEMENT_FLOAT_PROP(customGammaCurveGamma, 1.0f);
 	IMPLEMENT_BOOL_PROP(reloadConfigWithCtrlWinR, true);
 	IMPLEMENT_BOOL_PROP(iAmAMac, false);
 	IMPLEMENT_BOOL_PROP(multiDesktopLikeApplicationSwitcher, true);

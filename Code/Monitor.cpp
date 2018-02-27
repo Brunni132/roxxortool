@@ -85,7 +85,8 @@ static const int MAX_MONITORS_NUM = 128;
 static MonitorInfo *monitors[MAX_MONITORS_NUM];
 static int currentMonitors = 0;
 static DWORD lastReadTime;
-static bool hasBeenAttenuatedOnce = false;
+static bool hasBeenAttenuated = false;
+static UINT_PTR timerProcPtr = NULL;
 
 /******** Actual code ********/
 // Create the screen control structure
@@ -104,7 +105,7 @@ void Monitor::init(int autoApplyGammaCurveDelay) {
 	//	increaseBrightnessBy(0);
 	//autoApplyTimer(NULL, 0, 0, 0);
 	if (autoApplyGammaCurveDelay)
-		SetTimer(NULL, 0x1000, autoApplyGammaCurveDelay, autoApplyTimer);
+		timerProcPtr = SetTimer(NULL, 0x1000, autoApplyGammaCurveDelay, autoApplyTimer);
 }
 
 static HMONITOR getCurrentMonitor() {
@@ -136,21 +137,21 @@ static PHYSICAL_MONITOR *getHandleToPhysicalMonitors(HMONITOR hMonitor, DWORD *o
 }
 
 static void GetGammaRampForDevice(const char *deviceName, unsigned short ramp[256 * 3]) {
-	if (config.useCustomGammaCurve) {
-		if (config.customGammaCurveGamma == 1.0f) {				// Speed optimization
-			for (int i = 0; i < 256 * 3; i++)
-				ramp[i] = config.customGammaCurveArray[i];
-		}
-		else {
-			for (int i = 0; i < 256 * 3; i++)
-				ramp[i] = (unsigned short) (pow((float) config.customGammaCurveArray[i] / 0xff00, config.customGammaCurveGamma) * 0xff00);
-		}
-	}
-	else {
+	//if (config.useCustomGammaCurve) {
+	//	if (config.customGammaCurveGamma == 1.0f) {				// Speed optimization
+	//		for (int i = 0; i < 256 * 3; i++)
+	//			ramp[i] = config.customGammaCurveArray[i];
+	//	}
+	//	else {
+	//		for (int i = 0; i < 256 * 3; i++)
+	//			ramp[i] = (unsigned short) (pow((float) config.customGammaCurveArray[i] / 0xff00, config.customGammaCurveGamma) * 0xff00);
+	//	}
+	//}
+	//else {
 		HDC hDevice = CreateDC("DISPLAY", deviceName, NULL, NULL);
 		GetDeviceGammaRamp(hDevice, ramp);
 		DeleteDC(hDevice);
-	}
+	//}
 }
 
 static void SetGammaRampForDevice(const char *deviceName, unsigned short initialRamp[3 * 256], int brightnessPercentage, bool forceApply) {
@@ -230,6 +231,7 @@ static void sc_set(MonitorInfo *mi, HANDLE hPhysicalMonitor, MONITORINFO *monito
 		if (needsGammaRamp || config.forceReapplyGammaOnBrightnessChange) {
 			int attenuation = mi->minBrightness - mi->currentBrightness;
 			SetGammaRampForDevice(mi->deviceName, mi->gammaRamp, min(100, 100 - attenuation), !needsGammaRamp && config.forceReapplyGammaOnBrightnessChange);
+			hasBeenAttenuated = attenuation > 0;
 		}
 		StatusWindow::showBrightness(mi->currentBrightness);
 		mi->lastBrightness = mi->currentBrightness;
@@ -259,6 +261,20 @@ static bool shouldReadBrightnessNow(MonitorInfo *mi) {
 	bool shouldRead = nowTime - lastReadTime >= DWORD(config.brightnessCacheDuration);
 	lastReadTime = nowTime;
 	return shouldRead;
+}
+
+void Monitor::exit() {
+	if (timerProcPtr) {
+		KillTimer(NULL, timerProcPtr);
+		timerProcPtr = NULL;
+	}
+	// Restore gamma if it was modified
+	if (hasBeenAttenuated) {
+		for (int i = 0; i < currentMonitors; i++) {
+			MonitorInfo *mi = monitors[i];
+			SetGammaRampForDevice(mi->deviceName, mi->gammaRamp, 100, false);
+		}
+	}
 }
 
 void Monitor::increaseBrightnessBy(int by) {
@@ -297,9 +313,10 @@ void Monitor::decreaseBrightnessBy(int by) {
 	if (shouldReadBrightnessNow(mi))
 		sc_get(mi, monitors->hPhysicalMonitor, &monitorInfo);
 	if (mi->inited) {
+		int allowedNegativeBy = config.allowNegativeBrightness ? 40 : 0;
 		mi->currentBrightness -= by;
-		if (mi->currentBrightness < mi->minBrightness - 40)
-			mi->currentBrightness = mi->minBrightness - 40;
+		if (mi->currentBrightness < mi->minBrightness - allowedNegativeBy)
+			mi->currentBrightness = mi->minBrightness - allowedNegativeBy;
 		if (mi->lastBrightness != mi->currentBrightness)
 			sc_set(mi, monitors->hPhysicalMonitor, &monitorInfo);
 	}
@@ -310,9 +327,9 @@ void CALLBACK autoApplyTimer(HWND, UINT, UINT_PTR, DWORD) {
 	for (int i = 0; i < currentMonitors; i++) {
 		MonitorInfo *mi = monitors[i];
 		int attenuation = mi->minBrightness - mi->currentBrightness;
-		if (attenuation >= 0 || hasBeenAttenuatedOnce) {
+		if (attenuation > 0 || hasBeenAttenuated) {
 			SetGammaRampForDevice(mi->deviceName, mi->gammaRamp, min(100, 100 - attenuation), false);
-			hasBeenAttenuatedOnce = true;
+			hasBeenAttenuated = attenuation > 0;
 		}
 	}
 }

@@ -20,15 +20,14 @@ struct Config: public RefClass {
 	// Set that to true on a Mac, it will use a logarithmic scale ofr the brightness setting.
 	bool wmiLogarithmicBrightness;
 	int brightnessIncrementQuantity;
+	// If false, just doesn't touch the gamma curve (unless you have useCustomGammaCurve)
+	bool allowNegativeBrightness;
 	// in milliseconds; 0 = disable
 	int autoApplyGammaCurveDelay;
 	// Ctrl+Win+Home: stop, End: play/pause, PgUp: previous, PgDn: next, Up: vol+, Down: vol-
 	bool useSoftMediaKeys;
 	// Set this to true to reapply the gamma curve even when changing the brightness only (i.e. brightness >= 0)
 	bool forceReapplyGammaOnBrightnessChange;
-	bool useCustomGammaCurve;
-	unsigned short customGammaCurveArray[3 * 256];
-	float customGammaCurveGamma;
 	bool reloadConfigWithCtrlWinR;
 	// Mac specifics
 	// Eat accidental left/right presses after home/end on Mac

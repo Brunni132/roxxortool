@@ -8,6 +8,10 @@ namespace Monitor {
 	 */
 	void init(int autoApplyGammaCurveDelay);
 	/**
+	 * To be called at the very end.
+	 */
+	void exit();
+	/**
 	 * Increase the brightness of the display under the mouse, and apply it to the
 	 * display.
 	 * @param by by how much to increase it; the value is clamped to the max
