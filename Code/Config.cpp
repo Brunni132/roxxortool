@@ -32,7 +32,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(winHHidesWindow, true);
 	IMPLEMENT_BOOL_PROP(noNumPad, false);
 	IMPLEMENT_BOOL_PROP(rightShiftContextMenu, false);
-	IMPLEMENT_INT_PROP(brightnessCacheDuration, 60000);
+	IMPLEMENT_INT_PROP(brightnessCacheDuration, 3000);
 	IMPLEMENT_BOOL_PROP(closeWindowWithWinQ, false);
 	IMPLEMENT_BOOL_PROP(altGraveToStickyAltTab, false);
 	IMPLEMENT_BOOL_PROP(winTSelectsLastTask, false);

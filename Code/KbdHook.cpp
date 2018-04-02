@@ -619,7 +619,7 @@ void KbdHook::start() {
 
 void KbdHook::terminate() {
 	if (config.ddcCiBrightnessControl)
-		Monitor::exit();
+		Monitor::terminate();
 	UnhookWindowsHookEx(g_hHook);
 	cancelAllKeys();
 }

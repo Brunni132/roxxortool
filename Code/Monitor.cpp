@@ -263,7 +263,7 @@ static bool shouldReadBrightnessNow(MonitorInfo *mi) {
 	return shouldRead;
 }
 
-void Monitor::exit() {
+void Monitor::terminate() {
 	if (timerProcPtr) {
 		KillTimer(NULL, timerProcPtr);
 		timerProcPtr = NULL;

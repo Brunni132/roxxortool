@@ -10,7 +10,7 @@ namespace Monitor {
 	/**
 	 * To be called at the very end.
 	 */
-	void exit();
+	void terminate();
 	/**
 	 * Increase the brightness of the display under the mouse, and apply it to the
 	 * display.

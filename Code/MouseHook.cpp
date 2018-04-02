@@ -38,9 +38,7 @@ static void cancelTaskView(POINT mousePosition) {
 LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (nCode >= 0 && (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP)) {
 		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
-#ifdef _DEBUG
-		printf("w=%x flags=%x md=%x time=%x\n", wParam, mllStruct->flags, mllStruct->mouseData, mllStruct->time);
-#endif
+
 		// Do not process injected
 		if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED)
 			return CallNextHookEx(NULL, nCode, wParam, lParam);
@@ -67,6 +65,33 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 			}
 		}
 	}
+
+//	if (nCode >= 0 && wParam == WM_MOUSEWHEEL) {
+//		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
+//		static int interceptedCount = 0;
+//
+//		if (interceptedCount++ >= 5)
+//			exit(0);
+//
+//		// Do not process injected
+//		if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED)
+//			return CallNextHookEx(NULL, nCode, wParam, lParam);
+//
+////#ifdef _DEBUG
+////		printf("w=%x flags=%x md=%x time=%x\n", wParam, mllStruct->flags, mllStruct->mouseData, mllStruct->time);
+////#endif
+//		INPUT input;
+//		ZeroMemory(&input, sizeof(input));
+//		input.type = INPUT_MOUSE;
+//		input.mi.dx = mllStruct->pt.x;
+//		input.mi.dy = mllStruct->pt.y;
+//		input.mi.mouseData = mllStruct->mouseData;
+//		input.mi.dwFlags = MOUSEEVENTF_WHEEL;
+//		//input.mi.time = 0;
+//		//input.mi.dwExtraInfo = 0;
+//		SendInput(1, &input, sizeof(input));
+//		return 1;
+//	}
 	return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
