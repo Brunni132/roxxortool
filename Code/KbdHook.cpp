@@ -17,6 +17,7 @@ static bool shiftPressed() { return lShiftPressed || rShiftPressed; }
 static bool altPressed() { return lAltPressed; }
 // Only those two, not the others
 static bool ctrlWinPressed() { return lCtrlPressed && lWinPressed && !rWinPressed && !rCtrlPressed && !shiftPressed() && !altPressed(); }
+static bool ctrlWinAndMaybeShiftPressed() { return lCtrlPressed && lWinPressed && !rWinPressed && !rCtrlPressed && !altPressed(); }
 static bool winOnlyPressed() { return lWinPressed && !rWinPressed && !ctrlPressed() && !shiftPressed() && !altPressed(); }
 static void cancelAllKeys();
 
@@ -332,7 +333,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 
 		// External monitor brightness change
-		if (ctrlWinPressed()) {
+		if (ctrlWinAndMaybeShiftPressed()) {
 			if (config.ddcCiBrightnessControl) {
 				if (nKey == VK_LEFT) {
 					int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
