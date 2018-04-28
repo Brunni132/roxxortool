@@ -404,12 +404,13 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			}
 
 			if (config.closeWindowWithWinQ && nKey == 'Q') {
-				bool needAlt = !lAltPressed;
-				if (needAlt) kbddown(VK_LMENU, 0);
-				kbdup(VK_LWIN, 0); // Temporarily release WIN since Win+Alt+F4 does nothing
-				kbdpress(VK_F4, 0); // +F4
-				kbddown(VK_LWIN, 0); // Re-enable WIN
-				if (needAlt) kbdup(VK_LMENU, 0);
+				//bool needAlt = !lAltPressed;
+				//if (needAlt) kbddown(VK_LMENU, 0);
+				//kbdup(VK_LWIN, 0); // Temporarily release WIN since Win+Alt+F4 does nothing
+				//kbdpress(VK_F4, 0); // +F4
+				//kbddown(VK_LWIN, 0); // Re-enable WIN
+				//if (needAlt) kbdup(VK_LMENU, 0);
+				SendMessage(GetForegroundWindow(), WM_CLOSE, 0, 0);
 				return 1;
 			}
 
@@ -533,7 +534,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	}
 
 	// LWin+[0-9] -> Ctrl+Win+[0-9]
-	if (config.noNumPad && !injected) {
+	if (config.noNumPad /*&& !injected*/ && !rCtrlPressed) {
 		if (lWinPressed && nKey >= '0' && nKey <= '9' && wParam == WM_KEYDOWN) {
 			if (!shiftPressed() && !ctrlPressed() && config.multiDesktopLikeApplicationSwitcher) {
 				// Press Ctrl (http://www.codeproject.com/Articles/7305/Keyboard-Events-Simulation-using-keybd-event-funct)
