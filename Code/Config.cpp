@@ -44,6 +44,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(japaneseWindowsKeyboard, false);
 	IMPLEMENT_BOOL_PROP(japaneseMacKeyboard, false);
 	IMPLEMENT_BOOL_PROP(winSSuspendsSystem, false);
+	IMPLEMENT_BOOL_PROP(disableNextHooks, false);
 }
 
 bool Config::readFile() {
