@@ -404,13 +404,20 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			}
 
 			if (config.closeWindowWithWinQ && nKey == 'Q') {
-				//bool needAlt = !lAltPressed;
-				//if (needAlt) kbddown(VK_LMENU, 0);
-				//kbdup(VK_LWIN, 0); // Temporarily release WIN since Win+Alt+F4 does nothing
-				//kbdpress(VK_F4, 0); // +F4
-				//kbddown(VK_LWIN, 0); // Re-enable WIN
-				//if (needAlt) kbdup(VK_LMENU, 0);
-				SendMessage(GetForegroundWindow(), WM_CLOSE, 0, 0);
+				if (!injected) {
+					// Normal machine
+					bool needAlt = !lAltPressed;
+					if (needAlt) kbddown(VK_LMENU, 0);
+					kbdup(VK_LWIN, 0); // Temporarily release WIN since Win+Alt+F4 does nothing
+					kbdpress(VK_F4, 0); // +F4
+					kbddown(VK_LWIN, 0); // Re-enable WIN
+					if (needAlt) kbdup(VK_LMENU, 0);
+				}
+				else {
+					// TeamViewer support
+					if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // To avoid bringing the menu
+					SendMessage(GetForegroundWindow(), WM_CLOSE, 0, 0);
+				}
 				return 1;
 			}
 
