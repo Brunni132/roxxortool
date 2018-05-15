@@ -30,7 +30,7 @@
     <ProjectGuid>{0113C2EF-B24E-4D92-AD10-F8B0E2273185}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>RemapKeysInterceptor</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

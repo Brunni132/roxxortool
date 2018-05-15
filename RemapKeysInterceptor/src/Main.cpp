@@ -9,7 +9,7 @@
 const RemappingPlugin plugins[] = {
 	{ virtualFnRemappingPlugin, false },
 	{ macRemappingPlugin, true },
-	//{ roxxorRemappingPlugin, false },
+	{ roxxorRemappingPlugin, false },
 };
 
 #ifdef _WIN32_BUILD
