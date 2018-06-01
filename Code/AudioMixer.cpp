@@ -25,12 +25,14 @@ vol_t AudioMixer::getVolume() {
 	float currentVolume;
 	if (needsUpdateMixerEachTime)
 		updateWithDefaultEndpoint();
-	g_endpointVolume->GetMasterVolumeLevel(&currentVolume);
+	if (g_endpointVolume)
+		g_endpointVolume->GetMasterVolumeLevel(&currentVolume);
 	return currentVolume;
 }
 
 void AudioMixer::setVolume(vol_t newVolume) {
-	g_endpointVolume->SetMasterVolumeLevel(newVolume, NULL);
+	if (g_endpointVolume)
+		g_endpointVolume->SetMasterVolumeLevel(newVolume, NULL);
 	StatusWindow::showVolume(newVolume);
 }
 
@@ -64,9 +66,12 @@ void updateWithDefaultEndpoint() {
 	//	deviceEnumerator->Release();
 	//	deviceEnumerator = NULL;
 
-	hr = defaultDevice->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_INPROC_SERVER, NULL, (LPVOID *)&g_endpointVolume);
-	defaultDevice->Release();
-	defaultDevice = NULL;
+	if (defaultDevice) {
+		hr = defaultDevice->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_INPROC_SERVER, NULL, (LPVOID *)&g_endpointVolume);
+		defaultDevice->Release();
+		defaultDevice = NULL;
+	}
 
-	g_endpointVolume->GetVolumeRange(&g_minVolume, &g_maxVolume, &dummy);
+	if (g_endpointVolume)
+		g_endpointVolume->GetVolumeRange(&g_minVolume, &g_maxVolume, &dummy);
 }
