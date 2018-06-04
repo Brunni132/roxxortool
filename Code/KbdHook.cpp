@@ -639,33 +639,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				return 1;
 			}
 		}
-
-		//static bool currentlyPressingCtrl = false;
-		//static int callCount = 1;
-
-		//// Support deactivation
-		//if (currentlyPressingCtrl && wParam == WM_KEYDOWN && !(nKey >= VK_NUMPAD0 && nKey <= VK_NUMPAD9) && !(nKey >= '0' && nKey <= '9') && nKey != VK_RWIN && nKey != VK_LCONTROL && nKey != VK_RCONTROL) {
-		//	callCount = 1;
-		//}
-
-		//if (nKey >= VK_NUMPAD0 && nKey <= VK_NUMPAD9 && wParam == WM_KEYDOWN && ctrlPressed()) {
-		//	int taskId = nKey - VK_NUMPAD0 + '0';
-		//	bool needsLCtrl = lCtrlPressed, needsRCtrl = rCtrlPressed;
-		//	if (needsLCtrl) kbdup(VK_LCONTROL, 0);
-		//	if (needsRCtrl) kbdup(VK_RCONTROL, 0);
-		//	bool needsWin = !winPressed();
-		//	// Ctrl+Win+[taskId]
-		//	if (needsWin) kbddown(VK_RWIN, 0);
-		//	for (int i = 0; i < callCount; i += 1) kbdpress(taskId, 0);
-		//	callCount += 1;
-		//	if (needsLCtrl) kbddown(VK_LCONTROL, 0);
-		//	if (needsRCtrl) kbddown(VK_RCONTROL, 0);
-		//	currentlyPressingCtrl = true;
-		//	RunAfterDelay([=] {
-		//		if (needsWin) kbdup(VK_RWIN, 0);
-		//	}, 100);
-		//	return 1;
-		//}
 	}
 #endif
 
