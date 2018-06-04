@@ -10,7 +10,7 @@
 	"forceReapplyGammaOnBrightnessChange": false,
 	"iAmAMac": false,
 	"japaneseMacBookPro": false,
-	"multiDesktopLikeApplicationSwitcher": false,
+	"multiDesktopLikeApplicationSwitcher": true,
 	"noNumPad": false,
 	"reloadConfigWithCtrlWinR": false,
 	"rightShiftContextMenu": false,
