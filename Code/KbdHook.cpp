@@ -611,32 +611,60 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (config.multiDesktopLikeApplicationSwitcher) {
 		static int lCtrlPressCount = 0, rCtrlPressCount = 0;
 
-		if (nKey == VK_LCONTROL && lCtrlPressCount > 0) {
-			if (--lCtrlPressCount == 0) kbdup(VK_RWIN, 0);
-		}
-		if (nKey == VK_RCONTROL && rCtrlPressCount > 0) {
-			if (--rCtrlPressCount == 0) kbdup(VK_RWIN, 0);
+		if (wParam == WM_KEYUP) {
+			if (nKey == VK_LCONTROL && lCtrlPressCount > 0) {
+				if (--lCtrlPressCount == 0) {
+					kbdup(VK_RWIN, 0);
+					return 1;
+				}
+			}
+			if (nKey == VK_RCONTROL && rCtrlPressCount > 0) {
+				if (--rCtrlPressCount == 0) {
+					kbdup(VK_RWIN, 0);
+					return 1;
+				}
+			}
 		}
 
-		if (nKey >= VK_NUMPAD0 && nKey <= VK_NUMPAD9 && wParam == WM_KEYDOWN) {
-			int taskId = nKey - VK_NUMPAD0 + '0';
-			// Key repeats
-			if (lCtrlPressCount > 0 || rCtrlPressCount > 0) {
-				kbdpress(taskId, 0);
-				return 1;
+		if (wParam == WM_KEYDOWN) {
+			if (nKey >= VK_NUMPAD0 && nKey <= VK_NUMPAD9) {
+				int taskId = nKey - VK_NUMPAD0 + '0';
+				// Key repeats
+				if (lCtrlPressCount > 0 || rCtrlPressCount > 0) {
+					kbdpress(taskId, 0);
+					return 1;
+				}
+
+				if (ctrlPressed() && !winPressed()) {
+					bool needsWin = !winPressed();
+					lCtrlPressCount = lCtrlPressed ? 2 : 0;
+					rCtrlPressCount = rCtrlPressed ? 2 : 0;
+
+					if (lCtrlPressCount) kbdup(VK_LCONTROL, 0);
+					if (rCtrlPressCount) kbdup(VK_RCONTROL, 0);
+					// Ctrl+Win+[taskId]
+					kbddown(VK_RWIN, 0);
+					kbdpress(taskId, 0);
+					return 1;
+				}
 			}
 
-			if (ctrlPressed() && !winPressed()) {
-				bool needsWin = !winPressed();
-				lCtrlPressCount = lCtrlPressed ? 2 : 0;
-				rCtrlPressCount = rCtrlPressed ? 2 : 0;
-
-				if (lCtrlPressCount) kbdup(VK_LCONTROL, 0);
-				if (rCtrlPressCount) kbdup(VK_RCONTROL, 0);
-				// Ctrl+Win+[taskId]
-				kbddown(VK_RWIN, 0);
-				kbdpress(taskId, 0);
-				return 1;
+			// In case another key was pressed while the win key was artificially switched
+			if (!(nKey >= VK_NUMPAD0 && nKey <= VK_NUMPAD9 || nKey >= '0' && nKey <= '9' || nKey == VK_LCONTROL || nKey == VK_RCONTROL || nKey == VK_RWIN)) {
+				if (lCtrlPressCount > 0) {
+					lCtrlPressCount = 0;
+					kbddown(VK_LCONTROL, 0);
+					kbdup(VK_RWIN, 0);
+					kbddown(nKey, kbd->scanCode, kbd->flags);
+					return 1;
+				}
+				if (rCtrlPressCount > 0) {
+					rCtrlPressCount = 0;
+					kbddown(VK_RCONTROL, 0);
+					kbdup(VK_RWIN, 0);
+					kbddown(nKey, kbd->scanCode, kbd->flags);
+					return 1;
+				}
 			}
 		}
 	}
