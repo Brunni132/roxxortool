@@ -35,6 +35,7 @@ This tool focuses on very basic functionality that is usually not covered by oth
 - `altTabWithMouseButtons`: press the forward button on your mouse to open the app selector. Press for longer (200ms or more) to do a standard forward command.
 - `selectHiraganaByDefault`: if set, when switching between languages with Win+Space, sends a Ctrl+Caps right behind so that hiragana mode is enabled if IME is japanese (for others doesn't do anything; for other complex IME you may not want to use this feature as it's tailored for Japanese and doesn't have a way to check what you're currently using).
 - `winSSuspendsSystem`: suspends Windows by pressing Win+S.
+- `doNotUseWinSpace`: replaces Win+Space by Alt+Shift, the shortcut from older Windows versions. The advantage of Alt+Shift is that it switches only between the two last languages, where Win+Space goes to the next on the list, which is often unwanted especially since Windows sometimes temporarily adds unrelated languages during updates until a reboot.
 
 Additional (not as good, please shout out if you use them else I might remove them in the future):
 

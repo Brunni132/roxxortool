@@ -386,6 +386,18 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 		// Win only
 		if (winOnlyPressed()) {
+			if (config.doNotUseWinSpace && nKey == VK_SPACE) {
+				// Replace by Alt+Space
+				bool needLWin = lWinPressed, needRWin = rWinPressed;
+				kbddown(VK_LMENU, 0);
+				if (needLWin) kbdup(VK_LWIN, 0);
+				if (needRWin) kbdup(VK_RWIN, 0);
+				kbdpress(VK_LSHIFT, 0);
+				if (needLWin) kbddown(VK_LWIN, 0);
+				if (needRWin) kbddown(VK_RWIN, 0);
+				kbdup(VK_LMENU, 0);
+				return 1;
+			}
 			if (config.winFOpensYourFiles && nKey == 'F') {
 				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0);
 				WindowsExplorer::showHomeFolderWindow();
@@ -427,7 +439,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			}
 		}
 
-		if (config.winTSelectsLastTask && !injected) {
+		if (config.winTSelectsLastTask) {
 			 static bool inFunction = false;
 			// // Check that we are still in the task bar and restart function (Win+T from start) if not
 			 if (inFunction) {
@@ -441,15 +453,15 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			if (inFunction) {
 				if (nKey >= '5' && nKey <= '7') {
 					moveToTask(11 + (nKey - '5') * 10, START);
-					return -1;
+					return 1;
 				}
 				else if (nKey == VK_PRIOR) {
 					moveToTask(-config.winTTaskMoveBy, CURRENT);
-					return -1;
+					return 1;
 				}
 				else if (nKey == VK_NEXT) {
 					moveToTask(+config.winTTaskMoveBy, CURRENT);
-					return -1;
+					return 1;
 				}
 			}
 			else if (winOnlyPressed() && nKey == 'T') {
@@ -460,7 +472,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 					kbdpress('T', 0);
 					kbdpress(VK_END, 0);
 				}, 10);
-				return false;
+				return 1;
 			}
 		}
 	}
