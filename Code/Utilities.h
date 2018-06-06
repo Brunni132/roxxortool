@@ -6,5 +6,5 @@ void kbdup(int vkCode, BYTE scanCode, int flags = 0);
 void kbdpress(int vkCode, BYTE scanCode, int flags = 0);
 
 void RunAfterDelay(std::function<void()> code, int delayMs = 0);
-void LockMachineOnNextAction();
-void DidPerformAnAction();
+//void LockMachineOnNextAction();
+//void DidPerformAnAction();

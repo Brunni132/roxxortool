@@ -291,15 +291,15 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 	}
 
-	if (config.startScreenSaverWithInsert && !injected) {
-		DidPerformAnAction();
-	}
+	//if (config.startScreenSaverWithInsert && !injected) {
+	//	DidPerformAnAction();
+	//}
 
 	if (wParam == WM_KEYDOWN) {
 		// Insert -> start screen saver & lock
 		if (config.startScreenSaverWithInsert) {
 			if (nKey == VK_INSERT) {
-				LockMachineOnNextAction();
+				//LockMachineOnNextAction();
 				SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_SCREENSAVE, 0);
 				return 1;
 			}

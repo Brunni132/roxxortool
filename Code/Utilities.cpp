@@ -18,12 +18,12 @@ void RunAfterDelay(std::function<void()> code, int delayMs) {
 	SetTimer(NULL, eventId++, delayMs, PerformOnTimer);
 }
 
-void LockMachineOnNextAction() {
-	lockOnNextAction = true;
-}
-
-void DidPerformAnAction() {
-	if (lockOnNextAction) {
-		LockWorkStation();
-	}
-}
+//void LockMachineOnNextAction() {
+//	lockOnNextAction = true;
+//}
+//
+//void DidPerformAnAction() {
+//	if (lockOnNextAction) {
+//		LockWorkStation();
+//	}
+//}
