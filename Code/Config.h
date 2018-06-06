@@ -53,8 +53,6 @@ struct Config: public RefClass {
 	bool japaneseMacKeyboard;
 	bool japaneseWindowsKeyboard;
 	bool winSSuspendsSystem;
-	// For fixing TeamViewer
-	bool disableNextHooks;
 	bool doNotUseWinSpace;
 
 	// Reload the values from the config file. Will affect all members of this instance. Must be called at least once before use of the instance.

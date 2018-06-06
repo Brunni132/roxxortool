@@ -88,8 +88,7 @@ static HHOOK g_hHook;
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	// Not something for us
 	if (nCode != HC_ACTION) {
-		if (config.disableNextHooks) return 0;
-		else return CallNextHookEx(NULL, nCode, wParam, lParam);
+		return CallNextHookEx(NULL, nCode, wParam, lParam);
 	}
 
 	// TODO Florian -- replace all this with reading the scan code (in kbd)
@@ -683,8 +682,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 #endif
 
 	// wParam will contain the virtual key code.  
-	if (config.disableNextHooks) return 0;
-	else return CallNextHookEx(NULL, nCode, wParam, lParam);
+	return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
 void cancelAllKeys() {

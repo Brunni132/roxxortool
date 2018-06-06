@@ -41,8 +41,7 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 
 		// Do not process injected
 		if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED) {
-			if (config.disableNextHooks) return 0;
-			else return CallNextHookEx(NULL, nCode, wParam, lParam);
+			return CallNextHookEx(NULL, nCode, wParam, lParam);
 		}
 
 		static bool isDown = false;
@@ -94,8 +93,7 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 //		SendInput(1, &input, sizeof(input));
 //		return 1;
 //	}
-	if (config.disableNextHooks) return 0;
-	else return CallNextHookEx(NULL, nCode, wParam, lParam);
+	return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
 void MouseHook::start() {
