@@ -36,7 +36,11 @@ static void cancelTaskView(POINT mousePosition) {
 }
 
 LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lParam) {
-	if (nCode >= 0 && (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP)) {
+	if (config.startScreenSaverWithInsert) {
+		DidPerformAnAction();
+	}
+
+	if (config.altTabWithMouseButtons && nCode >= 0 && (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP)) {
 		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
 
 		// Do not process injected
@@ -97,7 +101,7 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 }
 
 void MouseHook::start() {
-	if (config.altTabWithMouseButtons)
+	if (config.altTabWithMouseButtons || config.startScreenSaverWithInsert)
 		hHook = SetWindowsHookEx(WH_MOUSE_LL, LowLevelMouseProc_AltTab, GetModuleHandle(NULL), 0);
 }
 
