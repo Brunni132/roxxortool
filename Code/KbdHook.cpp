@@ -296,6 +296,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	//}
 
 	if (wParam == WM_KEYDOWN) {
+		// Win+L triggers a key down but not up, and no up for Win so get aware of that
+		if (nKey == 'L' && winPressed()) {
+			lWinPressed = rWinPressed = false;
+		}
+
 		// Insert -> start screen saver & lock
 		if (config.startScreenSaverWithInsert) {
 			if (nKey == VK_INSERT) {
