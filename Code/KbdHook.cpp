@@ -54,12 +54,10 @@ void sendNextPageCommand() {
 
 static void switchToHiragana() {
 	bool needsShift = !shiftPressed(), needsControl = !ctrlPressed();
-	if (needsShift) kbddown(VK_RSHIFT, 0);
+	if (needsShift) kbddown(VK_RCONTROL, 0);
 	kbdpress(VK_CAPITAL, 0);
-	if (needsShift) kbdup(VK_RSHIFT, 0);
-	if (needsControl) kbddown(VK_RCONTROL, 0);
 	kbdpress(VK_CAPITAL, 0);
-	if (needsControl) kbdup(VK_RCONTROL, 0);
+	if (needsShift) kbdup(VK_RCONTROL, 0);
 }
 
 static void moveToTask(int taskNo, Location from) {
@@ -382,10 +380,10 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				case VK_NEXT:
 					kbdpress(VK_MEDIA_NEXT_TRACK, 0);
 					return 1;
-				case VK_UP:
+				case VK_F12:
 					AudioMixer::incrementVolume(config.volumeIncrementQuantity);
 					return 1;
-				case VK_DOWN:
+				case VK_F11:
 					AudioMixer::decrementVolume(config.volumeIncrementQuantity);
 					return 1;
 				}
@@ -404,6 +402,12 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				if (needLWin) kbddown(VK_LWIN, 0);
 				if (needRWin) kbddown(VK_RWIN, 0);
 				kbdup(VK_LMENU, 0);
+
+				if (config.selectHiraganaByDefault) {
+					RunAfterDelay([] {
+						switchToHiragana();
+					}, 200);
+				}
 				return 1;
 			}
 			if (config.winFOpensYourFiles && nKey == 'F') {
@@ -481,29 +485,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 					kbdpress(VK_END, 0);
 				}, 10);
 				return 1;
-			}
-		}
-	}
-
-	if (wParam == WM_KEYUP) {
-		if (config.selectHiraganaByDefault) {
-			static bool shouldSwitchToHiragana = false;
-			if (!winPressed() && shouldSwitchToHiragana) {
-				shouldSwitchToHiragana = false;
-				RunAfterDelay([] {
-					switchToHiragana();
-					RunAfterDelay([] {
-						bool needsControl = !ctrlPressed();
-						if (needsControl) kbddown(VK_RCONTROL, 0);
-						kbdpress(VK_CAPITAL, 0);
-						kbdpress(VK_CAPITAL, 0);
-						if (needsControl) kbdup(VK_RCONTROL, 0);
-					}, 500);
-				}, 50);
-			}
-			if (nKey == VK_SPACE && winPressed()) {
-				// Execute when both have been released
-				shouldSwitchToHiragana = true;
 			}
 		}
 	}
