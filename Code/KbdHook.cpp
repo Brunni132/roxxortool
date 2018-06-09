@@ -344,14 +344,14 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		// External monitor brightness change
 		if (ctrlWinAndMaybeShiftPressed()) {
 			if (config.ddcCiBrightnessControl) {
-				if (nKey == VK_LEFT) {
+				if (nKey == VK_F9) {
 					int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
 					RunAfterDelay([qty] {
 						Monitor::decreaseBrightnessBy(qty);
 					});
 					return 1;
 				}
-				else if (nKey == VK_RIGHT) {
+				else if (nKey == VK_F10) {
 					int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
 					RunAfterDelay([qty] {
 						Monitor::increaseBrightnessBy(qty);
