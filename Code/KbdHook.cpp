@@ -81,6 +81,25 @@ static void moveToTask(int taskNo, Location from) {
 	});
 }
 
+static void sendAltShift() {
+	// Replace by Alt+Shift
+	bool needLWin = lWinPressed, needRWin = rWinPressed;
+	kbddown(VK_LMENU, 0);
+	if (needLWin) kbdup(VK_LWIN, 0);
+	if (needRWin) kbdup(VK_RWIN, 0);
+	kbdpress(VK_LSHIFT, 0);
+	if (needLWin) kbddown(VK_LWIN, 0);
+	if (needRWin) kbddown(VK_RWIN, 0);
+	kbdup(VK_LMENU, 0);
+}
+
+static UINT getCurrentLayout() {
+	HWND fore = GetForegroundWindow();
+	UINT tpid = GetWindowThreadProcessId(fore, NULL);
+	HKL hKL = GetKeyboardLayout(tpid);
+	return LOWORD(hKL);
+}
+
 static HHOOK g_hHook;
 
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
@@ -393,29 +412,27 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		// Win only
 		if (winOnlyPressed()) {
 			if (config.doNotUseWinSpace && nKey == VK_SPACE) {
-				// Replace by Alt+Space
-				bool needLWin = lWinPressed, needRWin = rWinPressed;
-				kbddown(VK_LMENU, 0);
-				if (needLWin) kbdup(VK_LWIN, 0);
-				if (needRWin) kbdup(VK_RWIN, 0);
-				kbdpress(VK_LSHIFT, 0);
-				if (needLWin) kbddown(VK_LWIN, 0);
-				if (needRWin) kbddown(VK_RWIN, 0);
-				kbdup(VK_LMENU, 0);
+				// Replace by Alt+Shift
+				sendAltShift();
 
 				if (config.selectHiraganaByDefault) {
 					RunAfterDelay([] {
-						HWND fore = GetForegroundWindow();
-						UINT tpid = GetWindowThreadProcessId(fore, NULL);
-						HKL hKL = GetKeyboardLayout(tpid);
-						// Just switched to Japanese
-						if (LOWORD(hKL) == 0x0411) {
+						if (getCurrentLayout() == 0x0411) {
 							switchToHiragana();
 						}
 					}, 200);
 				}
 				return 1;
 			}
+
+			if (config.doNotUseWinSpace && nKey == 0xBE && getCurrentLayout() == 0x0411) {
+				sendAltShift();
+				RunAfterDelay([] {
+					kbdpress(0xBE, 0x34);
+				}, 100);
+				return 1;
+			}
+
 			if (config.winFOpensYourFiles && nKey == 'F') {
 				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0);
 				WindowsExplorer::showHomeFolderWindow();
