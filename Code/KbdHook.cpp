@@ -425,10 +425,14 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				return 1;
 			}
 
+			// Win+DOT also working in Japanese layout (not so useful for now)
 			if (config.doNotUseWinSpace && nKey == 0xBE && getCurrentLayout() == 0x0411) {
 				sendAltShift();
 				RunAfterDelay([] {
+					bool needsWin = !winPressed();
+					if (needsWin) kbddown(VK_RWIN, 0);
 					kbdpress(0xBE, 0x34);
+					if (needsWin) kbdup(VK_RWIN, 0);
 				}, 100);
 				return 1;
 			}
