@@ -405,7 +405,13 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 				if (config.selectHiraganaByDefault) {
 					RunAfterDelay([] {
-						switchToHiragana();
+						HWND fore = GetForegroundWindow();
+						UINT tpid = GetWindowThreadProcessId(fore, NULL);
+						HKL hKL = GetKeyboardLayout(tpid);
+						// Just switched to Japanese
+						if (LOWORD(hKL) == 0x0411) {
+							switchToHiragana();
+						}
 					}, 200);
 				}
 				return 1;
