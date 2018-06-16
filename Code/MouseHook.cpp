@@ -8,16 +8,6 @@ const DWORD CLICK_TIME_FOR_TASK_SWITCHER = 250;
 
 static HHOOK hHook;
 
-static void triggerTaskView() {
-	RunAfterDelay([=] {
-		kbddown(VK_LCONTROL, 0);
-		kbddown(VK_LMENU, 0);
-		kbdpress(VK_TAB, 0);
-		kbdup(VK_LCONTROL, 0);
-		kbdup(VK_LMENU, 0);
-	});
-}
-
 static void cancelTaskView(POINT mousePosition) {
 	kbdpress(VK_ESCAPE, 0);
 	RunAfterDelay([=] {
@@ -56,12 +46,20 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 			if (isGoingDown) {
 				isDown = true;
 				clickPosition = mllStruct->pt;
-				triggerTaskView();
 				RunAfterDelay([=] {
-					if (isDown) {
-						cancelTaskView(clickPosition);
-					}
-				}, CLICK_TIME_FOR_TASK_SWITCHER);
+					kbddown(VK_LCONTROL, 0);
+					kbddown(VK_LMENU, 0);
+					RunAfterDelay([=] {
+						kbdpress(VK_TAB, 0);
+						kbdup(VK_LCONTROL, 0);
+						kbdup(VK_LMENU, 0);
+						RunAfterDelay([=] {
+							if (isDown) {
+								cancelTaskView(clickPosition);
+							}
+						}, CLICK_TIME_FOR_TASK_SWITCHER);
+					});
+				});
 				return 1;
 			}
 			else if (isGoingUp) {
