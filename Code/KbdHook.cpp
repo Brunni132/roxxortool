@@ -490,17 +490,19 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				}
 			}
 			if (inFunction) {
-				if (nKey >= '5' && nKey <= '7') {
-					moveToTask(11 + (nKey - '5') * 10, START);
-					return 1;
-				}
-				else if (nKey == VK_PRIOR) {
-					moveToTask(-config.winTTaskMoveBy, CURRENT);
-					return 1;
-				}
-				else if (nKey == VK_NEXT) {
-					moveToTask(+config.winTTaskMoveBy, CURRENT);
-					return 1;
+				if (!winPressed()) {
+					if (nKey >= '5' && nKey <= '7') {
+						moveToTask(11 + (nKey - '5') * 10, START);
+						return 1;
+					}
+					else if (nKey == VK_PRIOR) {
+						moveToTask(-config.winTTaskMoveBy, CURRENT);
+						return 1;
+					}
+					else if (nKey == VK_NEXT) {
+						moveToTask(+config.winTTaskMoveBy, CURRENT);
+						return 1;
+					}
 				}
 			}
 			else if (winOnlyPressed() && nKey == 'T') {
