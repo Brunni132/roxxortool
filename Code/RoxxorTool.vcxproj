@@ -172,6 +172,7 @@
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="DisableAnimationsForWinTab.cpp" />
     <ClCompile Include="KbdHook.cpp" />
+    <ClCompile Include="KbdLayoutTranslators.cpp" />
     <ClCompile Include="lib\gason.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Use</PrecompiledHeader>
@@ -202,6 +203,7 @@
     <ClInclude Include="AudioMixer.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="KbdHook.h" />
+    <ClInclude Include="KbdLayoutTranslators.h" />
     <ClInclude Include="lib\gason.h" />
     <ClInclude Include="lib\JsonSerializer.h" />
     <ClInclude Include="lib\Ref.h" />

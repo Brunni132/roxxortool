@@ -1,7 +1,9 @@
+// Something to know: Ctrl+Win+Space switches between the last two languages
 #include "Precompiled.h"
 #include "KbdHook.h"
 #include "AudioMixer.h"
 #include "Config.h"
+#include "KbdLayoutTranslators.h"
 #include "Main.h"
 #include "Monitor.h"
 #include "WindowsExplorer.h"
@@ -99,96 +101,6 @@ static UINT getCurrentLayout() {
 	HKL hKL = GetKeyboardLayout(tpid);
 	return LOWORD(hKL);
 }
-
-// TODO move to its own file
-struct LayoutTranslator {
-	struct State {
-		struct StateOutcome {
-			WCHAR pressedChar;
-			WCHAR outputCharNormal;
-			WCHAR outputCharWithShift;
-		};
-		WCHAR entryChar;
-		// Note that the outcomes may be empty, in which case the defaultOutcome is chosen directly (the state is not really entered, it exits with the default outcome)
-		vector<StateOutcome> outcomes;
-		WCHAR defaultOutcome;
-		WCHAR defaultOutcomeWithShift;
-	};
-
-	vector<State> states;
-
-	LayoutTranslator() : stateIndex(-1) {}
-
-	void cancelAnyState() {
-		stateIndex = -1;
-	}
-
-	// Returns TRUE if the key must be eaten
-	bool processKey(int kbdVcode, bool shiftPressed, bool rAltPressed) {
-		// No state currently
-		if (stateIndex == -1) {
-			// Need alt for any special key
-			if (rAltPressed) {
-				for (int i = 0; i < states.size(); i++) {
-					if (kbdVcode == states[i].entryChar) {
-						enterState(i);
-						// This key is eaten
-						return true;
-					}
-				}
-			}
-		}
-		else {
-			// Process current state
-			// Assumes that there are outcomes (else we don't enter the state in the first place, cf. enterState)
-			const State &state = states[stateIndex];
-			int foundOutcomeId = -1; // -1 = not found
-			for (int i = 0; i < state.outcomes.size(); i++) {
-				if (kbdVcode == state.outcomes[i].pressedChar) {
-					foundOutcomeId = i;
-					break;
-				}
-			}
-
-			// Not found any outcome -> output the default outcome and leave the state
-			if (foundOutcomeId == -1) {
-				stateIndex = -1;
-				outputChar(state.defaultOutcome);
-				// Note that in this case we also want to output the original typed character after the outcome (e.g. `e)
-				return false;
-			}
-			else {
-				// OK, just output the new outcome and leave the state
-				const State::StateOutcome &outcome = state.outcomes[foundOutcomeId];
-				stateIndex = -1;
-				outputChar(shiftPressed ? outcome.outputCharWithShift : outcome.outputCharNormal);
-				return true;
-			}
-		}
-		return false;
-	}
-
-private:
-	int stateIndex; // -1 = nones
-
-	// May not effectively enter the state, in case the state has a direct outcome
-	void enterState(int stateIndex, bool shiftPressed) {
-		if (states[stateIndex].outcomes.empty()) {
-			const State &state = states[stateIndex];
-			// Not enter the state, just output the char
-			outputChar(shiftPressed ? state.defaultOutcomeWithShift : state.defaultOutcome);
-		}
-		else {
-			// Enter the state, wait for further instructions (processKey)
-			this->stateIndex = stateIndex;
-		}
-	}
-
-	void outputChar(WCHAR character) {
-		// TODO
-	}
-};
-
 
 static HHOOK g_hHook;
 
@@ -370,6 +282,23 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		// If a key has been remapped, we'll never go further (return 1)
 	}
 
+	if (config.internationalUsKeyboardForFrench) {
+		bool isDown = wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN;
+		bool isUp = wParam == WM_KEYUP || wParam == WM_SYSKEYUP;
+
+		layoutTranslatorsRegister();
+		if (isDown) {
+			if (layoutTranslatorsEnUs.processKeyDown(nKey, shiftPressed())) {
+				return 1;
+			}
+		}
+		if (isUp) {
+			if (layoutTranslatorsEnUs.processKeyUp(nKey)) {
+				return 1;
+			}
+		}
+	}
+
 	// Special keys
 	if (wParam == WM_KEYDOWN || wParam == WM_KEYUP || wParam == WM_SYSKEYDOWN || wParam == WM_SYSKEYUP) {
 		bool isDown = wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN;
@@ -395,6 +324,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		case VK_LMENU:
 			lAltPressed = isDown;
 			break;
+		//case VK_RMENU: // used by international keyboards
+		//	rAltPressed = isDown;
+		//	break;
 		}
 	}
 
@@ -775,14 +707,14 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 					lCtrlPressCount = 0;
 					kbddown(VK_LCONTROL, 0);
 					kbdup(VK_RWIN, 0);
-					kbddown(nKey, kbd->scanCode, kbd->flags);
+					kbddown(nKey, (BYTE)kbd->scanCode, kbd->flags);
 					return 1;
 				}
 				if (rCtrlPressCount > 0) {
 					rCtrlPressCount = 0;
 					kbddown(VK_RCONTROL, 0);
 					kbdup(VK_RWIN, 0);
-					kbddown(nKey, kbd->scanCode, kbd->flags);
+					kbddown(nKey, (BYTE)kbd->scanCode, kbd->flags);
 					return 1;
 				}
 			}

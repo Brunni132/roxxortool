@@ -36,6 +36,17 @@ This tool focuses on very basic functionality that is usually not covered by oth
 - `selectHiraganaByDefault`: if set, when switching between languages with Win+Space, sends a Ctrl+Caps right behind so that hiragana mode is enabled if IME is japanese (for others doesn't do anything; for other complex IME you may not want to use this feature as it's tailored for Japanese and doesn't have a way to check what you're currently using).
 - `winSSuspendsSystem`: suspends Windows by pressing Win+S.
 - `doNotUseWinSpace`: replaces Win+Space by Alt+Shift, the shortcut from older Windows versions. The advantage of Alt+Shift is that it switches only between the two last languages, where Win+Space goes to the next on the list, which is often unwanted especially since Windows sometimes temporarily adds unrelated languages during updates until a reboot.
+- `internationalUsKeyboardForFrench`: enables easy access to latin-international characters on top of an English (US) keyboard. Aimed at coders, and in its current implementation for French-speakers by providing a couple of shortcuts for mostly used accented characters. Useful since the MS KLC is not really supported anymore and doesn't create touch keyboards. It does this:
+	- Right Alt + E = é (or É with Shift when pressing E)
+	- Right Alt + C = ç
+	- Right Alt + A = à
+	- Right Alt + U = ` (dead key; then press another key like A to get à, E to get è, etc. or space to insert the ` char)
+	- Right Alt + I = ^ (dead key; A=â, E=ê, I=î, O=ô, U=û, space=^)
+	- Right Alt + O = ¨ (dead key; A=ä, E=ë, I=ï, O=ö, U=ü, space=¨)
+	- Right Alt + P = ´ (dead key; A=á, E=é, I=í, O=ó, U=ú, space=´)
+	- Right Alt + N = ~ (dead key; N=ñ, space=~)
+	- Right Alt + ; (semi-colon) = … (horizontal ellipsis)
+	- Note that you may create your own layouts or customize it. Look at layoutTranslatorsRegister.
 
 Additional (not as good, please shout out if you use them else I might remove them in the future):
 
