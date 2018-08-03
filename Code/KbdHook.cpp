@@ -12,7 +12,7 @@
 #include "DisableAnimationsForWinTab.h"
 #include "PowrProf.h"
 
-static bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, rWinPressed = false, lShiftPressed = false, rShiftPressed = false, lAltPressed = false;
+bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, rWinPressed = false, lShiftPressed = false, rShiftPressed = false, lAltPressed = false;
 static bool ctrlPressed() { return lCtrlPressed || rCtrlPressed; }
 static bool winPressed() { return lWinPressed || rWinPressed; }
 static bool shiftPressed() { return lShiftPressed || rShiftPressed; }

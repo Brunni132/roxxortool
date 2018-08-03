@@ -5,6 +5,8 @@ void kbddown(int vkCode, BYTE scanCode, int flags = 0);
 void kbdup(int vkCode, BYTE scanCode, int flags = 0);
 void kbdpress(int vkCode, BYTE scanCode, int flags = 0);
 
+extern bool lCtrlPressed, rCtrlPressed, lWinPressed, rWinPressed, lShiftPressed, rShiftPressed, lAltPressed;
+
 void RunAfterDelay(std::function<void()> code, int delayMs = 0);
 //void LockMachineOnNextAction();
 //void DidPerformAnAction();

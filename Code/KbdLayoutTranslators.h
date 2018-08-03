@@ -26,9 +26,11 @@ struct LayoutTranslator {
 private:
 	int stateIndex; // -1 = nones
 	bool isRAltDown;
+	bool didForcePressLCtrl;
 	vector<int> keysToEatOnPressup;
 
 	// May not effectively enter the state, in case the state has a direct outcome
+	void eatRAlt();
 	void enterState(int stateIndex, bool shiftPressed);
 	void outputChar(WCHAR character);
 };

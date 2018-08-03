@@ -1,5 +1,6 @@
 #include "Precompiled.h"
 #include "KbdLayoutTranslators.h"
+#include "Utilities.h"
 
 static bool layoutTranslatorsInited = false;
 LayoutTranslator layoutTranslatorsEnUs;
@@ -80,7 +81,7 @@ LayoutTranslator::State::State(WCHAR entryChar, WCHAR defaultOutcome, WCHAR defa
 	}
 }
 
-LayoutTranslator::LayoutTranslator() : stateIndex(-1), isRAltDown(false) {}
+LayoutTranslator::LayoutTranslator() : stateIndex(-1), isRAltDown(false), didForcePressLCtrl(false) {}
 
 void LayoutTranslator::cancelAnyState() {
 	stateIndex = -1;
@@ -90,7 +91,11 @@ void LayoutTranslator::cancelAnyState() {
 bool LayoutTranslator::processKeyUp(int kbdVcode) {
 	if (kbdVcode == VK_RMENU) {
 		isRAltDown = false;
-		return true;
+		if (didForcePressLCtrl) {
+			didForcePressLCtrl = false;
+			kbdup(VK_LCONTROL, 0);
+		}
+		return false;
 	}
 	for (unsigned i = 0; i < keysToEatOnPressup.size(); i++) {
 		if (keysToEatOnPressup[i] == kbdVcode) {
@@ -105,7 +110,11 @@ bool LayoutTranslator::processKeyUp(int kbdVcode) {
 bool LayoutTranslator::processKeyDown(int kbdVcode, bool shiftPressed) {
 	if (kbdVcode == VK_RMENU) {
 		isRAltDown = true;
-		return true;
+		if (!lCtrlPressed) {
+			didForcePressLCtrl = true;
+			kbddown(VK_LCONTROL, 0);
+		}
+		return false;
 	}
 	// Ignore non-char keystrokes
 	if (kbdVcode >= 0x30 && kbdVcode <= 0x5A || kbdVcode >= 0x60 && kbdVcode <= 0x6F || kbdVcode >= 0xBA && kbdVcode <= 0xC0 || kbdVcode == ' ') {
@@ -159,6 +168,14 @@ bool LayoutTranslator::processKeyDown(int kbdVcode, bool shiftPressed) {
 // ---- Private ----
 
 // May not effectively enter the state, in case the state has a direct outcome
+void LayoutTranslator::eatRAlt() {
+	//if (isRAltDown) {
+	//	if (KbdHook::cancelRAlt()) {
+
+	//	}
+	//}
+}
+
 void LayoutTranslator::enterState(int stateIndex, bool shiftPressed) {
 	if (states[stateIndex].outcomes.empty()) {
 		const State &state = states[stateIndex];
