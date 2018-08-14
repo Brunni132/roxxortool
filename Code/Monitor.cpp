@@ -137,7 +137,7 @@ static PHYSICAL_MONITOR *getHandleToPhysicalMonitors(HMONITOR hMonitor, DWORD *o
 }
 
 static void GetGammaRampForDevice(const char *deviceName, unsigned short ramp[256 * 3]) {
-	//if (config.useCustomGammaCurve) {
+	if (config.resetDefaultGammaCurve) {
 	//	if (config.customGammaCurveGamma == 1.0f) {				// Speed optimization
 	//		for (int i = 0; i < 256 * 3; i++)
 	//			ramp[i] = config.customGammaCurveArray[i];
@@ -146,12 +146,14 @@ static void GetGammaRampForDevice(const char *deviceName, unsigned short ramp[25
 	//		for (int i = 0; i < 256 * 3; i++)
 	//			ramp[i] = (unsigned short) (pow((float) config.customGammaCurveArray[i] / 0xff00, config.customGammaCurveGamma) * 0xff00);
 	//	}
-	//}
-	//else {
+		for (int i = 0; i < 256 * 3; i++)
+			ramp[i] = (i << 8) | i;
+	}
+	else {
 		HDC hDevice = CreateDC("DISPLAY", deviceName, NULL, NULL);
 		GetDeviceGammaRamp(hDevice, ramp);
 		DeleteDC(hDevice);
-	//}
+	}
 }
 
 static void SetGammaRampForDevice(const char *deviceName, unsigned short initialRamp[3 * 256], int brightnessPercentage, bool forceApply) {

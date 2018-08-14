@@ -55,11 +55,11 @@ void sendNextPageCommand() {
 }
 
 static void switchToHiragana() {
-	bool needsShift = !shiftPressed(), needsControl = !ctrlPressed();
-	if (needsShift) kbddown(VK_RCONTROL, 0);
+	bool needsControl = !ctrlPressed();
+	if (needsControl) kbddown(VK_RCONTROL, 0);
 	kbdpress(VK_CAPITAL, 0);
 	kbdpress(VK_CAPITAL, 0);
-	if (needsShift) kbdup(VK_RCONTROL, 0);
+	if (needsControl) kbdup(VK_RCONTROL, 0);
 }
 
 static void moveToTask(int taskNo, Location from) {

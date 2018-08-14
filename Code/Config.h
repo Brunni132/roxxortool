@@ -55,6 +55,8 @@ struct Config: public RefClass {
 	bool winSSuspendsSystem;
 	bool doNotUseWinSpace;
 	bool internationalUsKeyboardForFrench;
+	// If set, doesn't use the current gamma curve as a base, but always resets it
+	bool resetDefaultGammaCurve;
 
 	// Reload the values from the config file. Will affect all members of this instance. Must be called at least once before use of the instance.
 	bool readFile();
