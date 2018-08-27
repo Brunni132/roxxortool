@@ -439,9 +439,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 				if (config.selectHiraganaByDefault) {
 					RunAfterDelay([] {
-						if (getCurrentLayout() == 0x0411) {
+						//if (getCurrentLayout() == 0x0411) {
 							switchToHiragana();
-						}
+						//}
 					}, 200);
 				}
 				return 1;
@@ -537,6 +537,17 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				}, 10);
 				return 1;
 			}
+		}
+	}
+
+	if (winOnlyPressed()) {
+		if (!config.doNotUseWinSpace && config.selectHiraganaByDefault && nKey == VK_SPACE && wParam == WM_KEYUP) {
+			RunAfterDelay([] {
+				// Doesn't work in Mail app
+				//if (getCurrentLayout() == 0x0411) {
+					switchToHiragana();
+				//}
+			}, 200);
 		}
 	}
 
