@@ -540,12 +540,17 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 	}
 
-	if (winOnlyPressed()) {
+	if (wParam == WM_KEYUP) {
+		static bool needSwitchToHiragana = false;
 		if (!config.doNotUseWinSpace && config.selectHiraganaByDefault && nKey == VK_SPACE && wParam == WM_KEYUP) {
+			needSwitchToHiragana = true;
+		}
+
+		if (needSwitchToHiragana && (nKey == VK_LWIN || nKey == VK_RWIN)) {
 			RunAfterDelay([] {
 				// Doesn't work in Mail app
 				//if (getCurrentLayout() == 0x0411) {
-					switchToHiragana();
+				switchToHiragana();
 				//}
 			}, 200);
 		}
