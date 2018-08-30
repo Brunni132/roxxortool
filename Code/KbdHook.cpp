@@ -448,7 +448,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			}
 
 			// Win+DOT also working in Japanese layout (not so useful for now)
-			if (config.doNotUseWinSpace && nKey == 0xBE && getCurrentLayout() == 0x0411) {
+			if (config.selectHiraganaByDefault && nKey == 0xBE && getCurrentLayout() == 0x0411) {
 				sendAltShift();
 				RunAfterDelay([] {
 					bool needsWin = !winPressed();
@@ -547,12 +547,13 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 
 		if (needSwitchToHiragana && (nKey == VK_LWIN || nKey == VK_RWIN)) {
+			needSwitchToHiragana = false;
 			RunAfterDelay([] {
 				// Doesn't work in Mail app
 				//if (getCurrentLayout() == 0x0411) {
 				switchToHiragana();
 				//}
-			}, 200);
+			}, 50);
 		}
 	}
 
