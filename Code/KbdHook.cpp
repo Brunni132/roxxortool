@@ -542,8 +542,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 	if (wParam == WM_KEYUP) {
 		static bool needSwitchToHiragana = false;
-		if (!config.doNotUseWinSpace && config.selectHiraganaByDefault && nKey == VK_SPACE && wParam == WM_KEYUP) {
-			needSwitchToHiragana = true;
+		if (!config.doNotUseWinSpace && config.selectHiraganaByDefault && nKey == VK_SPACE) {
+			needSwitchToHiragana = winOnlyPressed();
 		}
 
 		if (needSwitchToHiragana && (nKey == VK_LWIN || nKey == VK_RWIN)) {
