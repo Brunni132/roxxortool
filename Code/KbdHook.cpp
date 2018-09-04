@@ -553,6 +553,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				//if (getCurrentLayout() == 0x0411) {
 				switchToHiragana();
 				//}
+				RunAfterDelay([] {
+					switchToHiragana();
+				}, 300);
 			}, 50);
 		}
 	}
