@@ -62,6 +62,18 @@ static void switchToHiragana() {
 	if (needsControl) kbdup(VK_RCONTROL, 0);
 }
 
+static void switchToHiraganaAfterDelay() {
+	RunAfterDelay([] {
+		// Doesn't work in Mail app
+		//if (getCurrentLayout() == 0x0411) {
+		switchToHiragana();
+		//}
+		RunAfterDelay([] {
+			switchToHiragana();
+		}, 1000);
+	}, 50);
+}
+
 static void moveToTask(int taskNo, Location from) {
 	bool needsWin = !winPressed(), needsShift = !shiftPressed();
 	if (from == START) kbdpress(VK_HOME, 0);
@@ -438,11 +450,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				sendAltShift();
 
 				if (config.selectHiraganaByDefault) {
-					RunAfterDelay([] {
-						//if (getCurrentLayout() == 0x0411) {
-							switchToHiragana();
-						//}
-					}, 200);
+					switchToHiraganaAfterDelay();
 				}
 				return 1;
 			}
@@ -548,15 +556,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 		if (needSwitchToHiragana && (nKey == VK_LWIN || nKey == VK_RWIN)) {
 			needSwitchToHiragana = false;
-			RunAfterDelay([] {
-				// Doesn't work in Mail app
-				//if (getCurrentLayout() == 0x0411) {
-				switchToHiragana();
-				//}
-				RunAfterDelay([] {
-					switchToHiragana();
-				}, 300);
-			}, 50);
+			switchToHiraganaAfterDelay();
 		}
 	}
 
