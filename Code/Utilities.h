@@ -7,6 +7,13 @@ void kbdpress(int vkCode, BYTE scanCode, int flags = 0);
 
 extern bool lCtrlPressed, rCtrlPressed, lWinPressed, rWinPressed, lShiftPressed, rShiftPressed, lAltPressed;
 
+enum NamedTask {
+	TASKID_SWITCH_TO_HIRAGANA
+};
+
+void RunNamedTaskAfterDelay(NamedTask taskId, int delayMs, std::function<void()> code, std::function<void()> onFinish = nullptr);
 void RunAfterDelay(std::function<void()> code, int delayMs = 0);
+void CancelNamedTask(NamedTask taskId);
+
 //void LockMachineOnNextAction();
 //void DidPerformAnAction();

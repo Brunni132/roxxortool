@@ -63,15 +63,15 @@ static void switchToHiragana() {
 }
 
 static void switchToHiraganaAfterDelay() {
-	RunAfterDelay([] {
+	RunNamedTaskAfterDelay(TASKID_SWITCH_TO_HIRAGANA, 100, [] {
 		// Doesn't work in Mail app
 		//if (getCurrentLayout() == 0x0411) {
 		switchToHiragana();
 		//}
-		RunAfterDelay([] {
+		RunNamedTaskAfterDelay(TASKID_SWITCH_TO_HIRAGANA, 1000, [] {
 			switchToHiragana();
-		}, 1000);
-	}, 50);
+		});
+	});
 }
 
 static void moveToTask(int taskNo, Location from) {
@@ -114,6 +114,40 @@ static UINT getCurrentLayout() {
 	return LOWORD(hKL);
 }
 
+template<size_t Size>
+static void listToString(char dest[Size], std::vector<std::string> strings) {
+	strcpy_s(dest, Size, "[");
+	for (int i = 0; i < strings.size(); i++) {
+		if (i > 0) strcat_s(dest, Size, ", ");
+		strcat_s(dest, Size, strings[i].c_str());
+	}
+	strcat_s(dest, Size, "]");
+}
+
+static void showStatusInfo() {
+	std::vector<std::string> infos;
+
+	if (lCtrlPressed) infos.push_back("lCtrl");
+	if (rCtrlPressed) infos.push_back("rCtrl");
+	if (lWinPressed) infos.push_back("lWin");
+	if (rWinPressed) infos.push_back("rWin");
+	if (lShiftPressed) infos.push_back("lShift");
+	if (rShiftPressed) infos.push_back("rShift");
+	if (lAltPressed) infos.push_back("lAlt");
+
+	for (int i = 0x00; i <= 0xff; i++) {
+		if (GetAsyncKeyState(i) & 0x8000) {
+			char buf[256];
+			sprintf_s(buf, "key=%x", i);
+			infos.push_back(buf);
+		}
+	}
+
+	char destBuffer[1024];
+	listToString<1024>(destBuffer, infos);
+	MessageBoxA(NULL, destBuffer, "RoxxorTool debug info", MB_ICONINFORMATION);
+}
+
 static HHOOK g_hHook;
 
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
@@ -123,7 +157,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	}
 
 	// TODO Florian -- replace all this with reading the scan code (in kbd)
-	KBDLLHOOKSTRUCT *kbd = (KBDLLHOOKSTRUCT*) lParam;
+	KBDLLHOOKSTRUCT *kbd = (KBDLLHOOKSTRUCT*)lParam;
 	int nKey = kbd->vkCode;
 	// Ignore injected input
 	bool injected = (kbd->flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED));
@@ -379,7 +413,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				// Molette -
 				RunAfterDelay([] { AudioMixer::decrementVolume(config.volumeIncrementQuantity); });
 				processed = 0xae;
-			} else if (nKey == 0xaf) {
+			}
+			else if (nKey == 0xaf) {
 				// Molette +
 				RunAfterDelay([] { AudioMixer::incrementVolume(config.volumeIncrementQuantity); });
 				processed = 0xaf;
@@ -419,6 +454,13 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				return 1;
 			}
 
+			if (config.reloadConfigWithCtrlWinR && nKey == 'D') {
+				RunAfterDelay([] {
+					showStatusInfo();
+				}, 1000);
+				return 1;
+			}
+
 			if (config.useSoftMediaKeys) {
 				switch (nKey) {
 				case VK_HOME:
@@ -445,6 +487,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 		// Win only
 		if (winOnlyPressed()) {
+			static bool skipNextWinDot = false;
+
 			if (config.doNotUseWinSpace && nKey == VK_SPACE) {
 				// Replace by Alt+Shift
 				sendAltShift();
@@ -456,15 +500,21 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			}
 
 			// Win+DOT also working in Japanese layout (not so useful for now)
-			if (config.selectHiraganaByDefault && nKey == 0xBE && getCurrentLayout() == 0x0411) {
-				sendAltShift();
-				RunAfterDelay([] {
-					bool needsWin = !winPressed();
-					if (needsWin) kbddown(VK_RWIN, 0);
-					kbdpress(0xBE, 0x34);
-					if (needsWin) kbdup(VK_RWIN, 0);
-				}, 100);
-				return 1;
+			if (config.selectHiraganaByDefault && nKey == 0xBE && !skipNextWinDot) {
+				CancelNamedTask(TASKID_SWITCH_TO_HIRAGANA); // Win+DOT is Interfered by a pending switch to hiragana
+				if (getCurrentLayout() == 0x0411) {
+					skipNextWinDot = true;
+					sendAltShift();
+					RunNamedTaskAfterDelay(TASKID_SWITCH_TO_HIRAGANA, 500, [] {
+						bool needsWin = !winPressed();
+						if (needsWin) kbddown(VK_RWIN, 0);
+						kbdpress(0xBE, 0x34);
+						if (needsWin) kbdup(VK_RWIN, 0);
+					}, [] {
+						skipNextWinDot = false;
+					});
+					return 1;
+				}
 			}
 
 			if (config.winFOpensYourFiles && nKey == 'F') {
@@ -509,11 +559,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 
 		if (config.winTSelectsLastTask) {
-			 static bool inFunction = false;
+			static bool inFunction = false;
 			// // Check that we are still in the task bar and restart function (Win+T from start) if not
-			 if (inFunction) {
-			 	char className[128];
-			 	GetClassNameA(GetForegroundWindow(), className, 128);
+			if (inFunction) {
+				char className[128];
+				GetClassNameA(GetForegroundWindow(), className, 128);
 				if (strcmp(className, "Shell_TrayWnd")) {
 					printf("Not anymore\n");
 					inFunction = false;
@@ -622,9 +672,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				kbddown(nKey, 0);
 				kbdup(VK_RCONTROL, 0);
 				return 1;
+				}
 			}
 		}
-	}
 #endif
 
 	if (config.rightShiftContextMenu) {
@@ -676,7 +726,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			kbdpress(taskId, 0);
 			if (needsWin) kbdup(VK_RWIN, 0);
 			return 1;
-		}
+	}
 	}
 #else
 	// Horrible hack because the new taskbar is coded with feet
