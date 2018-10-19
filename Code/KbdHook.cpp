@@ -499,6 +499,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				return 1;
 			}
 
+#if WIN_DOT_IN_OTHER_LANGUAGES
 			// Win+DOT also working in Japanese layout (not so useful for now)
 			if (config.selectHiraganaByDefault && nKey == 0xBE && !skipNextWinDot) {
 				CancelNamedTask(TASKID_SWITCH_TO_HIRAGANA); // Win+DOT is Interfered by a pending switch to hiragana
@@ -516,6 +517,12 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 					return 1;
 				}
 			}
+#else
+			// Avoid switching to hiragana if a Win+DOT is pressed soon after the Win+Space
+			if (config.selectHiraganaByDefault && nKey == 0xBE && !skipNextWinDot) {
+				CancelNamedTask(TASKID_SWITCH_TO_HIRAGANA);
+			}
+#endif
 
 			if (config.winFOpensYourFiles && nKey == 'F') {
 				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0);
