@@ -69,6 +69,53 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 		}
 	}
 
+	if (nCode >= 0 && wParam == WM_MOUSEWHEEL) {
+		// For some reason it's always injected on the Precision Trackpad...
+		//static unsigned consecutiveScrolls = 0;
+		//MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
+		//// Do not process injected
+		//if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED) {
+		//	printf("Was injected %x\n", mllStruct->flags);
+		//	return CallNextHookEx(NULL, nCode, wParam, lParam);
+		//}
+
+		//int zDelta = GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData);
+		//printf("zDelta: %d\n", zDelta);
+
+		//INPUT input;
+		//ZeroMemory(&input, sizeof(input));
+		//input.type = INPUT_MOUSE;
+		//input.mi.dx = mllStruct->pt.x;
+		//input.mi.dy = mllStruct->pt.y;
+		//input.mi.mouseData = mllStruct->mouseData;
+		//input.mi.dwFlags = MOUSEEVENTF_WHEEL;
+		//input.mi.time = mllStruct->time;
+		//input.mi.dwExtraInfo = mllStruct->dwExtraInfo;
+		//SendInput(1, &input, sizeof(input));
+		//return 1;
+
+		static unsigned consecutiveScrolls = 0;
+		static 
+		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
+
+		int zDelta = GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData);
+		
+
+		for (int i = 0; i < repeatCount; i++) {
+			INPUT input;
+			ZeroMemory(&input, sizeof(input));
+			input.type = INPUT_MOUSE;
+			input.mi.dx = mllStruct->pt.x;
+			input.mi.dy = mllStruct->pt.y;
+			input.mi.mouseData = mllStruct->mouseData;
+			input.mi.dwFlags = MOUSEEVENTF_WHEEL;
+			input.mi.time = mllStruct->time;
+			input.mi.dwExtraInfo = mllStruct->dwExtraInfo;
+			SendInput(1, &input, sizeof(input));
+		}
+		return 1;
+	}
+
 //	if (nCode >= 0 && wParam == WM_MOUSEWHEEL) {
 //		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
 //		static int interceptedCount = 0;
