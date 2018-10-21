@@ -122,7 +122,7 @@ void Config::readFile() {
 		for (string &error : errors) {
 			message.append("\n- ").append(error);
 		}
-		message.append("\nWe can fix the file for you (written as config.sample.json, just rename it to config.json if OK) if you click on Yes, just start the program as is if you click on No, or exit if you click on Cancel.");
+		message.append("\nWe can fix the file for you if you click on Yes (written as config.sample.json, just rename it to config.json if OK and restart the app), start as is if you click on No, or quit if you click on Cancel.");
 
 		switch (MessageBox(NULL, message.c_str(), "Invalid config file", MB_ICONWARNING | MB_YESNOCANCEL)) {
 		case IDYES:
