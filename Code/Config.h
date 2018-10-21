@@ -5,6 +5,9 @@
 extern char originalExeCommand[1024];
 
 struct Config: public RefClass {
+	// Set to null when found
+	std::vector<const char*> foundProps;
+	std::vector<std::string> errors;
 	// The right control key becomes the context menu key
 	//bool rightCtrlContextMenu;
 	// Toggle hidden folder view in explorer by pressing Ctrl+H
@@ -59,7 +62,7 @@ struct Config: public RefClass {
 	bool resetDefaultGammaCurve;
 
 	// Reload the values from the config file. Will affect all members of this instance. Must be called at least once before use of the instance.
-	bool readFile();
+	void readFile();
 
 private:
 	// Does initialization (if obj = null), read (if serializer = null) or write for any instance variable

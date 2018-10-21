@@ -1,18 +1,34 @@
 #include "Precompiled.h"
 #include "Config.h"
 
-#define IMPLEMENT_BOOL_PROP(name, default)	if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) name = obj->value.toBool();
-#define IMPLEMENT_UNSIGNED_PROP(name, default)	if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) name = (unsigned) obj->value.toNumber();
-#define IMPLEMENT_INT_PROP(name, default)	if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) name = (int) obj->value.toNumber();
-#define IMPLEMENT_FLOAT_PROP(name, default)	if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) name = (float) obj->value.toNumber();
-#define IMPLEMENT_ARRAY_PROP(name, default)	if (serializer) serializer->put(""#name, name, numberof(name)); else if (!obj) memcpy(name, default, sizeof(name)); else if (!strcmp(obj->key, ""#name)) parseNumberArray(name, numberof(name), obj->value);
-//#define IMPLEMENT_STRING_MAP_PROP(name, default)	if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (obj && !strcmp(obj->key, ""#name)) parseStringMap(name);
+#define IMPLEMENT_BOOL_PROP(name, default)      { if (obj) mkentry(""#name); if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) found(), name = obj->value.toBool(); }
+#define IMPLEMENT_UNSIGNED_PROP(name, default)	{ if (obj) mkentry(""#name); if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) found(), name = (unsigned) obj->value.toNumber(); }
+#define IMPLEMENT_INT_PROP(name, default)       { if (obj) mkentry(""#name); if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) found(), name = (int) obj->value.toNumber(); }
+#define IMPLEMENT_FLOAT_PROP(name, default)     { if (obj) mkentry(""#name); if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) found(), name = (float) obj->value.toNumber(); }
+#define IMPLEMENT_ARRAY_PROP(name, default)     { if (obj) mkentry(""#name); if (serializer) serializer->put(""#name, name, numberof(name)); else if (!obj) memcpy(name, default, sizeof(name)); else if (!strcmp(obj->key, ""#name)) found(), parseNumberArray(name, numberof(name), obj->value); }
+//#define IMPLEMENT_STRING_MAP_PROP(name, default)	{ propId++; if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (obj && !strcmp(obj->key, ""#name)) found = true, parseStringMap(name); }
 
 Config config;
 
 void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
+	// Checking whether the key exists
+	// If obj != null, foundProps should be all null (means that properties are found) and for each process call (key in the JSON) there thisEntryFound should be true.
+	int propId = -1;
+	bool thisEntryFound = false;
+	auto mkentry = [&](const char *key) {
+		propId++;
+		if (foundProps.size() < propId + 1) {
+			foundProps.push_back(key);
+		}
+	};
+	auto found = [&] {
+		foundProps[propId] = nullptr;
+		thisEntryFound = true;
+	};
+
 	unsigned short defaultGammaCurve[3 * 256];
 	memset(defaultGammaCurve, 0, sizeof(defaultGammaCurve));
+
 	//IMPLEMENT_BOOL_PROP(rightCtrlContextMenu, false);
 	IMPLEMENT_BOOL_PROP(toggleHideFolders, true);
 	IMPLEMENT_BOOL_PROP(startScreenSaverWithInsert, false);
@@ -47,14 +63,25 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(doNotUseWinSpace, false);
 	IMPLEMENT_BOOL_PROP(internationalUsKeyboardForFrench, false);
 	IMPLEMENT_BOOL_PROP(resetDefaultGammaCurve, false);
+
+	if (obj && !thisEntryFound) {
+		char error[1024];
+		sprintf(error, "Unrecognized entry %s in JSON", obj->key);
+		errors.push_back(error);
+	}
 }
 
-bool Config::readFile() {
+void Config::readFile() {
 	// Read & parse file
 	FILE *fp = fopen("config.json", "rb");
 	if (!fp) {
-		fputs("error: can not open config.json\n", stderr);
-		return false;
+		switch (MessageBox(NULL, "Cannot open config.json, do you want to create one for you?\nInspect it, then start the app again.", "Cannot start", MB_ICONWARNING | MB_OKCANCEL)) {
+		case IDOK:
+			writeSampleFile("config.json");
+		case IDCANCEL:
+			exit(EXIT_FAILURE);
+			break;
+		}
 	}
 	fseek(fp, 0, SEEK_END);
 	size_t buffer_size = ftell(fp) + 1;
@@ -68,20 +95,47 @@ bool Config::readFile() {
 	JsonAllocator allocator;
 	JsonParseStatus status = json_parse(buffer, &endptr, &value, allocator);
 	if (status != JSON_PARSE_OK) {
-		fprintf(stderr, "Error at %ld, status: %d\n", long(endptr - buffer), status);
-		return false;
+		char error[1024];
+		sprintf(error, "Error at %ld, status: %d\n", long(endptr - buffer), status);
+		errors.push_back(error);
+	}
+	else {
+		// Init to default values
+		foundProps.clear();
+		process();
+
+		// Parse file itself
+		for (auto obj : value)
+			process(obj);
+
+		for (auto prop : foundProps) {
+			if (prop) {
+				char error[1024];
+				sprintf(error, "Missing entry %s in JSON", prop);
+				errors.push_back(error);
+			}
+		}
 	}
 
-	// Init to default values
-	process();
+	if (!errors.empty()) {
+		std::string message("The following errors were found, please check your config file:");
+		for (string &error : errors) {
+			message.append("\n- ").append(error);
+		}
+		message.append("\nWe can fix the file for you (written as config.sample.json, just rename it to config.json if OK) if you click on Yes, just start the program as is if you click on No, or exit if you click on Cancel.");
 
-	// Parse file itself
-	for (auto obj : value)
-		process(obj);
-
-	// writeSampleFile("sample.json");
-	return true;
+		switch (MessageBox(NULL, message.c_str(), "Invalid config file", MB_ICONWARNING | MB_YESNOCANCEL)) {
+		case IDYES:
+			writeSampleFile("config.sample.json");
+		case IDCANCEL:
+			exit(EXIT_FAILURE);
+			break;
+		case IDNO:
+			break;
+		}
+	}
 }
+
 void Config::parseNumberArray(unsigned short array[], unsigned maxLength, JsonValue &val) {
 	int index = 0;
 	if (val.getTag() != JSON_TAG_ARRAY) {
@@ -103,5 +157,15 @@ void Config::writeSampleFile(const char *fname) {
 		process(NULL, &node);
 		writeJson(node, outFile);
 		fclose(outFile);
+
+		// Open in explorer
+		char directoryAnsi[1024];
+		char fullCommand[1080];
+		GetCurrentDirectory(numberof(directoryAnsi), directoryAnsi);
+		sprintf(fullCommand, "/select,%s\\%s", directoryAnsi, fname);
+		ShellExecute(NULL, "open", "explorer.exe", fullCommand, directoryAnsi, SW_SHOW);
+	}
+	else {
+		MessageBox(NULL, "Unable to create file in this directory, please check your rights", "Error", MB_ICONEXCLAMATION);
 	}
 }

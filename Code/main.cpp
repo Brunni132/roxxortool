@@ -52,10 +52,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
 	SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 	killAlreadyExisting();
-	if (!config.readFile()) {
-		MessageBox(NULL, "Unable to read config.json", "Cannot start", MB_ICONEXCLAMATION);
-		exit(EXIT_FAILURE);
-	}
+	config.readFile();
 
 #ifdef _DEBUG
 	AllocConsole();
