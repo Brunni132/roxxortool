@@ -10,6 +10,8 @@ namespace TaskManager {
 	void init();
 	void terminate();
 
+	uint64_t CurrentTime();
+
 	void Run(std::function<void()> function);
 	void RunNamed(NamedTask name, std::function<void()> function);
 	void RunLater(std::function<void()> function, int delayMs);

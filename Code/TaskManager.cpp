@@ -7,55 +7,35 @@ using namespace TaskManager;
 struct Action {
 	NamedTask taskName;
 	function<void()> taskFn;
+	uint64_t executionTime;
 
-	Action(NamedTask taskName, function<void()> taskFn) : taskFn(taskFn), taskName(taskName) {}
-};
-
-struct DeferredAction {
-	NamedTask taskName;
-	function<void()> taskFn;
-	DWORD timerIdEvent;
-
-	DeferredAction(NamedTask taskName, function<void()> taskFn) : taskName(taskName), taskFn(taskFn) {}
+	Action(NamedTask taskName, function<void()> taskFn, uint64_t executionTime) : taskFn(taskFn), taskName(taskName), executionTime(executionTime) {}
 };
 
 static HANDLE hThread = NULL;
 static HANDLE hQueueReadyEvent = NULL;
 static bool exitRequested = false;
-static list<Action> immediateActionQueue;
-static list<DeferredAction> deferredActionQueue;
+static list<Action> actionQueue;
 
-static DWORD WINAPI ImmediateActionThread(LPVOID lpParam) {
+static DWORD WINAPI ActionWorkerThread(LPVOID lpParam) {
 	while (!exitRequested) {
-		printf("Loop executed\n");
-		while (!immediateActionQueue.empty()) {
-			Action action = immediateActionQueue.front();
-			immediateActionQueue.pop_front();
-			action.taskFn();
+		auto now = CurrentTime();
+		// Not super fast: even if we add something in the middle the loop will terminate with the number of items that there was at the start
+		// Then because the now is computed only once the newly added actions wouldn't be executed anyway (because planned in the future)
+		// In any case it's not that bad because WaitForSingleObjectEx will do nothing since the event will already be set
+		for (auto it = actionQueue.begin(); it != actionQueue.end(); ) {
+			if (now >= (*it).executionTime) {
+				Action action = *it;
+				it = actionQueue.erase(it);
+				action.taskFn();
+			}
+			else ++it;
 		}
 
-		WaitForSingleObjectEx(hQueueReadyEvent, 10000, true);
+		WaitForSingleObjectEx(hQueueReadyEvent, actionQueue.empty() ? INFINITE : 10, true);
 	}
 
 	return 0;
-}
-
-void CALLBACK PerformDeferredActionOnTimer(HWND, UINT, UINT_PTR idEvent, DWORD) {
-	// Timer can be called only once
-	KillTimer(NULL, idEvent);
-
-	printf("Timer executed\n");
-	for (auto it = deferredActionQueue.begin(); it != deferredActionQueue.end(); ) {
-		if ((*it).timerIdEvent == idEvent) {
-			DeferredAction action = *it;
-			it = deferredActionQueue.erase(it);
-			// Do not run from the timer thread
-			RunNamed(action.taskName, [=] {
-				action.taskFn();
-			});
-		}
-		else ++it;
-	}
 }
 
 void TaskManager::init() {
@@ -66,7 +46,7 @@ void TaskManager::init() {
 	hThread = CreateThread(
 		NULL,                   // default security attributes
 		0,                      // use default stack size  
-		ImmediateActionThread,  // thread function name
+		ActionWorkerThread,     // thread function name
 		NULL,                   // argument to thread function 
 		0,                      // use default creation flags 
 		NULL);                  // returns the thread identifier 
@@ -80,30 +60,25 @@ void TaskManager::terminate() {
 	hThread = NULL;
 }
 
+uint64_t TaskManager::CurrentTime() {
+	return GetTickCount64();
+}
+
 void TaskManager::CancelTask(NamedTask taskId) {
 	// TODO proper mutex
-	for (auto it = immediateActionQueue.begin(); it != immediateActionQueue.end(); ) {
+	for (auto it = actionQueue.begin(); it != actionQueue.end(); ) {
 		auto &action = *it;
-		if (action.taskName == taskId) it = immediateActionQueue.erase(it);
-		else ++it;
-	}
-
-	for (auto it = immediateActionQueue.begin(); it != immediateActionQueue.end(); ) {
-		auto &action = *it;
-		if (action.taskName == taskId) it = immediateActionQueue.erase(it);
+		if (action.taskName == taskId) it = actionQueue.erase(it);
 		else ++it;
 	}
 }
 
 void TaskManager::Run(std::function<void()> function) {
-	immediateActionQueue.push_back(Action(TASKID_UNNAMED, function));
-	SetEvent(hQueueReadyEvent);
+	RunNamedLater(TASKID_UNNAMED, function, 0);
 }
 
 void TaskManager::RunNamed(NamedTask taskName, std::function<void()> function) {
-	if (taskName != TASKID_UNNAMED) CancelTask(taskName);
-	immediateActionQueue.push_back(Action(taskName, function));
-	SetEvent(hQueueReadyEvent);
+	RunNamedLater(taskName, function, 0);
 }
 
 void TaskManager::RunLater(std::function<void()> function, int delayMs) {
@@ -113,8 +88,7 @@ void TaskManager::RunLater(std::function<void()> function, int delayMs) {
 void TaskManager::RunNamedLater(NamedTask taskName, std::function<void()> function, int delay) {
 	if (taskName != TASKID_UNNAMED) CancelTask(taskName);
 
-	DeferredAction action(taskName, function);
-	action.timerIdEvent = SetTimer(NULL, 0, delay, PerformDeferredActionOnTimer);
-	deferredActionQueue.push_back(action);
+	actionQueue.push_back(Action(TASKID_UNNAMED, function, CurrentTime() + delay));
+	SetEvent(hQueueReadyEvent);
 }
 
