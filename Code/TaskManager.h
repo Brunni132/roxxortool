@@ -10,13 +10,11 @@ namespace TaskManager {
 	void init();
 	void terminate();
 
-	ULONGLONG GetSystemTimeInMs();
-
 	void Run(std::function<void()> function);
 	void RunNamed(NamedTask name, std::function<void()> function);
-	void RunLater(std::function<void()> function, int delay);
+	void RunLater(std::function<void()> function, int delayMs);
 	// Cancels any task with the same name
-	void RunNamedLater(NamedTask taskId, std::function<void()> function, int delay);
-	void CancelTask(NamedTask taskId);
+	void RunNamedLater(NamedTask taskName, std::function<void()> function, int delayMs);
+	void CancelTask(NamedTask taskName);
 }
 

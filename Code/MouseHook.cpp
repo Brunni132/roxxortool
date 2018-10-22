@@ -192,7 +192,13 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 
 void MouseHook::start() {
 	if (config.altTabWithMouseButtons /*|| config.startScreenSaverWithInsert*/) {
-		hHook = SetWindowsHookEx(WH_MOUSE_LL, LowLevelMouseProc_AltTab, GetModuleHandle(NULL), 0);
+		//hHook = SetWindowsHookEx(WH_MOUSE_LL, LowLevelMouseProc_AltTab, GetModuleHandle(NULL), 0);
+		TaskManager::Run([=] {
+			printf("Hello world\n");
+			TaskManager::RunLater([=] {
+				printf("Hello world 2\n");
+			}, 100);
+		});
 	}
 }
 
