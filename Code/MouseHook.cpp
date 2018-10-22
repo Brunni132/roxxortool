@@ -70,75 +70,51 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 	}
 
 	if (nCode >= 0 && wParam == WM_MOUSEWHEEL) {
-		// For some reason it's always injected on the Precision Trackpad...
-		//static unsigned consecutiveScrolls = 0;
-		//MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
-		//// Do not process injected
-		//if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED) {
-		//	printf("Was injected %x\n", mllStruct->flags);
-		//	return CallNextHookEx(NULL, nCode, wParam, lParam);
-		//}
-
-		//int zDelta = GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData);
-		//printf("zDelta: %d\n", zDelta);
-
-		//INPUT input;
-		//ZeroMemory(&input, sizeof(input));
-		//input.type = INPUT_MOUSE;
-		//input.mi.dx = mllStruct->pt.x;
-		//input.mi.dy = mllStruct->pt.y;
-		//input.mi.mouseData = mllStruct->mouseData;
-		//input.mi.dwFlags = MOUSEEVENTF_WHEEL;
-		//input.mi.time = mllStruct->time;
-		//input.mi.dwExtraInfo = mllStruct->dwExtraInfo;
-		//SendInput(1, &input, sizeof(input));
-		//return 1;
-
 		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
 		if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED) {
-			printf("Was injected %x %d\n", mllStruct->flags, GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData));
 			return CallNextHookEx(NULL, nCode, wParam, lParam);
 		}
 
-		static int lastWheelTime;
+		static const int MIN_SCROLL_TIME = 34;
+		static const bool SEND_MULTIPLE_MESSAGES = false;
+		static const int SCROLL_ACCELERATOR = 50;
+		static DWORD lastWheelTime;
 		static unsigned consecutiveScrolls = 0;
-		consecutiveScrolls++;
 
-		printf("Time: %d\n", mllStruct->time - lastWheelTime);
+		if (mllStruct->time - lastWheelTime < MIN_SCROLL_TIME) consecutiveScrolls++;
+		else consecutiveScrolls = 0;
+		//printf("Time: %lu - %lu = %lu (total %d)\n", mllStruct->time, lastWheelTime, mllStruct->time - lastWheelTime, consecutiveScrolls);
 		lastWheelTime = mllStruct->time;
 
-		//if (consecutiveScrolls < 2) {
-			//int zDelta = GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData);
-			//int repeatCount = 1;
-
-			//for (int i = 0; i < repeatCount; i++) {
-			//	INPUT input;
-			//	ZeroMemory(&input, sizeof(input));
-			//	input.type = INPUT_MOUSE;
-			//	input.mi.dx = mllStruct->pt.x;
-			//	input.mi.dy = mllStruct->pt.y;
-			//	input.mi.mouseData = GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData);
-			//	input.mi.dwFlags = MOUSEEVENTF_WHEEL;
-			//	//input.mi.time = mllStruct->time;
-			//	//input.mi.dwExtraInfo = mllStruct->dwExtraInfo;
-			//	SendInput(1, &input, sizeof(input));
-			//	printf("Sent input\n");
-			//}
-		//}
-
-		int mouseDelta = GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData);
-		TaskManager::Run([=] {
-			INPUT input;
-			ZeroMemory(&input, sizeof(input));
-			input.type = INPUT_MOUSE;
-			input.mi.mouseData = mouseDelta * 2;
-			input.mi.dwFlags = MOUSEEVENTF_WHEEL;
-			SendInput(1, &input, sizeof(input));
-			printf("INJECTED %d\n", GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData));
-		});
-		return 1;
-
-		//return CallNextHookEx(NULL, nCode, wParam, lParam);
+		int multiplier = 100 + (consecutiveScrolls - 1) * SCROLL_ACCELERATOR;
+		if (multiplier > 100) {
+			int mouseDelta = GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData);
+			if (!SEND_MULTIPLE_MESSAGES) {
+				mouseDelta = mouseDelta * multiplier / 100;
+				TaskManager::Run([=] {
+					INPUT input;
+					ZeroMemory(&input, sizeof(input));
+					input.type = INPUT_MOUSE;
+					input.mi.mouseData = mouseDelta;
+					input.mi.dwFlags = MOUSEEVENTF_WHEEL;
+					SendInput(1, &input, sizeof(input));
+					//printf("INJECTED %d\n", GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData));
+				});
+				return 1;
+			}
+			else {
+				int messageCount = (int)ceil((multiplier - 100) / 100.0f);
+				TaskManager::Run([=] {
+					INPUT input;
+					ZeroMemory(&input, sizeof(input));
+					input.type = INPUT_MOUSE;
+					input.mi.mouseData = mouseDelta;
+					input.mi.dwFlags = MOUSEEVENTF_WHEEL;
+					//printf("Sending %d messages\n", messageCount);
+					for (int i = 0; i < messageCount; i++) SendInput(1, &input, sizeof(input));
+				});
+			}
+		}
 	}
 
 //	if (nCode >= 0 && wParam == WM_MOUSEWHEEL) {

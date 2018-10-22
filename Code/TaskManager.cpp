@@ -64,7 +64,7 @@ uint64_t TaskManager::CurrentTime() {
 	return GetTickCount64();
 }
 
-void TaskManager::CancelTask(NamedTask taskId) {
+void TaskManager::CancelNamed(NamedTask taskId) {
 	// TODO proper mutex
 	for (auto it = actionQueue.begin(); it != actionQueue.end(); ) {
 		auto &action = *it;
@@ -86,7 +86,7 @@ void TaskManager::RunLater(std::function<void()> function, int delayMs) {
 }
 
 void TaskManager::RunNamedLater(NamedTask taskName, std::function<void()> function, int delay) {
-	if (taskName != TASKID_UNNAMED) CancelTask(taskName);
+	if (taskName != TASKID_UNNAMED) CancelNamed(taskName);
 
 	actionQueue.push_back(Action(TASKID_UNNAMED, function, CurrentTime() + delay));
 	SetEvent(hQueueReadyEvent);

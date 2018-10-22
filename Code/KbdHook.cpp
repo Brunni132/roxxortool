@@ -63,15 +63,15 @@ static void switchToHiragana() {
 }
 
 static void switchToHiraganaAfterDelay() {
-	RunNamedTaskAfterDelay(TASKID_SWITCH_TO_HIRAGANA, 100, [] {
+	TaskManager::RunNamedLater(TASKID_SWITCH_TO_HIRAGANA, [] {
 		// Doesn't work in Mail app
 		//if (getCurrentLayout() == 0x0411) {
 		switchToHiragana();
 		//}
-		RunNamedTaskAfterDelay(TASKID_SWITCH_TO_HIRAGANA, 1000, [] {
+		TaskManager::RunNamedLater(TASKID_SWITCH_TO_HIRAGANA, [] {
 			switchToHiragana();
-		});
-	});
+		}, 1000);
+	}, 100);
 }
 
 static void moveToTask(int taskNo, Location from) {
@@ -81,7 +81,7 @@ static void moveToTask(int taskNo, Location from) {
 	else if (from == CURRENT) taskNo += sgn(taskNo);
 	if (taskNo == 0 || taskNo == 1) return;
 
-	RunAfterDelay([=] {
+	TaskManager::Run([=] {
 		if (needsWin) kbddown(VK_RWIN, 0);
 		if (taskNo <= 0) {
 			if (needsShift) kbddown(VK_RSHIFT, 0);
@@ -411,12 +411,12 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			int processed = 0;
 			if (nKey == 0xae) {
 				// Molette -
-				RunAfterDelay([] { AudioMixer::decrementVolume(config.volumeIncrementQuantity); });
+				TaskManager::Run([] { AudioMixer::decrementVolume(config.volumeIncrementQuantity); });
 				processed = 0xae;
 			}
 			else if (nKey == 0xaf) {
 				// Molette +
-				RunAfterDelay([] { AudioMixer::incrementVolume(config.volumeIncrementQuantity); });
+				TaskManager::Run([] { AudioMixer::incrementVolume(config.volumeIncrementQuantity); });
 				processed = 0xaf;
 			}
 
@@ -432,14 +432,14 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			if (config.ddcCiBrightnessControl) {
 				if (nKey == VK_F9) {
 					int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
-					RunAfterDelay([qty] {
+					TaskManager::Run([qty] {
 						Monitor::decreaseBrightnessBy(qty);
 					});
 					return 1;
 				}
 				else if (nKey == VK_F10) {
 					int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
-					RunAfterDelay([qty] {
+					TaskManager::Run([qty] {
 						Monitor::increaseBrightnessBy(qty);
 					});
 					return 1;
@@ -448,14 +448,14 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 			// Reexecute ourselves on Ctrl+Win+R
 			if (config.reloadConfigWithCtrlWinR && nKey == 'R') {
-				RunAfterDelay([] {
+				TaskManager::Run([] {
 					Main::editConfigAndRelaunch();
 				});
 				return 1;
 			}
 
 			if (config.reloadConfigWithCtrlWinR && nKey == 'D') {
-				RunAfterDelay([] {
+				TaskManager::RunLater([] {
 					showStatusInfo();
 				}, 1000);
 				return 1;
@@ -520,7 +520,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 #else
 			// Avoid switching to hiragana if a Win+DOT is pressed soon after the Win+Space
 			if (config.selectHiraganaByDefault && nKey == 0xBE && !skipNextWinDot) {
-				CancelNamedTask(TASKID_SWITCH_TO_HIRAGANA);
+				TaskManager::CancelNamed(TASKID_SWITCH_TO_HIRAGANA);
 			}
 #endif
 
@@ -596,7 +596,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				inFunction = true;
 				kbdpress('B', 0);
 				// First press on Win+T
-				RunAfterDelay([] {
+				TaskManager::RunLater([] {
 					kbdpress('T', 0);
 					kbdpress(VK_END, 0);
 				}, 10);
@@ -693,7 +693,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			}
 			else if (wParam == WM_KEYUP && !pressedAnotherKeySince) {
 				// Au keyup, on presse un context menu (93)
-				RunAfterDelay([] {
+				TaskManager::Run([] {
 					kbdpress(VK_APPS, 0);
 				});
 			}
