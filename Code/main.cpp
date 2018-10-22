@@ -63,6 +63,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	AudioMixer::init();
 	KbdHook::start();
 	MouseHook::start();
+	TaskManager::init();
 
 	// Main message loop:
 	while (GetMessage(&msg, NULL, 0, 0)) {
@@ -73,6 +74,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	AudioMixer::terminate();
 	KbdHook::terminate();
 	MouseHook::terminate();
+	TaskManager::terminate();
 	return (int) msg.wParam;
 }
 

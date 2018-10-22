@@ -194,6 +194,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Precompiled.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Precompiled.h</PrecompiledHeaderFile>
     </ClCompile>
+    <ClCompile Include="TaskManager.cpp" />
     <ClCompile Include="Utilities.cpp" />
     <ClCompile Include="StatusWindow.cpp" />
     <ClCompile Include="WindowsExplorer.cpp" />
@@ -211,6 +212,7 @@
     <ClInclude Include="Monitor.h" />
     <ClInclude Include="MouseHook.h" />
     <ClInclude Include="Precompiled.h" />
+    <ClInclude Include="TaskManager.h" />
     <ClInclude Include="Utilities.h" />
     <ClInclude Include="StatusWindow.h" />
     <ClInclude Include="WindowsExplorer.h" />
