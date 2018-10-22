@@ -6,6 +6,12 @@
 
 const DWORD CLICK_TIME_FOR_TASK_SWITCHER = 250;
 
+static const bool MOUSE_WHEEL_ACCELERATION = true;
+static const int MIN_SCROLL_TIME = 34;
+static const int MAX_SCROLL_FACTOR = 2000;
+static const bool SEND_MULTIPLE_MESSAGES = false;
+static const int SCROLL_ACCELERATOR = 50;
+
 static HHOOK hHook;
 
 static void cancelTaskView(POINT mousePosition) {
@@ -69,15 +75,12 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 		}
 	}
 
-	if (nCode >= 0 && wParam == WM_MOUSEWHEEL) {
+	if (MOUSE_WHEEL_ACCELERATION && nCode >= 0 && wParam == WM_MOUSEWHEEL) {
 		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
 		if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED) {
 			return CallNextHookEx(NULL, nCode, wParam, lParam);
 		}
 
-		static const int MIN_SCROLL_TIME = 34;
-		static const bool SEND_MULTIPLE_MESSAGES = false;
-		static const int SCROLL_ACCELERATOR = 50;
 		static DWORD lastWheelTime;
 		static unsigned consecutiveScrolls = 0;
 
@@ -87,6 +90,7 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 		lastWheelTime = mllStruct->time;
 
 		int multiplier = 100 + (consecutiveScrolls - 1) * SCROLL_ACCELERATOR;
+		multiplier = min(MAX_SCROLL_FACTOR, multiplier);
 		if (multiplier > 100) {
 			int mouseDelta = GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData);
 			if (!SEND_MULTIPLE_MESSAGES) {
