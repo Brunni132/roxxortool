@@ -17,7 +17,10 @@ namespace TaskManager {
 	void RunLater(std::function<void()> function, int delayMs);
 	// Cancels any task with the same name
 	void RunNamedLater(NamedTask taskName, std::function<void()> function, int delayMs);
-	void RunLaterInSameThread(NamedTask taskName, std::function<void()> function, int delayMs);
 	void CancelNamed(NamedTask taskName);
+
+	void RunLaterOnSameThread(std::function<void()> code, int delayMs = 0);
+	void RunNamedOnSameThread(NamedTask taskId, int delayMs, std::function<void()> code, std::function<void()> onFinish);
+	void CancelNamedOnSameThread(NamedTask taskName);
 }
 

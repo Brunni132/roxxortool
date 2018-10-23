@@ -1,5 +1,4 @@
 #include "Precompiled.h"
-#include "TaskManager.h"
 
 using namespace std;
 using namespace TaskManager;
@@ -90,7 +89,4 @@ void TaskManager::RunNamedLater(NamedTask taskName, std::function<void()> functi
 
 	actionQueue.push_back(Action(TASKID_UNNAMED, function, CurrentTime() + delay));
 	SetEvent(hQueueReadyEvent);
-}
-
-void TaskManager::RunLaterInSameThread(NamedTask taskName, std::function<void()> function, int delayMs) {
 }

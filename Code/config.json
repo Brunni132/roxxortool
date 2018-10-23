@@ -21,7 +21,7 @@
 	"resetDefaultGammaCurve": true,
 	"rightShiftContextMenu": true,
 	"selectHiraganaByDefault": true,
-	"smoothVolumeControl": false,
+	"smoothVolumeControl": true,
 	"startScreenSaverWithInsert": false,
 	"toggleHideFolders": true,
 	"useSoftMediaKeys": true,

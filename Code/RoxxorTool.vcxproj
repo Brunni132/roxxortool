@@ -195,6 +195,7 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Precompiled.h</PrecompiledHeaderFile>
     </ClCompile>
     <ClCompile Include="TaskManager.cpp" />
+    <ClCompile Include="TaskManager.SameThread.cpp" />
     <ClCompile Include="Utilities.cpp" />
     <ClCompile Include="StatusWindow.cpp" />
     <ClCompile Include="WindowsExplorer.cpp" />

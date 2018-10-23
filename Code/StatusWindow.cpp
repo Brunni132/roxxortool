@@ -50,7 +50,7 @@ static ATOM MyRegisterClass(HINSTANCE hInstance)
 	return RegisterClassEx(&wcex);
 }
 
-static void showMessage() {
+static void showMessage(int delayMs) {
 	MONITORINFOEX monitorInfo;
 	HMONITOR hMonitor = MonitorFromWindow(GetForegroundWindow(), MONITOR_DEFAULTTOPRIMARY);
 	monitorInfo.cbSize = sizeof(monitorInfo);
@@ -69,7 +69,7 @@ static void showMessage() {
 		ShowWindow(g_hWnd, SW_SHOW);
 		SetWindowText(g_hStaticText, text);
 	}
-	SetTimer(g_hWnd, 0, 2000, NULL);
+	SetTimer(g_hWnd, 0, delayMs, NULL);
 	SetWindowPos(g_hWnd, HWND_TOPMOST,
 		(monitorInfo.rcMonitor.right + monitorInfo.rcMonitor.left - width) / 2,
 		(monitorInfo.rcMonitor.bottom + monitorInfo.rcMonitor.top - height) / 2,
@@ -78,7 +78,7 @@ static void showMessage() {
 
 void StatusWindow::showBrightness(int brightnessLevel) {
 	sprintf(text, "Brightness: %d", brightnessLevel);
-	showMessage();
+	showMessage(2000);
 }
 
 void StatusWindow::showVolume(double volumeLevel) {
@@ -87,6 +87,6 @@ void StatusWindow::showVolume(double volumeLevel) {
 		sprintf(text, "Volume: %d dB", (int)volumeLevel);
 	else
 		sprintf(text, "Volume: %.1f dB", volumeLevel);
-	showMessage();
+	showMessage(2000);
 }
 

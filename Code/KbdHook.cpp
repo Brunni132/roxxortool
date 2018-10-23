@@ -411,12 +411,12 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			int processed = 0;
 			if (nKey == 0xae) {
 				// Molette -
-				TaskManager::Run([] { AudioMixer::decrementVolume(config.volumeIncrementQuantity); });
+				TaskManager::RunLaterOnSameThread([] { AudioMixer::decrementVolume(config.volumeIncrementQuantity); });
 				processed = 0xae;
 			}
 			else if (nKey == 0xaf) {
 				// Molette +
-				TaskManager::Run([] { AudioMixer::incrementVolume(config.volumeIncrementQuantity); });
+				TaskManager::RunLaterOnSameThread([] { AudioMixer::incrementVolume(config.volumeIncrementQuantity); });
 				processed = 0xaf;
 			}
 
@@ -432,14 +432,14 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			if (config.ddcCiBrightnessControl) {
 				if (nKey == VK_F9) {
 					int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
-					TaskManager::Run([qty] {
+					TaskManager::RunLaterOnSameThread([qty] {
 						Monitor::decreaseBrightnessBy(qty);
 					});
 					return 1;
 				}
 				else if (nKey == VK_F10) {
 					int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
-					TaskManager::Run([qty] {
+					TaskManager::RunLaterOnSameThread([qty] {
 						Monitor::increaseBrightnessBy(qty);
 					});
 					return 1;
@@ -448,14 +448,14 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 			// Reexecute ourselves on Ctrl+Win+R
 			if (config.reloadConfigWithCtrlWinR && nKey == 'R') {
-				TaskManager::Run([] {
+				TaskManager::RunLaterOnSameThread([] {
 					Main::editConfigAndRelaunch();
 				});
 				return 1;
 			}
 
 			if (config.reloadConfigWithCtrlWinR && nKey == 'D') {
-				TaskManager::RunLater([] {
+				TaskManager::RunLaterOnSameThread([] {
 					showStatusInfo();
 				}, 1000);
 				return 1;
