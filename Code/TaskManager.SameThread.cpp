@@ -8,23 +8,20 @@ struct TaskInfo {
 	function<void()> callback;
 	// Always executed, even if the task is canceled
 	function<void()> onFinish;
-	bool repeat;
 
 	TaskInfo() : timerIdEvent(0), callback(nullptr) {}
 	bool isValid() const { return timerIdEvent != 0; }
-	void set(UINT_PTR timerIdEvent, function<void()> callback, function<void()> onFinish, bool repeat) {
+	void set(UINT_PTR timerIdEvent, function<void()> callback, function<void()> onFinish) {
 		assert(!this->timerIdEvent && !this->callback && !this->onFinish);
 		this->timerIdEvent = timerIdEvent;
 		this->callback = callback;
 		this->onFinish = onFinish;
-		this->repeat = repeat;
 	}
 	// Cancels the task but doesn't execute the onFinish callback
 	void clear() {
 		timerIdEvent = 0;
 		callback = nullptr;
 		onFinish = nullptr;
-		repeat = false;
 	}
 };
 
@@ -50,24 +47,19 @@ void TaskManager::RunLaterOnSameThread(function<void()> code, int delayMs) {
 }
 
 void CALLBACK PerformNamedOnTimer(HWND, UINT, UINT_PTR idEvent, DWORD) {
+	// Timer can be called only once
+	KillTimer(NULL, idEvent);
+	eventIdsToTaskId[idEvent] = (NamedTask)0;
+
 	NamedTask taskId = eventIdsToTaskId[idEvent];
 	TaskInfo &task = taskIdsToInfo[taskId];
 	function<void()> mainCb = task.callback;
 	function<void()> finishCb = task.onFinish;
-	bool repeat = task.repeat;
 
-	if (!repeat) {
-		// Timer can be called only once
-		KillTimer(NULL, idEvent);
-		eventIdsToTaskId[idEvent] = (NamedTask)0;
-
-		// Won't be triggered again
-		task.clear();
-	}
+	// Won't be triggered again
+	task.clear();
 	mainCb();
-	if (!repeat) {
-		if (finishCb) finishCb();
-	}
+	if (finishCb) finishCb();
 }
 
 // Called from TaskManager::CancelNamed, never call on your own

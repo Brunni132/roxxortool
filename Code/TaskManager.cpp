@@ -15,6 +15,7 @@ static HANDLE hThread = NULL;
 static HANDLE hQueueReadyEvent = NULL;
 static bool exitRequested = false;
 static list<Action> actionQueue;
+static UINT_PTR checkRemoteDesktopTimer = 0;
 
 static DWORD WINAPI ActionWorkerThread(LPVOID lpParam) {
 	while (!exitRequested) {
@@ -37,6 +38,10 @@ static DWORD WINAPI ActionWorkerThread(LPVOID lpParam) {
 	return 0;
 }
 
+void CALLBACK CheckRemoteDesktop(HWND, UINT, UINT_PTR, DWORD) {
+
+}
+
 void TaskManager::init() {
 	assert(!hThread);           // Already inited
 	exitRequested = false;
@@ -49,9 +54,12 @@ void TaskManager::init() {
 		NULL,                   // argument to thread function 
 		0,                      // use default creation flags 
 		NULL);                  // returns the thread identifier 
+
+	checkRemoteDesktopTimer = SetTimer(NULL, 0, 2000, CheckRemoteDesktop);
 }
 
 void TaskManager::terminate() {
+	KillTimer(NULL, checkRemoteDesktopTimer);
 	exitRequested = true;
 	SetEvent(hQueueReadyEvent);
 	WaitForSingleObject(hThread, INFINITE);
