@@ -7,10 +7,10 @@
 const DWORD CLICK_TIME_FOR_TASK_SWITCHER = 250;
 
 static const bool MOUSE_WHEEL_ACCELERATION = true;
-static const int MIN_SCROLL_TIME = 34;
+static const int MIN_SCROLL_TIME = 50;
 static const int MAX_SCROLL_FACTOR = 2000;
 static const bool SEND_MULTIPLE_MESSAGES = false;
-static const int SCROLL_ACCELERATOR = 100;
+static const float SCROLL_ACCELERATION_FACTOR = 1.0f;
 
 static HHOOK hHook;
 
@@ -82,93 +82,53 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 		}
 
 		static DWORD lastWheelTime;
-		static unsigned consecutiveScrolls = 0;
+		static int lastMouseDelta = 0;
+		static float consecutiveScrolls = 1;
 
-		if (mllStruct->time - lastWheelTime < MIN_SCROLL_TIME) consecutiveScrolls++;
-		else consecutiveScrolls = 0;
-		//printf("Time: %lu - %lu = %lu (total %d)\n", mllStruct->time, lastWheelTime, mllStruct->time - lastWheelTime, consecutiveScrolls);
+		int mouseDelta = GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData);
+		if (mouseDelta * lastMouseDelta < 0) {
+			consecutiveScrolls = 1;
+			//printf("RESETED (%d %d)\n", mouseDelta, lastMouseDelta);
+		}
+		else {
+			//printf("Affected: %f (time diff=%d)\n", 1 - float(mllStruct->time - lastWheelTime) / MIN_SCROLL_TIME, mllStruct->time - lastWheelTime);
+			consecutiveScrolls += (1 - float(mllStruct->time - lastWheelTime) / MIN_SCROLL_TIME) * SCROLL_ACCELERATION_FACTOR;
+			consecutiveScrolls = max(0, min(MAX_SCROLL_FACTOR, consecutiveScrolls));
+			//printf("Time: %lu - %lu = %lu (total %d)\n", mllStruct->time, lastWheelTime, mllStruct->time - lastWheelTime, consecutiveScrolls);
+			//printf("%f\n", consecutiveScrolls);
+		}
+		lastMouseDelta = mouseDelta;
 		lastWheelTime = mllStruct->time;
 
-		int multiplier = 100 + (consecutiveScrolls - 1) * SCROLL_ACCELERATOR;
-		multiplier = min(MAX_SCROLL_FACTOR, multiplier);
-		if (multiplier > 100) {
-			int mouseDelta = GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData);
-			if (!SEND_MULTIPLE_MESSAGES) {
-				mouseDelta = mouseDelta * multiplier / 100;
-				TaskManager::Run([=] {
-					INPUT input;
-					ZeroMemory(&input, sizeof(input));
-					input.type = INPUT_MOUSE;
-					input.mi.mouseData = mouseDelta;
-					input.mi.dwFlags = MOUSEEVENTF_WHEEL;
-					SendInput(1, &input, sizeof(input));
-					//printf("INJECTED %d\n", GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData));
-				});
-				return 1;
-			}
-			else {
-				int messageCount = (int)ceil((multiplier - 100) / 100.0f);
-				TaskManager::Run([=] {
-					INPUT input;
-					ZeroMemory(&input, sizeof(input));
-					input.type = INPUT_MOUSE;
-					input.mi.mouseData = mouseDelta;
-					input.mi.dwFlags = MOUSEEVENTF_WHEEL;
-					//printf("Sending %d messages\n", messageCount);
-					for (int i = 0; i < messageCount; i++) SendInput(1, &input, sizeof(input));
-				});
-			}
+		if (!SEND_MULTIPLE_MESSAGES && consecutiveScrolls > 1) {
+			mouseDelta = int(mouseDelta * consecutiveScrolls);
+			TaskManager::Run([=] {
+				INPUT input;
+				ZeroMemory(&input, sizeof(input));
+				input.type = INPUT_MOUSE;
+				input.mi.mouseData = mouseDelta;
+				input.mi.dwFlags = MOUSEEVENTF_WHEEL;
+				SendInput(1, &input, sizeof(input));
+				//printf("INJECTED %d\n", GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData));
+			});
+			return 1;
+		}
+		else if (SEND_MULTIPLE_MESSAGES && consecutiveScrolls >= 1.5f) {
+			int messageCount = int(roundf(consecutiveScrolls - 1.0f));
+			TaskManager::Run([=] {
+				INPUT input;
+				ZeroMemory(&input, sizeof(input));
+				input.type = INPUT_MOUSE;
+				input.mi.mouseData = mouseDelta;
+				input.mi.dwFlags = MOUSEEVENTF_WHEEL;
+				//printf("Sending %d messages\n", messageCount);
+				for (int i = 0; i < messageCount; i++) SendInput(1, &input, sizeof(input));
+			});
 		}
 	}
 
-//	if (nCode >= 0 && wParam == WM_MOUSEWHEEL) {
-//		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
-//		static int interceptedCount = 0;
-//
-//		if (interceptedCount++ >= 5)
-//			exit(0);
-//
-//		// Do not process injected
-//		if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED)
-//			return CallNextHookEx(NULL, nCode, wParam, lParam);
-//
-////#ifdef _DEBUG
-////		printf("w=%x flags=%x md=%x time=%x\n", wParam, mllStruct->flags, mllStruct->mouseData, mllStruct->time);
-////#endif
-//		INPUT input;
-//		ZeroMemory(&input, sizeof(input));
-//		input.type = INPUT_MOUSE;
-//		input.mi.dx = mllStruct->pt.x;
-//		input.mi.dy = mllStruct->pt.y;
-//		input.mi.mouseData = mllStruct->mouseData;
-//		input.mi.dwFlags = MOUSEEVENTF_WHEEL;
-//		//input.mi.time = 0;
-//		//input.mi.dwExtraInfo = 0;
-//		SendInput(1, &input, sizeof(input));
-//		return 1;
-//	}
 	return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
-
-//LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lParam) {
-//	if (nCode >= 0 && wParam == WM_MOUSEWHEEL) {
-//		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
-//		if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED)
-//			return CallNextHookEx(NULL, nCode, wParam, lParam);
-//
-//		int mouseDelta = GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData);
-//		RunInWorker([=] {
-//			INPUT input;
-//			ZeroMemory(&input, sizeof(input));
-//			input.type = INPUT_MOUSE;
-//			input.mi.mouseData = mouseDelta;
-//			input.mi.dwFlags = MOUSEEVENTF_WHEEL;
-//			SendInput(1, &input, sizeof(input));
-//		});
-//		return 1;
-//	}
-//	return CallNextHookEx(NULL, nCode, wParam, lParam);
-//}
 
 void MouseHook::start() {
 	if (config.altTabWithMouseButtons /*|| config.startScreenSaverWithInsert*/) {
