@@ -28,20 +28,21 @@ static void killAlreadyExisting() {
 }
 
 void Main::editConfigAndRelaunch() {
-	// Stop the hooks so we can type and use the mouse
 	KbdHook::terminate();
 	MouseHook::terminate();
-	// Edit file
-	system("echo You pressed Ctrl+Win+R & echo When you close the notepad, RoxxorTool will restart with the new parameters. & notepad config.json");
-	TCHAR reexecute[1024];
-	PROCESS_INFORMATION pi;
-	STARTUPINFO si;
-	ZeroMemory(&si, sizeof(si));
-	si.cb = sizeof si;
-	GetModuleFileName(NULL, reexecute, 1024);
-	CreateProcess(reexecute, NULL,
-		NULL, NULL, FALSE, 0, NULL,
-		NULL, &si, &pi);
+	TaskManager::Run([=] {
+		// Edit file
+		system("echo You pressed Ctrl+Win+R & echo When you close the notepad, RoxxorTool will restart with the new parameters. & notepad config.json");
+		TCHAR reexecute[1024];
+		PROCESS_INFORMATION pi;
+		STARTUPINFO si;
+		ZeroMemory(&si, sizeof(si));
+		si.cb = sizeof si;
+		GetModuleFileName(NULL, reexecute, 1024);
+		CreateProcess(reexecute, NULL,
+			NULL, NULL, FALSE, 0, NULL,
+			NULL, &si, &pi);
+	});
 }
 
 int APIENTRY WinMain(HINSTANCE hInstance,

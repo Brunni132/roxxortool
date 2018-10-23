@@ -21,6 +21,5 @@ namespace TaskManager {
 
 	void RunLaterOnSameThread(std::function<void()> code, int delayMs = 0);
 	void RunNamedOnSameThread(NamedTask taskId, int delayMs, std::function<void()> code, std::function<void()> onFinish);
-	void CancelNamedOnSameThread(NamedTask taskName);
 }
 

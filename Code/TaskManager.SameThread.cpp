@@ -62,19 +62,8 @@ void CALLBACK PerformNamedOnTimer(HWND, UINT, UINT_PTR idEvent, DWORD) {
 	if (finishCb) finishCb();
 }
 
-void TaskManager::RunNamedOnSameThread(NamedTask taskId, int delayMs, function<void()> code, function<void()> onFinish) {
-	assert(delayMs > 0);	// Race condition may occur otherwise
-	CancelNamedOnSameThread(taskId);
-
-	// The issue is that SetTimer always regenerates an ID and doesn't pass it back to the callback, so we need double linked lists
-	UINT_PTR idEvent = SetTimer(NULL, 0, delayMs, PerformNamedOnTimer);
-	eventIdsToTaskId[idEvent] = taskId;
-
-	TaskInfo &task = taskIdsToInfo[taskId];
-	task.set(idEvent, code, onFinish);
-}
-
-void TaskManager::CancelNamedOnSameThread(NamedTask taskId) {
+// Called from TaskManager::CancelNamed, never call on your own
+void Internal_CancelTask(NamedTask taskId) {
 	TaskInfo &task = taskIdsToInfo[taskId];
 	if (task.isValid()) {
 		function<void()> finishCb = task.onFinish;
@@ -84,6 +73,18 @@ void TaskManager::CancelNamedOnSameThread(NamedTask taskId) {
 		task.clear();
 		if (finishCb) finishCb();
 	}
+}
+
+void TaskManager::RunNamedOnSameThread(NamedTask taskId, int delayMs, function<void()> code, function<void()> onFinish) {
+	assert(delayMs > 0);	// Race condition may occur otherwise
+	TaskManager::CancelNamed(taskId);
+
+	// The issue is that SetTimer always regenerates an ID and doesn't pass it back to the callback, so we need double linked lists
+	UINT_PTR idEvent = SetTimer(NULL, 0, delayMs, PerformNamedOnTimer);
+	eventIdsToTaskId[idEvent] = taskId;
+
+	TaskInfo &task = taskIdsToInfo[taskId];
+	task.set(idEvent, code, onFinish);
 }
 
 //void LockMachineOnNextAction() {

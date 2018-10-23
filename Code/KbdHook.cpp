@@ -138,7 +138,7 @@ static void showStatusInfo() {
 	for (int i = 0x00; i <= 0xff; i++) {
 		if (GetAsyncKeyState(i) & 0x8000) {
 			char buf[256];
-			sprintf_s(buf, "key=%x", i);
+			sprintf_s(buf, "key=%02x(%c)", i, i);
 			infos.push_back(buf);
 		}
 	}
@@ -163,14 +163,14 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	bool injected = (kbd->flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED));
 
 #ifdef _DEBUG
-	if (wParam == WM_KEYDOWN)
-		printf("Down%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
-	if (wParam == WM_KEYUP)
-		printf("Up%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
-	if (wParam == WM_SYSKEYDOWN)
-		printf("Sysdown%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
-	if (wParam == WM_SYSKEYUP)
-		printf("Sysup%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
+	//if (wParam == WM_KEYDOWN)
+	//	printf("Down%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
+	//if (wParam == WM_KEYUP)
+	//	printf("Up%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
+	//if (wParam == WM_SYSKEYDOWN)
+	//	printf("Sysdown%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
+	//if (wParam == WM_SYSKEYUP)
+	//	printf("Sysup%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
 #endif
 
 	// Keyboard translation services, must be run before everyone else
@@ -448,18 +448,17 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 			// Reexecute ourselves on Ctrl+Win+R
 			if (config.reloadConfigWithCtrlWinR && nKey == 'R') {
-				TaskManager::RunLaterOnSameThread([] {
-					Main::editConfigAndRelaunch();
-				});
+				Main::editConfigAndRelaunch();
 				return 1;
 			}
 
 			if (config.reloadConfigWithCtrlWinR && nKey == 'D') {
-				TaskManager::RunLaterOnSameThread([] {
+				TaskManager::RunLater([] {
 					showStatusInfo();
-				}, 1000);
+				}, 500);
 				return 1;
 			}
+
 
 			if (config.useSoftMediaKeys) {
 				switch (nKey) {
@@ -572,7 +571,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				char className[128];
 				GetClassNameA(GetForegroundWindow(), className, 128);
 				if (strcmp(className, "Shell_TrayWnd")) {
-					printf("Not anymore\n");
 					inFunction = false;
 				}
 			}
