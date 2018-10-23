@@ -16,7 +16,7 @@ static HHOOK hHook;
 
 static void cancelTaskView(POINT mousePosition) {
 	kbdpress(VK_ESCAPE, 0);
-	TaskManager::RunLater([=] {
+	TaskManager::RunLaterOnSameThread([=] {
 		INPUT input;
 		ZeroMemory(&input, sizeof(input));
 		input.type = INPUT_MOUSE;
@@ -52,14 +52,14 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 			if (isGoingDown) {
 				isDown = true;
 				clickPosition = mllStruct->pt;
-				TaskManager::Run([=] {
+				TaskManager::RunLaterOnSameThread([=] {
 					kbddown(VK_LCONTROL, 0);
 					kbddown(VK_LMENU, 0);
-					TaskManager::Run([=] {
+					TaskManager::RunLaterOnSameThread([=] {
 						kbdpress(VK_TAB, 0);
 						kbdup(VK_LCONTROL, 0);
 						kbdup(VK_LMENU, 0);
-						TaskManager::RunLater([=] {
+						TaskManager::RunLaterOnSameThread([=] {
 							if (isDown) {
 								cancelTaskView(clickPosition);
 							}
