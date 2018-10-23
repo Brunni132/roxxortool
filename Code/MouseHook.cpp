@@ -11,6 +11,7 @@ static const int MIN_SCROLL_TIME = 50;
 static const int MAX_SCROLL_FACTOR = 2000;
 static const bool SEND_MULTIPLE_MESSAGES = false;
 static const float SCROLL_ACCELERATION_FACTOR = 1.0f;
+static const bool DISMISS_PRECISION_TRACKPAD = true;
 
 static HHOOK hHook;
 
@@ -83,9 +84,21 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 
 		static DWORD lastWheelTime;
 		static int lastMouseDelta = 0;
+		static int dismissedIrregularScrollsFor = 0;
 		static float consecutiveScrolls = 1;
 
 		int mouseDelta = GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData);
+		if (DISMISS_PRECISION_TRACKPAD) {
+			if (labs(mouseDelta) != labs(lastMouseDelta)) {
+				dismissedIrregularScrollsFor = 4;
+			}
+			if (dismissedIrregularScrollsFor > 0) {
+				dismissedIrregularScrollsFor--;
+				lastMouseDelta = mouseDelta;
+				lastWheelTime = mllStruct->time;
+				return CallNextHookEx(NULL, nCode, wParam, lParam);
+			}
+		}
 		if (mouseDelta * lastMouseDelta < 0) {
 			consecutiveScrolls = 1;
 			//printf("RESETED (%d %d)\n", mouseDelta, lastMouseDelta);
