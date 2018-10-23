@@ -33,6 +33,11 @@ static void cancelTaskView(POINT mousePosition) {
 }
 
 LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lParam) {
+	// Unlike the keyboard hook, the mouse hook is called and processed properly even if MS TSC is the active window
+	// So we let the host do the job and ignore anything on the guest
+	if (TaskManager::isInRemoteDesktop || TaskManager::isBeingRemoteDesktopd) {
+		return CallNextHookEx(NULL, nCode, wParam, lParam);
+	}
 	//if (config.startScreenSaverWithInsert) {
 	//	DidPerformAnAction();
 	//}
