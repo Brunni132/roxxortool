@@ -10,7 +10,7 @@ static const bool MOUSE_WHEEL_ACCELERATION = true;
 static const int MIN_SCROLL_TIME = 34;
 static const int MAX_SCROLL_FACTOR = 2000;
 static const bool SEND_MULTIPLE_MESSAGES = false;
-static const int SCROLL_ACCELERATOR = 50;
+static const int SCROLL_ACCELERATOR = 100;
 
 static HHOOK hHook;
 

@@ -92,3 +92,5 @@ void TaskManager::RunNamedLater(NamedTask taskName, std::function<void()> functi
 	SetEvent(hQueueReadyEvent);
 }
 
+void TaskManager::RunLaterInSameThread(NamedTask taskName, std::function<void()> function, int delayMs) {
+}

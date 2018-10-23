@@ -719,6 +719,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	// TODO parameter
 	if (config.disableWinTabAnimation) {
 		if (nKey == VK_TAB && winPressed() && wParam == WM_KEYDOWN) {
+			// Must be run in the main thread because it calls SetTimer!
 			disableAnimationsForDurationOfWinTab();
 		}
 	}
