@@ -7,7 +7,7 @@
 const DWORD CLICK_TIME_FOR_TASK_SWITCHER = 250;
 
 static const bool MOUSE_WHEEL_ACCELERATION = true;
-static const int MIN_SCROLL_TIME = 50;
+static const int MIN_SCROLL_TIME = 70;
 static const int MAX_SCROLL_FACTOR = 2000;
 static const bool SEND_MULTIPLE_MESSAGES = false;
 static const float SCROLL_ACCELERATION_FACTOR = 1.0f;
