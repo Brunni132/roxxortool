@@ -60,6 +60,11 @@ struct Config: public RefClass {
 	bool internationalUsKeyboardForFrench;
 	// If set, doesn't use the current gamma curve as a base, but always resets it
 	bool resetDefaultGammaCurve;
+	float scrollAccelerationFactor;
+	int scrollAccelerationIntertia;
+	float scrollAccelerationMaxScrollFactor;
+	bool scrollAccelerationSendMultipleMessages;
+	bool scrollAccelerationDismissTrackpad;
 
 	// Reload the values from the config file. Will affect all members of this instance. Must be called at least once before use of the instance.
 	void readFile();
@@ -68,7 +73,7 @@ private:
 	// Does initialization (if obj = null), read (if serializer = null) or write for any instance variable
 	void process(struct JsonNode *obj = NULL, struct JsonWriterNode *serializer = NULL);
 	void parseNumberArray(unsigned short array[], unsigned maxLength, struct JsonValue &val);
-	void writeSampleFile(const char *fname);
+	void writeSampleFile(const char *fname, bool showInExplorer);
 };
 
 // Common instance to normally query the config from.

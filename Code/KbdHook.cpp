@@ -152,7 +152,7 @@ static HHOOK g_hHook;
 
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	// Not something for us
-	if (nCode != HC_ACTION || TaskManager::isInRemoteDesktop) {
+	if (nCode != HC_ACTION || TaskManager::isInTeamViewer) {
 		return CallNextHookEx(NULL, nCode, wParam, lParam);
 	}
 

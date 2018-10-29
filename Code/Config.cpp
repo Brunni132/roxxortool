@@ -63,10 +63,15 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(doNotUseWinSpace, false);
 	IMPLEMENT_BOOL_PROP(internationalUsKeyboardForFrench, false);
 	IMPLEMENT_BOOL_PROP(resetDefaultGammaCurve, false);
+	IMPLEMENT_FLOAT_PROP(scrollAccelerationFactor, 0.0f);
+	IMPLEMENT_INT_PROP(scrollAccelerationIntertia, 50);
+	IMPLEMENT_FLOAT_PROP(scrollAccelerationMaxScrollFactor, 2000);
+	IMPLEMENT_BOOL_PROP(scrollAccelerationSendMultipleMessages, false);
+	IMPLEMENT_BOOL_PROP(scrollAccelerationDismissTrackpad, true);
 
 	if (obj && !thisEntryFound) {
 		char error[1024];
-		sprintf(error, "Unrecognized entry %s in JSON", obj->key);
+		sprintf(error, "Unrecognized entry %s", obj->key);
 		errors.push_back(error);
 	}
 }
@@ -77,7 +82,7 @@ void Config::readFile() {
 	if (!fp) {
 		switch (MessageBox(NULL, "Cannot open config.json, do you want to create one for you?\nInspect it, then start the app again.", "Cannot start", MB_ICONWARNING | MB_OKCANCEL)) {
 		case IDOK:
-			writeSampleFile("config.json");
+			writeSampleFile("config.json", true);
 		case IDCANCEL:
 			exit(EXIT_FAILURE);
 			break;
@@ -111,22 +116,31 @@ void Config::readFile() {
 		for (auto prop : foundProps) {
 			if (prop) {
 				char error[1024];
-				sprintf(error, "Missing entry %s in JSON", prop);
+				sprintf(error, "Missing entry %s", prop);
 				errors.push_back(error);
 			}
 		}
 	}
 
 	if (!errors.empty()) {
-		std::string message("The following errors were found, please check your config file:");
+		std::string message("The following happened when loading the JSON config file:");
 		for (string &error : errors) {
 			message.append("\n- ").append(error);
 		}
-		message.append("\nWe can fix the file for you if you click on Yes (written as config.sample.json, just rename it to config.json if OK and restart the app), start as is if you click on No, or quit if you click on Cancel.");
+		message.append("\nWe can fix the file for you if you click on Yes (current is renamed as config.old.json), start as is if you click on No, or quit if you click on Cancel.");
 
 		switch (MessageBox(NULL, message.c_str(), "Invalid config file", MB_ICONWARNING | MB_YESNOCANCEL)) {
 		case IDYES:
-			writeSampleFile("config.sample.json");
+			if (!MoveFile("config.json", "config.old.json")) {
+				LPSTR messageBuffer = nullptr;
+				size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+					NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPSTR)&messageBuffer, 0, NULL);
+				MessageBox(NULL, messageBuffer, "Unable to rename the file to config.old.json", MB_ICONEXCLAMATION);
+				exit(EXIT_FAILURE);
+			}
+			else
+				writeSampleFile("config.json", false);
+			break;
 		case IDCANCEL:
 			exit(EXIT_FAILURE);
 			break;
@@ -150,7 +164,7 @@ void Config::parseNumberArray(unsigned short array[], unsigned maxLength, JsonVa
 	}
 }
 
-void Config::writeSampleFile(const char *fname) {
+void Config::writeSampleFile(const char *fname, bool showInExplorer) {
 	JsonWriterNode node;
 	FILE *outFile = fopen(fname, "w");
 	if (outFile) {
@@ -158,12 +172,13 @@ void Config::writeSampleFile(const char *fname) {
 		writeJson(node, outFile);
 		fclose(outFile);
 
-		// Open in explorer
-		char directoryAnsi[1024];
-		char fullCommand[1080];
-		GetCurrentDirectory(numberof(directoryAnsi), directoryAnsi);
-		sprintf(fullCommand, "/select,%s\\%s", directoryAnsi, fname);
-		ShellExecute(NULL, "open", "explorer.exe", fullCommand, directoryAnsi, SW_SHOW);
+		if (showInExplorer) {
+			char directoryAnsi[1024];
+			char fullCommand[1080];
+			GetCurrentDirectory(numberof(directoryAnsi), directoryAnsi);
+			sprintf(fullCommand, "/select,%s\\%s", directoryAnsi, fname);
+			ShellExecute(NULL, "open", "explorer.exe", fullCommand, directoryAnsi, SW_SHOW);
+		}
 	}
 	else {
 		MessageBox(NULL, "Unable to create file in this directory, please check your rights", "Error", MB_ICONEXCLAMATION);

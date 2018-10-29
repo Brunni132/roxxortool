@@ -6,13 +6,6 @@
 
 const DWORD CLICK_TIME_FOR_TASK_SWITCHER = 250;
 
-static const bool MOUSE_WHEEL_ACCELERATION = true;
-static const int MIN_SCROLL_TIME = 70;
-static const int MAX_SCROLL_FACTOR = 2000;
-static const bool SEND_MULTIPLE_MESSAGES = false;
-static const float SCROLL_ACCELERATION_FACTOR = 1.0f;
-static const bool DISMISS_PRECISION_TRACKPAD = true;
-
 static HHOOK hHook;
 
 static void cancelTaskView(POINT mousePosition) {
@@ -35,7 +28,7 @@ static void cancelTaskView(POINT mousePosition) {
 LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lParam) {
 	// Unlike the keyboard hook, the mouse hook is called and processed properly even if MS TSC is the active window
 	// So we let the host do the job and ignore anything on the guest
-	if (TaskManager::isInRemoteDesktop || TaskManager::isBeingRemoteDesktopd) {
+	if (TaskManager::isInTeamViewer || TaskManager::isBeingRemoteDesktopd) {
 		return CallNextHookEx(NULL, nCode, wParam, lParam);
 	}
 	//if (config.startScreenSaverWithInsert) {
@@ -81,7 +74,7 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 		}
 	}
 
-	if (MOUSE_WHEEL_ACCELERATION && nCode >= 0 && wParam == WM_MOUSEWHEEL) {
+	if (config.scrollAccelerationFactor > 0 && nCode >= 0 && wParam == WM_MOUSEWHEEL) {
 		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
 		if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED) {
 			return CallNextHookEx(NULL, nCode, wParam, lParam);
@@ -93,7 +86,7 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 		static float consecutiveScrolls = 1;
 
 		int mouseDelta = GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData);
-		if (DISMISS_PRECISION_TRACKPAD) {
+		if (config.scrollAccelerationDismissTrackpad) {
 			if (labs(mouseDelta) != labs(lastMouseDelta)) {
 				dismissedIrregularScrollsFor = 4;
 			}
@@ -110,15 +103,15 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 		}
 		else {
 			//printf("Affected: %f (time diff=%d)\n", 1 - float(mllStruct->time - lastWheelTime) / MIN_SCROLL_TIME, mllStruct->time - lastWheelTime);
-			consecutiveScrolls += (1 - float(mllStruct->time - lastWheelTime) / MIN_SCROLL_TIME) * SCROLL_ACCELERATION_FACTOR;
-			consecutiveScrolls = max(0, min(MAX_SCROLL_FACTOR, consecutiveScrolls));
+			consecutiveScrolls += (1 - float(mllStruct->time - lastWheelTime) / config.scrollAccelerationIntertia) * config.scrollAccelerationFactor;
+			consecutiveScrolls = max(0, min(config.scrollAccelerationMaxScrollFactor, consecutiveScrolls));
 			//printf("Time: %lu - %lu = %lu (total %d)\n", mllStruct->time, lastWheelTime, mllStruct->time - lastWheelTime, consecutiveScrolls);
 			//printf("%f\n", consecutiveScrolls);
 		}
 		lastMouseDelta = mouseDelta;
 		lastWheelTime = mllStruct->time;
 
-		if (!SEND_MULTIPLE_MESSAGES && consecutiveScrolls > 1) {
+		if (!config.scrollAccelerationSendMultipleMessages && consecutiveScrolls > 1) {
 			mouseDelta = int(mouseDelta * consecutiveScrolls);
 			TaskManager::Run([=] {
 				INPUT input;
@@ -131,7 +124,7 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 			});
 			return 1;
 		}
-		else if (SEND_MULTIPLE_MESSAGES && consecutiveScrolls >= 1.5f) {
+		else if (config.scrollAccelerationSendMultipleMessages && consecutiveScrolls >= 1.5f) {
 			int messageCount = int(roundf(consecutiveScrolls - 1.0f));
 			TaskManager::Run([=] {
 				INPUT input;

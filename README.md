@@ -6,6 +6,11 @@ I decided to publicly release a tool that I've been developing and improving eve
 
 This tool focuses on very basic functionality that is usually not covered by other tools (else I would simply have used them in the first place). So let's go on with a list of tweaks, associated with their key (which you'll use to enable it in the configuration file).
 
+- `scrollAccelerationFactor`: set to a value > 0 (start with 0.5) to enable mouse wheel acceleration, a bit like on macOS.
+	- `scrollAccelerationIntertia`: this sets the scroll rate necessary to accelerate the scrolling. The smaller the value, the less you'll see acceleration, and the quicker it will stop once you release it.
+	- `scrollAccelerationMaxScrollFactor`: limits the maximum scrolling rate.
+	- `scrollAccelerationSendMultipleMessages`: by default it uses the precise scrolling as offered by Windows, but you may set this to true to simulate an accelerated scroll by multiple simple scroll actions.
+	- `scrollAccelerationDismissTrackpad`: when set to true, dismisses any "precise" device (i.e. not having a fixed wheel delta, like gaming mice). Try setting this to false if it doesn't work.
 - `ddcCiBrightnessControl`: enables controlling the brightness of your screen through Ctrl+Win+F9 and F10. It can be used either for your internal panel (possibly replacing the manufacturer tool if it proves to be badly designed or a resource hog like often), either for your external screen. The screen affected by this command is the one on which the active window is. Note that this won't work on a TV since the DDC/CI protocol is not supported. It will work on most monitors though, but you might have to enable the DDC/CI option somewhere from the OSD to enable for that. Try it if the brightness is stuck to 0.
 	- Shift can be held to make smaller increments.
 	- Driven by `brightnessIncrementQuantity`, `forceReapplyGammaOnBrightnessChange`, `brightnessCacheDuration` (time in ms in which the brightness is kept in memory before querying again the panel's current brightness; this is useful if you use the adaptive display feature -- try setting it to 0 to see what I mean -- else I recommend you turn it to 0).

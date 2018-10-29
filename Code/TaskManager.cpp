@@ -16,7 +16,7 @@ static HANDLE hQueueReadyEvent = NULL;
 static bool exitRequested = false;
 static list<Action> actionQueue;
 static UINT_PTR checkRemoteDesktopTimer = 0;
-bool TaskManager::isInRemoteDesktop = false, TaskManager::isBeingRemoteDesktopd = false;
+bool TaskManager::isInTeamViewer = false, TaskManager::isBeingRemoteDesktopd = false;
 
 static DWORD WINAPI ActionWorkerThread(LPVOID lpParam) {
 	while (!exitRequested) {
@@ -43,8 +43,8 @@ void CALLBACK CheckRemoteDesktop(HWND, UINT, UINT_PTR, DWORD) {
 	char className[128];
 	HWND hWnd = GetForegroundWindow();
 	GetClassName(hWnd, className, numberof(className));
-	// MS TSC or Team Viewer
-	isInRemoteDesktop = /* !strcmp(className, "TscShellContainerClass") || */ !strcmp(className, "TV_CClientWindowClass");
+	//isInMsRDP = !strcmp(className, "TscShellContainerClass");
+	isInTeamViewer = !strcmp(className, "TV_CClientWindowClass");
 	// TODO only works with MS TSC
 	isBeingRemoteDesktopd = GetSystemMetrics(SM_REMOTESESSION);
 }
