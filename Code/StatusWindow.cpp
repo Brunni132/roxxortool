@@ -50,35 +50,42 @@ static ATOM MyRegisterClass(HINSTANCE hInstance)
 	return RegisterClassEx(&wcex);
 }
 
-static void showMessage(int delayMs) {
+// Needs the text variable to be set to the message text to show
+// If the text is an empty string, the window is hidden if active / nothing is shown
+static void showMessageInternal(int delayMs) {
 	MONITORINFOEX monitorInfo;
 	HMONITOR hMonitor = MonitorFromWindow(GetForegroundWindow(), MONITOR_DEFAULTTOPRIMARY);
 	monitorInfo.cbSize = sizeof(monitorInfo);
 	GetMonitorInfo(hMonitor, &monitorInfo);
 	const int width = 200, height = 50;
+	bool isEmptyMessage = !text[0];
+
 	if (g_hWnd) {
 		KillTimer(g_hWnd, 0);
-		SetWindowText(g_hStaticText, text);
+		SetTimer(g_hWnd, 0, delayMs, NULL);
 	}
-	else {
+	else if (!isEmptyMessage) {
 		if (!alreadyRegistered)
 			MyRegisterClass(GetModuleHandle(NULL));
 		alreadyRegistered = true;
 		g_hWnd = CreateWindowEx(WS_EX_TOPMOST, szWindowClass, szWindowTitle, WS_POPUP,
 			0, 0, width, height, NULL, NULL, GetModuleHandle(NULL), 0);
 		ShowWindow(g_hWnd, SW_SHOW);
-		SetWindowText(g_hStaticText, text);
+		SetTimer(g_hWnd, 0, delayMs, NULL);
 	}
-	SetTimer(g_hWnd, 0, delayMs, NULL);
-	SetWindowPos(g_hWnd, HWND_TOPMOST,
-		(monitorInfo.rcMonitor.right + monitorInfo.rcMonitor.left - width) / 2,
-		(monitorInfo.rcMonitor.bottom + monitorInfo.rcMonitor.top - height) / 2,
-		width, height, SWP_NOSIZE | SWP_NOZORDER);
+
+	if (!isEmptyMessage) {
+		SetWindowText(g_hStaticText, text);
+		SetWindowPos(g_hWnd, HWND_TOPMOST,
+			(monitorInfo.rcMonitor.right + monitorInfo.rcMonitor.left - width) / 2,
+			(monitorInfo.rcMonitor.bottom + monitorInfo.rcMonitor.top - height) / 2,
+			width, height, SWP_NOSIZE | SWP_NOZORDER);
+	}
 }
 
 void StatusWindow::showBrightness(int brightnessLevel) {
 	sprintf(text, "Brightness: %d", brightnessLevel);
-	showMessage(2000);
+	showMessageInternal(2000);
 }
 
 void StatusWindow::showVolume(double volumeLevel) {
@@ -87,6 +94,14 @@ void StatusWindow::showVolume(double volumeLevel) {
 		sprintf(text, "Volume: %d dB", (int)volumeLevel);
 	else
 		sprintf(text, "Volume: %.1f dB", volumeLevel);
-	showMessage(2000);
+	showMessageInternal(2000);
 }
 
+void StatusWindow::showMessage(const char *message, int timeToLeaveOpen) {
+	strcpy_s(text, message);
+	showMessageInternal(timeToLeaveOpen);
+}
+
+void StatusWindow::hideMessage() {
+	showMessage("", 0);
+}

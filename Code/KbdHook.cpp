@@ -70,8 +70,11 @@ static void switchToHiraganaAfterDelay() {
 		//}
 		TaskManager::RunNamedLater(TASKID_SWITCH_TO_HIRAGANA, [] {
 			switchToHiragana();
+			TaskManager::RunNamedLater(TASKID_SWITCH_TO_HIRAGANA, [] {
+				switchToHiragana();
+			}, 1000);
 		}, 1000);
-	}, 100);
+	}, 200);
 }
 
 static void moveToTask(int taskNo, Location from) {
@@ -161,6 +164,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	int nKey = kbd->vkCode;
 	// Ignore injected input
 	bool injected = (kbd->flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED));
+	bool isDown = wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN;
+	bool isUp = wParam == WM_KEYUP || wParam == WM_SYSKEYUP;
 
 #ifdef _DEBUG
 	//if (wParam == WM_KEYDOWN)
@@ -328,10 +333,54 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		// If a key has been remapped, we'll never go further (return 1)
 	}
 
-	if (config.internationalUsKeyboardForFrench) {
-		bool isDown = wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN;
-		bool isUp = wParam == WM_KEYUP || wParam == WM_SYSKEYUP;
+	//const bool USE_R_ALT_MODE = false;
+	//if (USE_R_ALT_MODE) {
+	//	static bool featureActive = false;
+	//	const int R_ALT_DEPRESS_DELAY = 150;
+	//	static uint64_t keyPressTime = 0;
 
+	//	if (!featureActive) {
+	//		if (nKey == VK_RMENU) {
+	//			// TODO: refactor for rShift too
+	//			// TODO: do not take if any key is pressed meanwhile
+	//			// Enable feature by a quick press on R_ALT
+	//			if (!ctrlPressed() && !winPressed() && !shiftPressed() && isDown) {
+	//				keyPressTime = TaskManager::CurrentTime();
+	//			}
+	//			else if (isUp && TaskManager::CurrentTime() - keyPressTime <= R_ALT_DEPRESS_DELAY) {
+	//				featureActive = true;
+	//				StatusWindow::showMessage("Alt-mode active", 1000);
+	//			}
+	//		}
+	//	}
+	//	else {
+	//		if (isDown) {
+	//			if (nKey == 'K' || nKey == 'S') {
+	//				kbdpress(VK_DOWN, 0);
+	//				return 1;
+	//			}
+	//			else if (nKey == 'I' || nKey == 'W') {
+	//				kbdpress(VK_UP, 0);
+	//				return 1;
+	//			}
+	//			else if (nKey == 'A' || nKey == 'J') {
+	//				kbdpress(VK_LEFT, 0);
+	//				return 1;
+	//			}
+	//			else if (nKey == 'D' || nKey == 'L') {
+	//				kbdpress(VK_RIGHT, 0);
+	//				return 1;
+	//			}
+	//			else if (nKey != VK_UP && nKey != VK_DOWN && nKey != VK_RIGHT && nKey != VK_LEFT &&
+	//				nKey != VK_LCONTROL && nKey != VK_RCONTROL && nKey != VK_LMENU && nKey != VK_LSHIFT && nKey != VK_RSHIFT && nKey != VK_LWIN && nKey != VK_RWIN) {
+	//				featureActive = false;
+	//				StatusWindow::showMessage("Alt-mode disabled", 300);
+	//			}
+	//		}
+	//	}
+	//}
+
+	if (config.internationalUsKeyboardForFrench) {
 		layoutTranslatorsRegister();
 		if (isDown) {
 			if (layoutTranslatorsEnUs.processKeyDown(nKey, shiftPressed())) {
@@ -347,7 +396,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 	// Special keys
 	if (wParam == WM_KEYDOWN || wParam == WM_KEYUP || wParam == WM_SYSKEYDOWN || wParam == WM_SYSKEYUP) {
-		bool isDown = wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN;
 		switch (nKey) {
 		case VK_LCONTROL:
 			lCtrlPressed = isDown;
