@@ -5,8 +5,12 @@
 #include <CommCtrl.h>
 
 const DWORD CLICK_TIME_FOR_TASK_SWITCHER = 250;
-
 static HHOOK hHook;
+static vector<WPARAM> mouseEventsToIgnore;
+
+static void addForIgnore(WPARAM eventType) {
+	mouseEventsToIgnore.push_back(eventType);
+}
 
 static void cancelTaskView(POINT mousePosition) {
 	kbdpress(VK_ESCAPE, 0);
@@ -16,32 +20,71 @@ static void cancelTaskView(POINT mousePosition) {
 		input.type = INPUT_MOUSE;
 		input.mi.mouseData = XBUTTON2;
 		input.mi.dwFlags = MOUSEEVENTF_XDOWN;
+		addForIgnore(WM_XBUTTONDOWN);
 		SendInput(1, &input, sizeof(input));
 
 		input.mi.dwFlags = MOUSEEVENTF_XUP;
+		addForIgnore(WM_XBUTTONUP);
 		SendInput(1, &input, sizeof(input));
 		//extern void sendNextPageCommand();
 		//sendNextPageCommand();
 	}, 20);
 }
 
+#ifdef _DEBUG
+static char *buttonName(WPARAM wParam) {
+	switch (wParam) {
+	case WM_XBUTTONDOWN: return "WM_XBUTTONDOWN";
+	case WM_XBUTTONUP: return "WM_XBUTTONUP";
+	case WM_XBUTTONDBLCLK: return "WM_XBUTTONDBLCLK";
+	case WM_MOUSEWHEEL: return "WM_MOUSEWHEEL";
+	default: return "";
+	}
+}
+#endif
+
+
 LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lParam) {
 	// Unlike the keyboard hook, the mouse hook is called and processed properly even if MS TSC is the active window
 	// So we let the host do the job and ignore anything on the guest
 	if (TaskManager::isInTeamViewer || TaskManager::isBeingRemoteDesktopd) {
+#ifdef _DEBUG
+		if (TaskManager::isInTeamViewer) printf("Ignoring mouse event because in TeamViewer window\n");
+		if (TaskManager::isBeingRemoteDesktopd) printf("Ignoring mouse event because in remote desktop session\n");
+#endif
 		return CallNextHookEx(NULL, nCode, wParam, lParam);
 	}
+
 	//if (config.startScreenSaverWithInsert) {
 	//	DidPerformAnAction();
 	//}
 
-	if (config.altTabWithMouseButtons && nCode >= 0 && (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP)) {
+#ifdef _DEBUG
+	{
 		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
+		bool injected = mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED;
+		printf("Mouse%s, w=%llx (%s), for ignore=%zd\n", injected ? " (inj.)" : "", wParam, buttonName(wParam), mouseEventsToIgnore.size());
+	}
+#endif
 
-		// Do not process injected
-		if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED) {
+	// See if we should ignore the event
+	for (auto it = mouseEventsToIgnore.begin(); it != mouseEventsToIgnore.end(); ++it) {
+		if (*it == wParam) {
+#ifdef _DEBUG
+			printf("Ignored event %llx!\n", wParam);
+#endif
+			mouseEventsToIgnore.erase(it);
 			return CallNextHookEx(NULL, nCode, wParam, lParam);
 		}
+	}
+
+	if (config.altTabWithMouseButtons && nCode >= 0 && (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP)) {
+		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
+		
+		// Do not process injected
+		//if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED) {
+		//	return CallNextHookEx(NULL, nCode, wParam, lParam);
+		//}
 
 		static bool isDown = false;
 		static POINT clickPosition;
@@ -76,9 +119,9 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 
 	if (config.scrollAccelerationFactor > 0 && nCode >= 0 && wParam == WM_MOUSEWHEEL) {
 		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
-		if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED) {
-			return CallNextHookEx(NULL, nCode, wParam, lParam);
-		}
+		//if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED) {
+		//	return CallNextHookEx(NULL, nCode, wParam, lParam);
+		//}
 
 		static DWORD lastWheelTime;
 		static int lastMouseDelta = 0;
@@ -119,6 +162,7 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 				input.type = INPUT_MOUSE;
 				input.mi.mouseData = mouseDelta;
 				input.mi.dwFlags = MOUSEEVENTF_WHEEL;
+				addForIgnore(WM_MOUSEWHEEL);
 				SendInput(1, &input, sizeof(input));
 				//printf("INJECTED %d\n", GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData));
 			});
@@ -132,6 +176,7 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 				input.type = INPUT_MOUSE;
 				input.mi.mouseData = mouseDelta;
 				input.mi.dwFlags = MOUSEEVENTF_WHEEL;
+				addForIgnore(WM_MOUSEWHEEL);
 				//printf("Sending %d messages\n", messageCount);
 				for (int i = 0; i < messageCount; i++) SendInput(1, &input, sizeof(input));
 			});
