@@ -45,6 +45,11 @@ void CALLBACK CheckRemoteDesktop(HWND, UINT, UINT_PTR, DWORD) {
 	GetClassName(hWnd, className, numberof(className));
 	//isInMsRDP = !strcmp(className, "TscShellContainerClass");
 	isInTeamViewer = !strcmp(className, "TV_CClientWindowClass");
+#ifdef _DEBUG
+	char windowTitle[128];
+	GetWindowText(hWnd, windowTitle, sizeof(windowTitle));
+	printf("Current wnd class: %s, title: %s\n", className, windowTitle);
+#endif
 	// TODO only works with MS TSC
 	isBeingRemoteDesktopd = GetSystemMetrics(SM_REMOTESESSION);
 }

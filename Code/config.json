@@ -7,7 +7,6 @@
 	"brightnessIncrementQuantity": 5,
 	"closeWindowWithWinQ": true,
 	"ddcCiBrightnessControl": true,
-	"disableWinTabAnimation": true,
 	"doNotUseWinSpace": true,
 	"forceReapplyGammaOnBrightnessChange": false,
 	"iAmAMac": true,

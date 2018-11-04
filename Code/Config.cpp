@@ -53,7 +53,6 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(altGraveToStickyAltTab, false);
 	IMPLEMENT_BOOL_PROP(winTSelectsLastTask, false);
 	IMPLEMENT_INT_PROP(winTTaskMoveBy, 4);
-	IMPLEMENT_BOOL_PROP(disableWinTabAnimation, false);
 	IMPLEMENT_BOOL_PROP(altTabWithMouseButtons, false);
 	IMPLEMENT_BOOL_PROP(selectHiraganaByDefault, false);
 	IMPLEMENT_BOOL_PROP(japaneseMacBookPro, false);
@@ -127,7 +126,7 @@ void Config::readFile() {
 		for (string &error : errors) {
 			message.append("\n- ").append(error);
 		}
-		message.append("\nWe can fix the file for you if you click on Yes (current is renamed as config.old.json), start as is if you click on No, or quit if you click on Cancel.");
+		message.append("\nThis can be normal after an update. We can fix the file for you if you click on Yes (current is renamed as config.old.json), start as is if you click on No, or quit if you click on Cancel.");
 
 		switch (MessageBox(NULL, message.c_str(), "Invalid config file", MB_ICONWARNING | MB_YESNOCANCEL)) {
 		case IDYES:

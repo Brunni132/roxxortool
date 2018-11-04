@@ -170,7 +170,6 @@
   <ItemGroup>
     <ClCompile Include="AudioMixer.cpp" />
     <ClCompile Include="Config.cpp" />
-    <ClCompile Include="DisableAnimationsForWinTab.cpp" />
     <ClCompile Include="KbdHook.cpp" />
     <ClCompile Include="KbdLayoutTranslators.cpp" />
     <ClCompile Include="lib\gason.cpp">

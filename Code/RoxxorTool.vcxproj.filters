@@ -60,9 +60,6 @@
     <ClCompile Include="MouseHook.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DisableAnimationsForWinTab.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="KbdLayoutTranslators.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -9,7 +9,7 @@
 #include "WindowsExplorer.h"
 #include "Utilities.h"
 #include "StatusWindow.h"
-#include "DisableAnimationsForWinTab.h"
+//#include "DisableAnimationsForWinTab.h"
 #include "PowrProf.h"
 
 bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, rWinPressed = false, lShiftPressed = false, rShiftPressed = false, lAltPressed = false;
@@ -762,13 +762,12 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 	}
 
-	// TODO parameter
-	if (config.disableWinTabAnimation) {
-		if (nKey == VK_TAB && winPressed() && wParam == WM_KEYDOWN) {
-			// Must be run in the main thread because it calls SetTimer!
-			disableAnimationsForDurationOfWinTab();
-		}
-	}
+	//if (config.disableWinTabAnimation) {
+	//	if (nKey == VK_TAB && winPressed() && wParam == WM_KEYDOWN) {
+	//		// Must be run in the main thread because it calls SetTimer!
+	//		disableAnimationsForDurationOfWinTab();
+	//	}
+	//}
 
 #if PRE_WINDOWS_1803_UPDATE
 	if (nKey >= VK_NUMPAD0 && nKey <= VK_NUMPAD9 && config.multiDesktopLikeApplicationSwitcher) {
