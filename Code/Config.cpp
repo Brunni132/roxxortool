@@ -130,6 +130,7 @@ void Config::readFile() {
 
 		switch (MessageBox(NULL, message.c_str(), "Invalid config file", MB_ICONWARNING | MB_YESNOCANCEL)) {
 		case IDYES:
+			DeleteFile("config.old.json");
 			if (!MoveFile("config.json", "config.old.json")) {
 				LPSTR messageBuffer = nullptr;
 				size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
