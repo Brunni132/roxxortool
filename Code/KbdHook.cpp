@@ -168,14 +168,14 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	bool isUp = wParam == WM_KEYUP || wParam == WM_SYSKEYUP;
 
 #ifdef _DEBUG
-	//if (wParam == WM_KEYDOWN)
-	//	printf("Down%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
-	//if (wParam == WM_KEYUP)
-	//	printf("Up%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
-	//if (wParam == WM_SYSKEYDOWN)
-	//	printf("Sysdown%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
-	//if (wParam == WM_SYSKEYUP)
-	//	printf("Sysup%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
+	if (wParam == WM_KEYDOWN)
+		printf("Down%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
+	if (wParam == WM_KEYUP)
+		printf("Up%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
+	if (wParam == WM_SYSKEYDOWN)
+		printf("Sysdown%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
+	if (wParam == WM_SYSKEYUP)
+		printf("Sysup%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
 #endif
 
 	// Keyboard translation services, must be run before everyone else

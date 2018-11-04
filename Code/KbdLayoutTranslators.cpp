@@ -81,7 +81,7 @@ LayoutTranslator::State::State(WCHAR entryChar, WCHAR defaultOutcome, WCHAR defa
 	}
 }
 
-LayoutTranslator::LayoutTranslator() : stateIndex(-1), isRAltDown(false), didForcePressLCtrl(false) {}
+LayoutTranslator::LayoutTranslator() : stateIndex(-1), isRAltDown(false), isMenuDown(false), shouldSendMenuKey(false), didForcePressLCtrl(false) {}
 
 void LayoutTranslator::cancelAnyState() {
 	stateIndex = -1;
@@ -89,6 +89,14 @@ void LayoutTranslator::cancelAnyState() {
 
 // Returns TRUE if the key must be eaten
 bool LayoutTranslator::processKeyUp(int kbdVcode) {
+	if (kbdVcode == VK_APPS && !TaskManager::isInTeamViewer) {
+		bool pressMenuKey = isMenuDown && shouldSendMenuKey;
+		isMenuDown = shouldSendMenuKey = false;
+		if (pressMenuKey) {
+			kbdpress(VK_APPS, 0);
+		}
+		return true;
+	}
 	if (kbdVcode == VK_RMENU) {
 		isRAltDown = false;
 		if (didForcePressLCtrl) {
@@ -108,6 +116,13 @@ bool LayoutTranslator::processKeyUp(int kbdVcode) {
 
 // Returns TRUE if the key must be eaten
 bool LayoutTranslator::processKeyDown(int kbdVcode, bool shiftPressed) {
+	if (kbdVcode == VK_APPS && !TaskManager::isInTeamViewer) {
+		isMenuDown = true;
+		shouldSendMenuKey = true;
+		return true;
+	}
+	shouldSendMenuKey = false;
+
 	if (kbdVcode == VK_RMENU) {
 		isRAltDown = true;
 		if (!lCtrlPressed) {
@@ -121,7 +136,7 @@ bool LayoutTranslator::processKeyDown(int kbdVcode, bool shiftPressed) {
 		// No state currently
 		if (stateIndex == -1) {
 			// Need alt for any special key
-			if (isRAltDown) {
+			if (isRAltDown || isMenuDown) {
 				for (int i = 0; i < states.size(); i++) {
 					if (kbdVcode == states[i].entryChar) {
 						enterState(i, shiftPressed);

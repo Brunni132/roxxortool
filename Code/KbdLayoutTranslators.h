@@ -26,6 +26,8 @@ struct LayoutTranslator {
 private:
 	int stateIndex; // -1 = nones
 	bool isRAltDown;
+	bool isMenuDown;
+	bool shouldSendMenuKey;
 	bool didForcePressLCtrl;
 	vector<int> keysToEatOnPressup;
 
