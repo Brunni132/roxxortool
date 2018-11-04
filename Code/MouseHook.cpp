@@ -47,49 +47,40 @@ static char *buttonName(WPARAM wParam) {
 LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lParam) {
 	// Unlike the keyboard hook, the mouse hook is called and processed properly even if MS TSC is the active window
 	// So we let the host do the job and ignore anything on the guest
-	if (TaskManager::isInTeamViewer || TaskManager::isBeingRemoteDesktopd) {
+	if (TaskManager::isBeingRemoteDesktopd) {
 #ifdef _DEBUG
-		if (TaskManager::isInTeamViewer) printf("Ignoring mouse event because in TeamViewer window\n");
 		if (TaskManager::isBeingRemoteDesktopd) printf("Ignoring mouse event because in remote desktop session\n");
 #endif
 		return CallNextHookEx(NULL, nCode, wParam, lParam);
 	}
 
-	//if (config.startScreenSaverWithInsert) {
-	//	DidPerformAnAction();
-	//}
-
-#ifdef _DEBUG
-	{
-		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
-		bool injected = mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED;
-		printf("Mouse%s, w=%llx (%s), for ignore=%zd\n", injected ? " (inj.)" : "", wParam, buttonName(wParam), mouseEventsToIgnore.size());
-	}
-#endif
+//#ifdef _DEBUG
+//	{
+//		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
+//		bool injected = mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED;
+//		printf("Mouse%s, w=%llx (%s), for ignore=%zd\n", injected ? " (inj.)" : "", wParam, buttonName(wParam), mouseEventsToIgnore.size());
+//	}
+//#endif
 
 	// See if we should ignore the event
 	for (auto it = mouseEventsToIgnore.begin(); it != mouseEventsToIgnore.end(); ++it) {
 		if (*it == wParam) {
 #ifdef _DEBUG
-			printf("Ignored event %llx!\n", wParam);
+			MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
+			printf("Ignored event %s! (%d)\n", buttonName(wParam), GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData));
 #endif
 			mouseEventsToIgnore.erase(it);
 			return CallNextHookEx(NULL, nCode, wParam, lParam);
 		}
 	}
 
-	if (config.altTabWithMouseButtons && nCode >= 0 && (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP)) {
+	if (config.altTabWithMouseButtons && nCode >= 0 && (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP) && !TaskManager::isInTeamViewer) {
 		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
-		
-		// Do not process injected
-		//if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED) {
-		//	return CallNextHookEx(NULL, nCode, wParam, lParam);
-		//}
-
 		static bool isDown = false;
 		static POINT clickPosition;
 		bool isGoingDown = wParam == WM_XBUTTONDOWN, isGoingUp = wParam == WM_XBUTTONUP;
 		int button = mllStruct->mouseData >> 16;
+
 		if (button & XBUTTON2) {
 			if (isGoingDown) {
 				isDown = true;
@@ -119,33 +110,36 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 
 	if (config.scrollAccelerationFactor > 0 && nCode >= 0 && wParam == WM_MOUSEWHEEL) {
 		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
-		//if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED) {
-		//	return CallNextHookEx(NULL, nCode, wParam, lParam);
-		//}
+		if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED) {
+			return CallNextHookEx(NULL, nCode, wParam, lParam);
+		}
 
 		static DWORD lastWheelTime;
-		static int lastMouseDelta = 0;
+		static int lastMouseDelta = 0x7fffffff;
 		static int dismissedIrregularScrollsFor = 0;
-		static float consecutiveScrolls = 1;
+		static float consecutiveScrolls = 0;
 
 		int mouseDelta = GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData);
+		//printf("PROCESSED %d\n", mouseDelta);
 		if (config.scrollAccelerationDismissTrackpad) {
 			if (labs(mouseDelta) != labs(lastMouseDelta)) {
-				dismissedIrregularScrollsFor = 4;
+				dismissedIrregularScrollsFor = lastMouseDelta == 0x7fffffff ? 1 : 4;
 			}
 			if (dismissedIrregularScrollsFor > 0) {
 				dismissedIrregularScrollsFor--;
 				lastMouseDelta = mouseDelta;
 				lastWheelTime = mllStruct->time;
+				//printf("Dismissed trackpad\n");
 				return CallNextHookEx(NULL, nCode, wParam, lParam);
 			}
 		}
 		if (mouseDelta * lastMouseDelta < 0) {
-			consecutiveScrolls = 1;
+			consecutiveScrolls = 0;
 			//printf("RESETED (%d %d)\n", mouseDelta, lastMouseDelta);
 		}
 		else {
-			//printf("Affected: %f (time diff=%d)\n", 1 - float(mllStruct->time - lastWheelTime) / MIN_SCROLL_TIME, mllStruct->time - lastWheelTime);
+			//if (consecutiveScrolls <= 1) printf("\n\nWas reseted\n");
+			//printf("Affected: %f (time diff=%d [%ld - %ld])\n", 1 - float(mllStruct->time - lastWheelTime) / config.scrollAccelerationIntertia, mllStruct->time - lastWheelTime, mllStruct->time, lastWheelTime);
 			consecutiveScrolls += (1 - float(mllStruct->time - lastWheelTime) / config.scrollAccelerationIntertia) * config.scrollAccelerationFactor;
 			consecutiveScrolls = max(0, min(config.scrollAccelerationMaxScrollFactor, consecutiveScrolls));
 			//printf("Time: %lu - %lu = %lu (total %d)\n", mllStruct->time, lastWheelTime, mllStruct->time - lastWheelTime, consecutiveScrolls);
@@ -161,8 +155,8 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 				ZeroMemory(&input, sizeof(input));
 				input.type = INPUT_MOUSE;
 				input.mi.mouseData = mouseDelta;
+				input.mi.dwExtraInfo = 0x8;
 				input.mi.dwFlags = MOUSEEVENTF_WHEEL;
-				addForIgnore(WM_MOUSEWHEEL);
 				SendInput(1, &input, sizeof(input));
 				//printf("INJECTED %d\n", GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData));
 			});
@@ -176,7 +170,6 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 				input.type = INPUT_MOUSE;
 				input.mi.mouseData = mouseDelta;
 				input.mi.dwFlags = MOUSEEVENTF_WHEEL;
-				addForIgnore(WM_MOUSEWHEEL);
 				//printf("Sending %d messages\n", messageCount);
 				for (int i = 0; i < messageCount; i++) SendInput(1, &input, sizeof(input));
 			});
