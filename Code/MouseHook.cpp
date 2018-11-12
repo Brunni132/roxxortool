@@ -14,7 +14,8 @@ static void addForIgnore(WPARAM eventType) {
 
 static void cancelTaskView(POINT mousePosition) {
 	kbdpress(VK_ESCAPE, 0);
-	TaskManager::RunLaterOnSameThread([=] {
+	// Avoid running on the same thread because it can cause lock up the OS for a while in case of delays in the processing
+	TaskManager::RunLater([=] {
 		INPUT input;
 		ZeroMemory(&input, sizeof(input));
 		input.type = INPUT_MOUSE;
