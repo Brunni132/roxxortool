@@ -84,7 +84,7 @@ static void moveToTask(int taskNo, Location from) {
 	else if (from == CURRENT) taskNo += sgn(taskNo);
 	if (taskNo == 0 || taskNo == 1) return;
 
-	TaskManager::Run([=] {
+	TaskManager::RunNamedLater(TASKID_TASK_SWITCH, [=] {
 		if (needsWin) kbddown(VK_RWIN, 0);
 		if (taskNo <= 0) {
 			if (needsShift) kbddown(VK_RSHIFT, 0);
@@ -95,7 +95,7 @@ static void moveToTask(int taskNo, Location from) {
 			for (int i = 0; i < taskNo - 1; i += 1) kbdpress('T', 0);
 		}
 		if (needsWin) kbdup(VK_RWIN, 0);
-	});
+	}, 70);
 }
 
 static void sendAltShift() {
