@@ -19,7 +19,7 @@
 	"reloadConfigWithCtrlWinR": true,
 	"resetDefaultGammaCurve": true,
 	"rightShiftContextMenu": true,
-	"scrollAccelerationDismissTrackpad": true,
+	"scrollAccelerationBaseValue": 120,
 	"scrollAccelerationFactor": 0,
 	"scrollAccelerationIntertia": 66,
 	"scrollAccelerationMaxScrollFactor": 2000,

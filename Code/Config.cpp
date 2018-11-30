@@ -66,7 +66,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_INT_PROP(scrollAccelerationIntertia, 50);
 	IMPLEMENT_FLOAT_PROP(scrollAccelerationMaxScrollFactor, 2000);
 	IMPLEMENT_BOOL_PROP(scrollAccelerationSendMultipleMessages, false);
-	IMPLEMENT_BOOL_PROP(scrollAccelerationDismissTrackpad, true);
+	IMPLEMENT_INT_PROP(scrollAccelerationBaseValue, 0);
 
 	if (obj && !thisEntryFound) {
 		char error[1024];

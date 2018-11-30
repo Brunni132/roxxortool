@@ -122,9 +122,11 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 
 		int mouseDelta = GET_WHEEL_DELTA_WPARAM(mllStruct->mouseData);
 		//printf("PROCESSED %d\n", mouseDelta);
-		if (config.scrollAccelerationDismissTrackpad) {
-			if (labs(mouseDelta) != labs(lastMouseDelta)) {
-				dismissedIrregularScrollsFor = lastMouseDelta == 0x7fffffff ? 1 : 4;
+		if (config.scrollAccelerationBaseValue > 0) {
+			//if (labs(mouseDelta) != labs(lastMouseDelta)) {
+			//	dismissedIrregularScrollsFor = lastMouseDelta == 0x7fffffff ? 1 : 4;
+			if (labs(mouseDelta) != labs(config.scrollAccelerationBaseValue)) {
+				dismissedIrregularScrollsFor = 5;
 			}
 			if (dismissedIrregularScrollsFor > 0) {
 				dismissedIrregularScrollsFor--;

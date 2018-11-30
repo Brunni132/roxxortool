@@ -63,7 +63,8 @@ struct Config: public RefClass {
 	int scrollAccelerationIntertia;
 	float scrollAccelerationMaxScrollFactor;
 	bool scrollAccelerationSendMultipleMessages;
-	bool scrollAccelerationDismissTrackpad;
+	// If nonzero, ignores all scroll events that are not equal to this. Typically 120.
+	int scrollAccelerationBaseValue;
 
 	// Reload the values from the config file. Will affect all members of this instance. Must be called at least once before use of the instance.
 	void readFile();
