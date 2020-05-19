@@ -12,6 +12,9 @@
 //#include "DisableAnimationsForWinTab.h"
 #include "PowrProf.h"
 
+// Has been fixed in 1909 I think
+#define PRE_WINDOWS_1803_UPDATE 1
+
 bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, rWinPressed = false, lShiftPressed = false, rShiftPressed = false, lAltPressed = false;
 static bool ctrlPressed() { return lCtrlPressed || rCtrlPressed; }
 static bool winPressed() { return lWinPressed || rWinPressed; }
@@ -782,7 +785,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	}
 	}
 #else
-	// Horrible hack because the new taskbar is coded with feet
+	// Horrible hack because the taskbar in Windows 1803-1903 (?) is coded with feet. It's been fixed eventually.
 	if (config.multiDesktopLikeApplicationSwitcher) {
 		static int lCtrlPressCount = 0, rCtrlPressCount = 0;
 

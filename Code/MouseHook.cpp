@@ -50,7 +50,7 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 	// So we let the host do the job and ignore anything on the guest
 	if (TaskManager::isBeingRemoteDesktopd) {
 #ifdef _DEBUG
-		if (TaskManager::isBeingRemoteDesktopd) printf("Ignoring mouse event because in remote desktop session\n");
+		printf("Ignoring mouse event because in remote desktop session\n");
 #endif
 		return CallNextHookEx(NULL, nCode, wParam, lParam);
 	}
