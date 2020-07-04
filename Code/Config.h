@@ -65,6 +65,8 @@ struct Config: public RefClass {
 	bool scrollAccelerationSendMultipleMessages;
 	// If nonzero, ignores all scroll events that are not equal to this. Typically 120.
 	int scrollAccelerationBaseValue;
+	bool capsPageControls;
+	bool disableCapsLock;
 
 	// Reload the values from the config file. Will affect all members of this instance. Must be called at least once before use of the instance.
 	void readFile();
