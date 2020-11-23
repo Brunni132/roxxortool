@@ -5,6 +5,7 @@
 	"autoApplyGammaCurveDelay": 0,
 	"brightnessCacheDuration": 2000,
 	"brightnessIncrementQuantity": 5,
+	"capsPageControls": false,
 	"closeWindowWithWinQ": true,
 	"ddcCiBrightnessControl": true,
 	"doNotUseWinSpace": true,

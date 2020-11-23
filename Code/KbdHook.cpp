@@ -58,11 +58,12 @@ void sendNextPageCommand() {
 }
 
 static void switchToHiragana() {
-	bool needsControl = !ctrlPressed();
-	if (needsControl) kbddown(VK_RCONTROL, 0);
-	kbdpress(VK_CAPITAL, 0);
-	kbdpress(VK_CAPITAL, 0);
-	if (needsControl) kbdup(VK_RCONTROL, 0);
+	//bool needsControl = !ctrlPressed();
+	//if (needsControl) kbddown(VK_RCONTROL, 0);
+	//kbdpress(VK_CAPITAL, 0);
+	//kbdpress(VK_CAPITAL, 0);
+	//if (needsControl) kbdup(VK_RCONTROL, 0);
+	kbdpress(0x16, 0, 0); // 0x16 = VK_IME_ON
 }
 
 static void switchToHiraganaAfterDelay() {
