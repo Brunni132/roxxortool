@@ -77,8 +77,8 @@ static void switchToHiraganaAfterDelay() {
 			TaskManager::RunNamedLater(TASKID_SWITCH_TO_HIRAGANA, [] {
 				switchToHiragana();
 			}, 1000);
-		}, 1000);
-	}, 200);
+		}, 200);
+	}, 50);
 }
 
 static void moveToTask(int taskNo, Location from) {
@@ -611,10 +611,10 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				}
 			}
 #else
-			// Avoid switching to hiragana if a Win+DOT is pressed soon after the Win+Space
-			if (config.selectHiraganaByDefault && nKey == 0xBE && !skipNextWinDot) {
-				TaskManager::CancelNamed(TASKID_SWITCH_TO_HIRAGANA);
-			}
+			//// Avoid switching to hiragana if a Win+DOT is pressed soon after the Win+Space
+			//if (config.selectHiraganaByDefault && nKey == 0xBE && !skipNextWinDot) {
+			//	TaskManager::CancelNamed(TASKID_SWITCH_TO_HIRAGANA);
+			//}
 #endif
 
 			if (config.winFOpensYourFiles && nKey == 'F') {
