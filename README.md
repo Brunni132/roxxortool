@@ -53,6 +53,7 @@ This tool focuses on very basic functionality that is usually not covered by oth
 	- Right Alt + N = ~ (dead key; N=ñ, space=~)
 	- Right Alt + ; (semi-colon) = … (horizontal ellipsis)
 	- Note that you may create your own layouts or customize it. Look at layoutTranslatorsRegister.
+- `processAltTabWithMouseButtonsEvenFromRdp`: set to true if you are using RDP, and your host does not use the RoxxorTool (ex. it is a Mac). Since the RoxxorTool is given mouse input (but not keyboard) coming from the RDP client app and processes it, translating for instance the mouse button to Alt Tab, by default, the RoxxorTool will not process mouse events on the RDP host, to avoid conflicts. If you don't have the RoxxorTool on your host though, this will prevent the functionality from working. In the future, I might come with a better solution (i.e. detecting where the mouse click came from, or avoid processing them from the RDP client app).
 
 Additional (not as good, please shout out if you use them else I might remove them in the future):
 

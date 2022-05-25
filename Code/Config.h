@@ -67,6 +67,7 @@ struct Config: public RefClass {
 	int scrollAccelerationBaseValue;
 	bool capsPageControls;
 	bool disableCapsLock;
+	bool processAltTabWithMouseButtonsEvenFromRdp;
 
 	// Reload the values from the config file. Will affect all members of this instance. Must be called at least once before use of the instance.
 	void readFile();

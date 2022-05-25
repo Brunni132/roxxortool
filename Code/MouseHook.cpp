@@ -48,7 +48,7 @@ static char *buttonName(WPARAM wParam) {
 LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lParam) {
 	// Unlike the keyboard hook, the mouse hook is called and processed properly even if MS TSC is the active window
 	// So we let the host do the job and ignore anything on the guest
-	if (TaskManager::isBeingRemoteDesktopd) {
+	if (TaskManager::isBeingRemoteDesktopd && !config.processAltTabWithMouseButtonsEvenFromRdp) {
 #ifdef _DEBUG
 		printf("Ignoring mouse event because in remote desktop session\n");
 #endif
