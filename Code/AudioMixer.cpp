@@ -31,8 +31,14 @@ vol_t AudioMixer::getVolume() {
 }
 
 void AudioMixer::setVolume(vol_t newVolume) {
-	if (g_endpointVolume)
+	if (g_endpointVolume) {
+		BOOL isMute;
 		g_endpointVolume->SetMasterVolumeLevel(newVolume, NULL);
+		g_endpointVolume->GetMute(&isMute);
+		if (isMute) {
+			g_endpointVolume->SetMute(FALSE, NULL);
+		}
+	}
 	StatusWindow::showVolume(newVolume);
 }
 
