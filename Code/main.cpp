@@ -4,19 +4,21 @@
 #include "Main.h"
 #include "KbdHook.h"
 #include "MouseHook.h"
-
-char originalExeCommand[1024];
+#include "Utilities.h"
 
 static void killAlreadyExisting() {
 	PROCESSENTRY32 entry;
 	DWORD processId;
+	TCHAR szFileName[MAX_PATH];
 	entry.dwSize = sizeof(PROCESSENTRY32);
 	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
 	processId = GetCurrentProcessId();
+	GetModuleFileName(NULL, szFileName, MAX_PATH);
+	const TCHAR *exeFnOnly = extractFileNameFromPath(szFileName);
 
 	if (Process32First(snapshot, &entry) == TRUE)
 		while (Process32Next(snapshot, &entry) == TRUE)
-			if (_stricmp(entry.szExeFile, "RoxxorTool.exe") == 0 && entry.th32ProcessID != processId) {  
+			if (_stricmp(entry.szExeFile, exeFnOnly) == 0 && entry.th32ProcessID != processId) {  
 				DWORD nExitCode;
 				HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, entry.th32ProcessID);
 				GetExitCodeProcess(hProcess, &nExitCode);

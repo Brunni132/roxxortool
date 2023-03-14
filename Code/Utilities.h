@@ -7,3 +7,4 @@ void kbdpress(int vkCode, BYTE scanCode, int flags = 0);
 
 extern bool lCtrlPressed, rCtrlPressed, lWinPressed, rWinPressed, lShiftPressed, rShiftPressed, lAltPressed;
 
+extern const TCHAR* extractFileNameFromPath(const TCHAR* fullPath);
