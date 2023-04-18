@@ -70,6 +70,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(capsPageControls, false);
 	IMPLEMENT_BOOL_PROP(disableCapsLock, false);
 	IMPLEMENT_BOOL_PROP(processAltTabWithMouseButtonsEvenFromRdp, false);
+	IMPLEMENT_BOOL_PROP(mediaKeysWithCapsLock, false);
 
 	if (obj && !thisEntryFound) {
 		char error[1024];

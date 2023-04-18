@@ -522,24 +522,55 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 
 		// External monitor brightness change
-		if (ctrlWinAndMaybeShiftPressed()) {
-			if (config.ddcCiBrightnessControl) {
-				if (nKey == VK_F9) {
-					int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
-					TaskManager::RunLaterOnSameThread([qty] {
-						Monitor::decreaseBrightnessBy(qty);
+#define TRIGGERS_MEDIA_CONTROLS1 (GetKeyState(VK_CAPITAL) && config.mediaKeysWithCapsLock)
+#define TRIGGERS_MEDIA_CONTROLS2 (ctrlWinAndMaybeShiftPressed() || TRIGGERS_MEDIA_CONTROLS1)
+		if (config.ddcCiBrightnessControl) {
+			if (nKey == VK_F9 && TRIGGERS_MEDIA_CONTROLS2) {
+				int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
+				TaskManager::RunLaterOnSameThread([qty] {
+					Monitor::decreaseBrightnessBy(qty);
 					});
-					return 1;
-				}
-				else if (nKey == VK_F10) {
-					int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
-					TaskManager::RunLaterOnSameThread([qty] {
-						Monitor::increaseBrightnessBy(qty);
+				return 1;
+			}
+			else if (nKey == VK_F10 && TRIGGERS_MEDIA_CONTROLS2) {
+				int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
+				TaskManager::RunLaterOnSameThread([qty] {
+					Monitor::increaseBrightnessBy(qty);
 					});
-					return 1;
-				}
+				return 1;
+			}
+		}
+
+		if (config.useSoftMediaKeys) {
+			if (nKey == VK_F5 && TRIGGERS_MEDIA_CONTROLS1) {
+				kbdpress(VK_MEDIA_STOP, 0);
+				return 1;
+			}
+			else if (nKey == VK_F6 && TRIGGERS_MEDIA_CONTROLS1) {
+				kbdpress(VK_MEDIA_PREV_TRACK, 0);
+				return 1;
+			}
+			else if (nKey == VK_F7 && TRIGGERS_MEDIA_CONTROLS1) {
+				kbdpress(VK_MEDIA_NEXT_TRACK, 0);
+				return 1;
+			}
+			else if (nKey == VK_F8 && TRIGGERS_MEDIA_CONTROLS1) {
+				kbdpress(VK_MEDIA_PLAY_PAUSE, 0);
+				return 1;
+			}
+			else if (nKey == VK_F11 && TRIGGERS_MEDIA_CONTROLS2) {
+				AudioMixer::decrementVolume(config.volumeIncrementQuantity);
+				return 1;
+			}
+			else if (nKey == VK_F12 && TRIGGERS_MEDIA_CONTROLS2) {
+				AudioMixer::incrementVolume(config.volumeIncrementQuantity);
+				return 1;
 			}
 
+		}
+#undef TRIGGER_MEDIA_CONTROLS
+
+		if (ctrlWinAndMaybeShiftPressed()) {
 			// Reexecute ourselves on Ctrl+Win+R
 			if (config.reloadConfigWithCtrlWinR && nKey == 'R') {
 				Main::editConfigAndRelaunch();
@@ -567,12 +598,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 					return 1;
 				case VK_NEXT:
 					kbdpress(VK_MEDIA_NEXT_TRACK, 0);
-					return 1;
-				case VK_F12:
-					AudioMixer::incrementVolume(config.volumeIncrementQuantity);
-					return 1;
-				case VK_F11:
-					AudioMixer::decrementVolume(config.volumeIncrementQuantity);
 					return 1;
 				}
 			}
