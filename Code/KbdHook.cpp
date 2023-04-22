@@ -522,7 +522,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 
 		// External monitor brightness change
-#define TRIGGERS_MEDIA_CONTROLS1 (GetKeyState(VK_CAPITAL) && config.mediaKeysWithCapsLock)
+#define TRIGGERS_MEDIA_CONTROLS1 (GetKeyState(VK_CAPITAL) && (config.mediaKeysWithCapsLockFnKeys || config.mediaKeysWithCapsLockSpaceArrow))
+#define TRIGGERS_MEDIA_CONTROLS_ARROWS (GetKeyState(VK_CAPITAL) && config.mediaKeysWithCapsLockSpaceArrow)
 #define TRIGGERS_MEDIA_CONTROLS2 (ctrlWinAndMaybeShiftPressed() || TRIGGERS_MEDIA_CONTROLS1)
 		if (config.ddcCiBrightnessControl) {
 			if (nKey == VK_F9 && TRIGGERS_MEDIA_CONTROLS2) {
@@ -558,6 +559,10 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				kbdpress(VK_MEDIA_PLAY_PAUSE, 0);
 				return 1;
 			}
+			else if (nKey == VK_SPACE && TRIGGERS_MEDIA_CONTROLS_ARROWS) {
+				kbdpress(VK_MEDIA_PLAY_PAUSE, 0);
+				return 1;
+			}
 			else if (nKey == VK_F11 && TRIGGERS_MEDIA_CONTROLS2) {
 				AudioMixer::decrementVolume(config.volumeIncrementQuantity);
 				return 1;
@@ -566,7 +571,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				AudioMixer::incrementVolume(config.volumeIncrementQuantity);
 				return 1;
 			}
-
 		}
 #undef TRIGGER_MEDIA_CONTROLS
 
