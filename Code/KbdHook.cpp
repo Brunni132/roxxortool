@@ -474,6 +474,61 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	//	DidPerformAnAction();
 	//}
 
+	// External monitor brightness change
+#define TRIGGERS_MEDIA_CONTROLS1 (GetKeyState(VK_CAPITAL) && (config.mediaKeysWithCapsLockFnKeys || config.mediaKeysWithCapsLockSpaceArrow))
+#define TRIGGERS_MEDIA_CONTROLS_ARROWS (GetKeyState(VK_CAPITAL) && config.mediaKeysWithCapsLockSpaceArrow)
+#define TRIGGERS_MEDIA_CONTROLS2 (ctrlWinAndMaybeShiftPressed() || TRIGGERS_MEDIA_CONTROLS1)
+	// TODO -- refactor this function so that it automatically eats key up
+#define ON_KEYDOWN_ONLY(code) if (wParam == WM_KEYDOWN) code
+	if (config.ddcCiBrightnessControl) {
+		if (nKey == VK_F9 && TRIGGERS_MEDIA_CONTROLS2) {
+			ON_KEYDOWN_ONLY({
+				int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
+				TaskManager::RunLaterOnSameThread([qty] { Monitor::decreaseBrightnessBy(qty); });
+			})
+			return 1;
+		}
+		else if (nKey == VK_F10 && TRIGGERS_MEDIA_CONTROLS2) {
+			ON_KEYDOWN_ONLY({
+				int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
+				TaskManager::RunLaterOnSameThread([qty] { Monitor::increaseBrightnessBy(qty); });
+			})
+			return 1;
+		}
+	}
+
+	if (config.useSoftMediaKeys) {
+		if (nKey == VK_F5 && TRIGGERS_MEDIA_CONTROLS1) {
+			ON_KEYDOWN_ONLY({ kbdpress(VK_MEDIA_STOP, 0); })
+			return 1;
+		}
+		else if (nKey == VK_F6 && TRIGGERS_MEDIA_CONTROLS1) {
+			ON_KEYDOWN_ONLY({ kbdpress(VK_MEDIA_PREV_TRACK, 0); })
+			return 1;
+		}
+		else if (nKey == VK_F7 && TRIGGERS_MEDIA_CONTROLS1) {
+			ON_KEYDOWN_ONLY({ kbdpress(VK_MEDIA_NEXT_TRACK, 0); })
+			return 1;
+		}
+		else if (nKey == VK_F8 && TRIGGERS_MEDIA_CONTROLS1) {
+			ON_KEYDOWN_ONLY({ kbdpress(VK_MEDIA_PLAY_PAUSE, 0); })
+			return 1;
+		}
+		else if (nKey == VK_SPACE && TRIGGERS_MEDIA_CONTROLS_ARROWS) {
+			ON_KEYDOWN_ONLY({ kbdpress(VK_MEDIA_PLAY_PAUSE, 0); })
+			return 1;
+		}
+		else if (nKey == VK_F11 && TRIGGERS_MEDIA_CONTROLS2) {
+			ON_KEYDOWN_ONLY({ AudioMixer::decrementVolume(config.volumeIncrementQuantity); })
+			return 1;
+		}
+		else if (nKey == VK_F12 && TRIGGERS_MEDIA_CONTROLS2) {
+			ON_KEYDOWN_ONLY({ AudioMixer::incrementVolume(config.volumeIncrementQuantity); })
+			return 1;
+		}
+	}
+#undef TRIGGER_MEDIA_CONTROLS
+
 	if (wParam == WM_KEYDOWN) {
 		// Win+L triggers a key down but not up, and no up for Win so get aware of that
 		if (nKey == 'L' && winPressed()) {
@@ -520,59 +575,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				return 1;
 			}
 		}
-
-		// External monitor brightness change
-#define TRIGGERS_MEDIA_CONTROLS1 (GetKeyState(VK_CAPITAL) && (config.mediaKeysWithCapsLockFnKeys || config.mediaKeysWithCapsLockSpaceArrow))
-#define TRIGGERS_MEDIA_CONTROLS_ARROWS (GetKeyState(VK_CAPITAL) && config.mediaKeysWithCapsLockSpaceArrow)
-#define TRIGGERS_MEDIA_CONTROLS2 (ctrlWinAndMaybeShiftPressed() || TRIGGERS_MEDIA_CONTROLS1)
-		if (config.ddcCiBrightnessControl) {
-			if (nKey == VK_F9 && TRIGGERS_MEDIA_CONTROLS2) {
-				int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
-				TaskManager::RunLaterOnSameThread([qty] {
-					Monitor::decreaseBrightnessBy(qty);
-					});
-				return 1;
-			}
-			else if (nKey == VK_F10 && TRIGGERS_MEDIA_CONTROLS2) {
-				int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
-				TaskManager::RunLaterOnSameThread([qty] {
-					Monitor::increaseBrightnessBy(qty);
-					});
-				return 1;
-			}
-		}
-
-		if (config.useSoftMediaKeys) {
-			if (nKey == VK_F5 && TRIGGERS_MEDIA_CONTROLS1) {
-				kbdpress(VK_MEDIA_STOP, 0);
-				return 1;
-			}
-			else if (nKey == VK_F6 && TRIGGERS_MEDIA_CONTROLS1) {
-				kbdpress(VK_MEDIA_PREV_TRACK, 0);
-				return 1;
-			}
-			else if (nKey == VK_F7 && TRIGGERS_MEDIA_CONTROLS1) {
-				kbdpress(VK_MEDIA_NEXT_TRACK, 0);
-				return 1;
-			}
-			else if (nKey == VK_F8 && TRIGGERS_MEDIA_CONTROLS1) {
-				kbdpress(VK_MEDIA_PLAY_PAUSE, 0);
-				return 1;
-			}
-			else if (nKey == VK_SPACE && TRIGGERS_MEDIA_CONTROLS_ARROWS) {
-				kbdpress(VK_MEDIA_PLAY_PAUSE, 0);
-				return 1;
-			}
-			else if (nKey == VK_F11 && TRIGGERS_MEDIA_CONTROLS2) {
-				AudioMixer::decrementVolume(config.volumeIncrementQuantity);
-				return 1;
-			}
-			else if (nKey == VK_F12 && TRIGGERS_MEDIA_CONTROLS2) {
-				AudioMixer::incrementVolume(config.volumeIncrementQuantity);
-				return 1;
-			}
-		}
-#undef TRIGGER_MEDIA_CONTROLS
 
 		if (ctrlWinAndMaybeShiftPressed()) {
 			// Reexecute ourselves on Ctrl+Win+R
