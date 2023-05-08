@@ -170,6 +170,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	bool injected = (kbd->flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED));
 	bool isDown = wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN;
 	bool isUp = wParam == WM_KEYUP || wParam == WM_SYSKEYUP;
+	int _capsLockDown = -1;
+	auto capsLockDownLazy = [&]() {
+		if (_capsLockDown == -1) _capsLockDown = GetKeyState(VK_CAPITAL) ? 1 : 0;
+		return _capsLockDown;
+	};
 
 #ifdef _DEBUG
 	if (wParam == WM_KEYDOWN)
@@ -475,11 +480,17 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	//}
 
 	// External monitor brightness change
-#define TRIGGERS_MEDIA_CONTROLS1 (GetKeyState(VK_CAPITAL) && (config.mediaKeysWithCapsLockFnKeys || config.mediaKeysWithCapsLockSpaceArrow))
-#define TRIGGERS_MEDIA_CONTROLS_ARROWS (GetKeyState(VK_CAPITAL) && config.mediaKeysWithCapsLockSpaceArrow)
+#define TRIGGERS_MEDIA_CONTROLS1 (capsLockDownLazy() && (config.mediaKeysWithCapsLockFnKeys || config.mediaKeysWithCapsLockSpaceArrow))
+#define TRIGGERS_MEDIA_CONTROLS_ARROWS (capsLockDownLazy() && config.mediaKeysWithCapsLockSpaceArrow)
 #define TRIGGERS_MEDIA_CONTROLS2 (ctrlWinAndMaybeShiftPressed() || TRIGGERS_MEDIA_CONTROLS1)
 	// TODO -- refactor this function so that it automatically eats key up
 #define ON_KEYDOWN_ONLY(code) if (wParam == WM_KEYDOWN) code
+
+	// Eat any alphanumeric key
+	if (config.mediaKeysWithCapsLockSpaceArrow && nKey >= 'A' && nKey <= 'Z' && capsLockDownLazy()) {
+		return 1;
+	}
+
 	if (config.ddcCiBrightnessControl) {
 		if (nKey == VK_F9 && TRIGGERS_MEDIA_CONTROLS2) {
 			ON_KEYDOWN_ONLY({
