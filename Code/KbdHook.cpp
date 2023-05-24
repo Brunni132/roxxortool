@@ -20,6 +20,7 @@ static bool ctrlPressed() { return lCtrlPressed || rCtrlPressed; }
 static bool winPressed() { return lWinPressed || rWinPressed; }
 static bool shiftPressed() { return lShiftPressed || rShiftPressed; }
 static bool altPressed() { return lAltPressed; }
+static bool anyModifierPressed() { return lShiftPressed || rShiftPressed || lWinPressed || rWinPressed || lCtrlPressed || rCtrlPressed; }
 // Only those two, not the others
 static bool ctrlWinPressed() { return lCtrlPressed && lWinPressed && !rWinPressed && !rCtrlPressed && !shiftPressed() && !altPressed(); }
 static bool ctrlWinAndMaybeShiftPressed() { return lCtrlPressed && lWinPressed && !rWinPressed && !rCtrlPressed && !altPressed(); }
@@ -487,7 +488,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 #define ON_KEYDOWN_ONLY(code) if (wParam == WM_KEYDOWN) code
 
 	// Eat any alphanumeric key
-	if (config.mediaKeysWithCapsLockSpaceArrow && nKey >= 'A' && nKey <= 'Z' && capsLockDownLazy()) {
+	if (config.mediaKeysWithCapsLockSpaceArrow && nKey >= 'A' && nKey <= 'Z' && !anyModifierPressed() && capsLockDownLazy()) {
 		return 1;
 	}
 
