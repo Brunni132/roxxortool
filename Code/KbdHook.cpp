@@ -489,6 +489,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 	// Eat any alphanumeric key
 	if (config.mediaKeysWithCapsLockSpaceArrow && nKey >= 'A' && nKey <= 'Z' && !anyModifierPressed() && capsLockDownLazy()) {
+		StatusWindow::ShowBlocked();
 		return 1;
 	}
 
