@@ -42,15 +42,15 @@ This tool focuses on very basic functionality that is usually not covered by oth
 - `winSSuspendsSystem`: suspends Windows by pressing Win+S.
 - `doNotUseWinSpace`: replaces Win+Space by Alt+Shift, the shortcut from older Windows versions. The advantage of Alt+Shift is that it switches only between the two last languages, where Win+Space goes to the next on the list, which is often unwanted especially since Windows sometimes temporarily adds unrelated languages during updates until a reboot.
 - `internationalUsKeyboardForFrench`: enables easy access to latin-international characters on top of an English (US) keyboard. Aimed at coders, and in its current implementation for French-speakers by providing a couple of shortcuts for mostly used accented characters. Useful since the MS KLC is not really supported anymore and doesn't create touch keyboards. It does this:
-	- Right Alt + E = � (or � with Shift when pressing E)
-	- Right Alt + C = �
-	- Right Alt + A = �
-	- Right Alt + U = ` (dead key; then press another key like A to get �, E to get �, etc. or space to insert the ` char)
-	- Right Alt + I = ^ (dead key; A=�, E=�, I=�, O=�, U=�, space=^)
-	- Right Alt + O = � (dead key; A=�, E=�, I=�, O=�, U=�, space=�)
-	- Right Alt + P = � (dead key; A=�, E=�, I=�, O=�, U=�, space=�)
-	- Right Alt + N = ~ (dead key; N=�, space=~)
-	- Right Alt + ; (semi-colon) = � (horizontal ellipsis)
+	- Right Alt + E = é (or É with Shift when pressing E)
+	- Right Alt + C = ç
+	- Right Alt + A = à
+	- Right Alt + U = \` (dead key; then press another key like A to get à, E to get è, etc. or space to insert the \` char)
+	- Right Alt + I = ^ (dead key; A=â, E=ê, I=î, O=ô, U=û, space=^)
+	- Right Alt + O = ¨ (dead key; A=ä, E=ë, I=ï, O=ö, U=ü, space=¨)
+	- Right Alt + P = ´ (dead key; A=á, E=é, I=í, O=ó, U=ú, space=´)
+	- Right Alt + N = ~ (dead key; N=ñ, space=~)
+	- Right Alt + ; (semi-colon) = … (horizontal ellipsis)
 	- Note that you may create your own layouts or customize it. Look at layoutTranslatorsRegister.
 - `processAltTabWithMouseButtonsEvenFromRdp`: set to true if you are using RDP, and your host does not use the RoxxorTool (ex. it is a Mac). Since the RoxxorTool is given mouse input (but not keyboard) coming from the RDP client app and processes it, translating for instance the mouse button to Alt Tab, by default, the RoxxorTool will not process mouse events on the RDP host, to avoid conflicts. If you don't have the RoxxorTool on your host though, this will prevent the functionality from working. In the future, I might come with a better solution (i.e. detecting where the mouse click came from, or avoid processing them from the RDP client app).
 
