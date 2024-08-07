@@ -53,6 +53,10 @@ This tool focuses on very basic functionality that is usually not covered by oth
 	- Right Alt + ; (semi-colon) = … (horizontal ellipsis)
 	- Note that you may create your own layouts or customize it. Look at layoutTranslatorsRegister.
 - `processAltTabWithMouseButtonsEvenFromRdp`: set to true if you are using RDP, and your host does not use the RoxxorTool (ex. it is a Mac). Since the RoxxorTool is given mouse input (but not keyboard) coming from the RDP client app and processes it, translating for instance the mouse button to Alt Tab, by default, the RoxxorTool will not process mouse events on the RDP host, to avoid conflicts. If you don't have the RoxxorTool on your host though, this will prevent the functionality from working. In the future, I might come with a better solution (i.e. detecting where the mouse click came from, or avoid processing them from the RDP client app).
+- `disableCapsLock`: disable the normal operation of Caps Lock.
+- `capsPageControls`: allows to use Caps as an alternate Fn key. Then, you can use Caps+Up/Down to perform a PageUp / PageDown, and Caps+Left/Right to perform Home and End. Useful for some keyboards with unintuitive layouts, like Dell laptops.
+- `mediaKeysWithCapsLockFnKeys`: does like `useSoftMediaKeys` (which must activated too), except that the F9-F12 keys can be pressed freely when Caps Lock is on, instead of having to do Ctrl + Win + F9-F12. Additionally, F5 can be used for Stop, F6 for Previous Track, F7 for Next Track, F8 for Play/Pause.
+	- `mediaKeysWithCapsLockSpaceArrow`: if set to true, then it will add the possibility to press the Space key to play/pause when Caps Lock is on, and eat any alphanumeric key, showing a window in that case (just to remind you that you are in this special mode). I used this when I am consuming media, and I want to quickly be able to play/pause with Space.
 
 Additional (not as good, please shout out if you use them else I might remove them in the future):
 
@@ -64,10 +68,6 @@ Additional (not as good, please shout out if you use them else I might remove th
 - `autoApplyGammaCurveDelay`: reapply the gamma curve (for negative brightness) at the given interval in milliseconds.
 - `japaneseWindowsKeyboard`: remaps some keys if you have a Japanese keyboard, so that the right alt key for example is replaced with the 変換 key, and the カタカナ・ひらがな・ローマ字 key acts as a right Windows key, and 無変換 acts as a a left Alt key.
 	- There are additional settings for Macs using Bootcamp: `japaneseMacBookPro` and `japaneseMacKeyboard`.
-- `disableCapsLock`: disable the normal operation of Caps Lock.
-- `capsPageControls`: allows to use Caps as an alternate Fn key. Then, you can use Caps+Up/Down to perform a PageUp / PageDown, and Caps+Left/Right to perform Home and End. Useful for some keyboards with unintuitive layouts, like Dell laptops.
-- `mediaKeysWithCapsLockFnKeys`: does like `useSoftMediaKeys` (which must activated too), except that the F9-F12 keys can be pressed freely when Caps Lock is on, instead of having to do Ctrl + Win + F9-F12. Additionally, F5 can be used for Stop, F6 for Previous Track, F7 for Next Track, F8 for Play/Pause.
-	- `mediaKeysWithCapsLockSpaceArrow`: if set to true, then it will add the possibility to press the Space key to play/pause when Caps Lock is on, and eat any alphanumeric key, showing a window in that case (just to remind you that you are in this special mode). I used this when I am consuming media, and I want to quickly be able to play/pause with Space.
 
 
 Using the Roxxor Tool

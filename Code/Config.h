@@ -61,15 +61,15 @@ struct Config: public RefClass {
 	bool altGraveToStickyAltTab;
 	// If set, doesn't use the current gamma curve as a base, but always resets it
 	bool resetDefaultGammaCurve;
+	bool disableCapsLock;
+	bool capsPageControls;
+	bool mediaKeysWithCapsLockFnKeys, mediaKeysWithCapsLockSpaceArrow;
 
 	// in milliseconds; 0 = disable
 	int autoApplyGammaCurveDelay;
 	bool japaneseMacBookPro;
 	bool japaneseMacKeyboard;
 	bool japaneseWindowsKeyboard;
-	bool disableCapsLock;
-	bool capsPageControls;
-	bool mediaKeysWithCapsLockFnKeys, mediaKeysWithCapsLockSpaceArrow;
 
 	// Reload the values from the config file. Will affect all members of this instance. Must be called at least once before use of the instance.
 	void readFile();
