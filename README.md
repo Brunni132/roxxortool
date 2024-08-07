@@ -12,7 +12,6 @@ This tool focuses on very basic functionality that is usually not covered by oth
 	- `scrollAccelerationIntertia`: this sets the scroll rate necessary to accelerate the scrolling. The smaller the value, the less you'll see acceleration, and the quicker it will stop once you release it. You can build momentum by scrolling repeatedly with a higher value (> 50).
 	- `scrollAccelerationMaxScrollFactor`: limits the maximum scrolling rate.
 	- `scrollAccelerationSendMultipleMessages`: by default it uses the precise scrolling as offered by Windows, but you may set this to true to simulate an accelerated scroll by multiple simple scroll actions.
-	- `scrollAccelerationDismissTrackpad`: when set to true, dismisses any "precise" device (i.e. not having a fixed wheel delta, like gaming mice). Try setting this to false if it doesn't work.
 - `altTabWithMouseButtons`: press the forward button on your mouse to open the app selector. Press for longer (200ms or more) to do a standard forward command.
 - `ddcCiBrightnessControl`: enables controlling the brightness of your screen through Ctrl+Win+F9 and F10. It can be used either for your internal panel (possibly replacing the manufacturer tool if it proves to be badly designed or a resource hog like often), either for your external screen. The screen affected by this command is the one on which the active window is. Note that this won't work on a TV since the DDC/CI protocol is not supported. It will work on most monitors though, but you might have to enable the DDC/CI option somewhere from the OSD to enable for that. Try it if the brightness is stuck to 0.
 	- Shift can be held to make smaller increments.
@@ -38,20 +37,20 @@ This tool focuses on very basic functionality that is usually not covered by oth
 	- 7: select 31st item
 	- Note that Home and End are provided by the system to move to the first or last task. You may as well use a directional key to wrap around the last entry and select the first entry easily (for example if your taskbar is at the bottom, press Right once).
 	- You can use PgUp and PgDn keys to move by increments of `winTTaskMoveBy` (default 4) icons in the taskbar.
-- `disableWinTabAnimation`: when pressing Win+Tab (and not using another combination, such as swiping up with three/four fingers on your precision touchpad) the Task View appears without animation. Huge hack as it is, it actually removes animations then calls the Task View screen, then periodically checks that it is still active; when it's not it reenables animations. Note that this is done in a safe way, i.e. not persisted to your user profile.
+- `disableWinTabAnimation` (removed, but still commented out in the source code): when pressing Win+Tab (and not using another combination, such as swiping up with three/four fingers on your precision touchpad) the Task View appears without animation. Huge hack as it is, it actually removes animations then calls the Task View screen, then periodically checks that it is still active; when it's not it reenables animations. Note that this is done in a safe way, i.e. not persisted to your user profile.
 - `selectHiraganaByDefault`: if set, when switching between languages with Win+Space, sends a Ctrl+Caps right behind so that hiragana mode is enabled if IME is japanese (for others doesn't do anything; for other complex IME you may not want to use this feature as it's tailored for Japanese and doesn't have a way to check what you're currently using).
 - `winSSuspendsSystem`: suspends Windows by pressing Win+S.
 - `doNotUseWinSpace`: replaces Win+Space by Alt+Shift, the shortcut from older Windows versions. The advantage of Alt+Shift is that it switches only between the two last languages, where Win+Space goes to the next on the list, which is often unwanted especially since Windows sometimes temporarily adds unrelated languages during updates until a reboot.
 - `internationalUsKeyboardForFrench`: enables easy access to latin-international characters on top of an English (US) keyboard. Aimed at coders, and in its current implementation for French-speakers by providing a couple of shortcuts for mostly used accented characters. Useful since the MS KLC is not really supported anymore and doesn't create touch keyboards. It does this:
-	- Right Alt + E = È (or … with Shift when pressing E)
-	- Right Alt + C = Á
-	- Right Alt + A = ‡
-	- Right Alt + U = ` (dead key; then press another key like A to get ‡, E to get Ë, etc. or space to insert the ` char)
-	- Right Alt + I = ^ (dead key; A=‚, E=Í, I=Ó, O=Ù, U=˚, space=^)
-	- Right Alt + O = ® (dead key; A=‰, E=Î, I=Ô, O=ˆ, U=¸, space=®)
-	- Right Alt + P = ¥ (dead key; A=·, E=È, I=Ì, O=Û, U=˙, space=¥)
-	- Right Alt + N = ~ (dead key; N=Ò, space=~)
-	- Right Alt + ; (semi-colon) = Ö (horizontal ellipsis)
+	- Right Alt + E = ÔøΩ (or ÔøΩ with Shift when pressing E)
+	- Right Alt + C = ÔøΩ
+	- Right Alt + A = ÔøΩ
+	- Right Alt + U = ` (dead key; then press another key like A to get ÔøΩ, E to get ÔøΩ, etc. or space to insert the ` char)
+	- Right Alt + I = ^ (dead key; A=ÔøΩ, E=ÔøΩ, I=ÔøΩ, O=ÔøΩ, U=ÔøΩ, space=^)
+	- Right Alt + O = ÔøΩ (dead key; A=ÔøΩ, E=ÔøΩ, I=ÔøΩ, O=ÔøΩ, U=ÔøΩ, space=ÔøΩ)
+	- Right Alt + P = ÔøΩ (dead key; A=ÔøΩ, E=ÔøΩ, I=ÔøΩ, O=ÔøΩ, U=ÔøΩ, space=ÔøΩ)
+	- Right Alt + N = ~ (dead key; N=ÔøΩ, space=~)
+	- Right Alt + ; (semi-colon) = ÔøΩ (horizontal ellipsis)
 	- Note that you may create your own layouts or customize it. Look at layoutTranslatorsRegister.
 - `processAltTabWithMouseButtonsEvenFromRdp`: set to true if you are using RDP, and your host does not use the RoxxorTool (ex. it is a Mac). Since the RoxxorTool is given mouse input (but not keyboard) coming from the RDP client app and processes it, translating for instance the mouse button to Alt Tab, by default, the RoxxorTool will not process mouse events on the RDP host, to avoid conflicts. If you don't have the RoxxorTool on your host though, this will prevent the functionality from working. In the future, I might come with a better solution (i.e. detecting where the mouse click came from, or avoid processing them from the RDP client app).
 
@@ -62,7 +61,13 @@ Additional (not as good, please shout out if you use them else I might remove th
 - `altGraveToStickyAltTab`: frankly this shouldn't be there, it only works on European and American keyboards, but yeah, you may use the Alt key + grave accent (which should be located right above the Tab key, on the leftmost corner) to bring the Alt+Tab menu and keep it open until you click elsewhere or press Escape. There is no magic behind this as the system already does that with Ctrl+Alt+Tab, but since I'm using it a lot I wanted to give it a dedicated key. But the `altTabWithMouseButtons` is much better in practice.
 	-> I recommend tuning the options of your Alt+Tab view, especially if you've been used to non-Windows DEs. I make the icons bigger by tuning the registry under `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\MultitaskingView\AltTabViewHost`, setting `Thumbnail_icon_size` to 00000030(hex), `Thumbnail_max_height_percent` to 00000010 and `Thumbnail_min_height_percent` to 00000010. See [this topic](https://answers.microsoft.com/en-us/insider/forum/insider_wintp-insider_personal/registry-customization-for-multitaskingview-mtv/806a0c84-b203-46fb-b23a-acc82dc0ecce) for more info.
 - `resetDefaultGammaCurve`: does not take the current gamma curve in account when lowering the brightness below 0%. Not recommended, unless you know why you need this.
-
+- `autoApplyGammaCurveDelay`: reapply the gamma curve (for negative brightness) at the given interval in milliseconds.
+- `japaneseWindowsKeyboard`: remaps some keys if you have a Japanese keyboard, so that the right alt key for example is replaced with the Â§âÊèõ key, and the „Ç´„Çø„Ç´„Éä„Éª„Å≤„Çâ„Åå„Å™„Éª„É≠„Éº„ÉûÂ≠ó key acts as a right Windows key, and ÁÑ°Â§âÊèõ acts as a a left Alt key.
+	- There are additional settings for Macs using Bootcamp: `japaneseMacBookPro` and `japaneseMacKeyboard`.
+- `disableCapsLock`: disable the normal operation of Caps Lock.
+- `capsPageControls`: allows to use Caps as an alternate Fn key. Then, you can use Caps+Up/Down to perform a PageUp / PageDown, and Caps+Left/Right to perform Home and End. Useful for some keyboards with unintuitive layouts, like Dell laptops.
+- `mediaKeysWithCapsLockFnKeys`: does like `useSoftMediaKeys` (which must activated too), except that the F9-F12 keys can be pressed freely when Caps Lock is on, instead of having to do Ctrl + Win + F9-F12. Additionally, F5 can be used for Stop, F6 for Previous Track, F7 for Next Track, F8 for Play/Pause.
+	- `mediaKeysWithCapsLockSpaceArrow`: if set to true, then it will add the possibility to press the Space key to play/pause when Caps Lock is on, and eat any alphanumeric key, showing a window in that case (just to remind you that you are in this special mode). I used this when I am consuming media, and I want to quickly be able to play/pause with Space.
 
 
 Using the Roxxor Tool
