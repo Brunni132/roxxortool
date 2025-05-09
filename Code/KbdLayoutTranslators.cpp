@@ -28,6 +28,9 @@ void layoutTranslatorsRegister() {
 	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('C', 0xE7, 0xC7, nullptr, 0));
 	// ; -> …
 	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(VK_OEM_1, 0x2026, 0x2026, nullptr, 0));
+	// AltGr+' and AltGr+\ -> « »
+	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(0xDE, 0xAB, 0xAB, nullptr, 0));
+	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(0xDC, 0xBB, 0xBB, nullptr, 0));
 
 	//const WCHAR test[] = { L'ä', L'ë', L'ï', L'ö', L'ü', L'Ä' };
 	const LayoutTranslator::State::StateOutcome outcomesForAcute[] = {
@@ -132,7 +135,7 @@ bool LayoutTranslator::processKeyDown(int kbdVcode, bool shiftPressed) {
 		return false;
 	}
 	// Ignore non-char keystrokes
-	if (kbdVcode >= 0x30 && kbdVcode <= 0x5A || kbdVcode >= 0x60 && kbdVcode <= 0x6F || kbdVcode >= 0xBA && kbdVcode <= 0xC0 || kbdVcode == ' ') {
+	if (kbdVcode >= 0x30 && kbdVcode <= 0x5A || kbdVcode >= 0x60 && kbdVcode <= 0x6F || kbdVcode >= 0x80 && kbdVcode <= 0xF0 || kbdVcode == ' ') {
 		// No state currently
 		if (stateIndex == -1) {
 			// Need alt for any special key
@@ -204,7 +207,9 @@ void LayoutTranslator::enterState(int stateIndex, bool shiftPressed) {
 }
 
 void LayoutTranslator::outputChar(WCHAR character) {
-	//printf("Outputing %x\n", character);
+#ifdef _DEBUG
+	printf("Outputing %x\n", character);
+#endif
 	sendUnicodeKey(0, character, KEYEVENTF_UNICODE);
 	sendUnicodeKey(0, character, KEYEVENTF_UNICODE | KEYEVENTF_KEYUP);
 }
