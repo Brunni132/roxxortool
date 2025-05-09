@@ -12,6 +12,7 @@ struct Config: public RefClass {
 	//bool rightCtrlContextMenu;
 	bool closeWindowWithWinQ;
 	bool winHHidesWindow;
+	bool scrollAccelerationEnabled;
 	float scrollAccelerationFactor;
 	int scrollAccelerationIntertia;
 	float scrollAccelerationMaxScrollFactor;
@@ -45,6 +46,7 @@ struct Config: public RefClass {
 	bool iAmAMac;
 	// Also bring the context menu when pressing on Right Shift
 	bool rightShiftContextMenu;
+	bool winEOpensThisPC;
 	bool winFOpensYourFiles;
 	bool winTSelectsLastTask;
 	int winTTaskMoveBy;

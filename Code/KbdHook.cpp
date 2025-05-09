@@ -666,6 +666,13 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				WindowsExplorer::showHomeFolderWindow();
 				return 1;
 			}
+
+			if (config.winEOpensThisPC && nKey == 'E') {
+				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0);
+				WindowsExplorer::showThisPcFolderWindow();
+				return 1;
+			}
+
 			if (config.winHHidesWindow && nKey == 'H') {
 				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // To avoid bringing the menu
 				char className[128], title[128];
@@ -703,40 +710,53 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 
 		if (config.winTSelectsLastTask) {
-			static bool inFunction = false;
-			// // Check that we are still in the task bar and restart function (Win+T from start) if not
-			if (inFunction) {
-				char className[128];
-				GetClassNameA(GetForegroundWindow(), className, 128);
-				if (strcmp(className, "Shell_TrayWnd")) {
-					inFunction = false;
+			if (/* Windows 10 */ false) {
+				static bool inFunction = false;
+				// // Check that we are still in the task bar and restart function (Win+T from start) if not
+				if (inFunction) {
+					char className[128];
+					GetClassNameA(GetForegroundWindow(), className, 128);
+					if (strcmp(className, "Shell_TrayWnd")) {
+						inFunction = false;
+					}
 				}
-			}
-			if (inFunction) {
-				if (!winPressed()) {
-					if (nKey >= '5' && nKey <= '7') {
-						moveToTask(11 + (nKey - '5') * 10, START);
-						return 1;
+				if (inFunction) {
+					if (!winPressed()) {
+						if (nKey >= '5' && nKey <= '7') {
+							moveToTask(11 + (nKey - '5') * 10, START);
+							return 1;
+						}
+						else if (nKey == VK_PRIOR) {
+							moveToTask(-config.winTTaskMoveBy, CURRENT);
+							return 1;
+						}
+						else if (nKey == VK_NEXT) {
+							moveToTask(+config.winTTaskMoveBy, CURRENT);
+							return 1;
+						}
 					}
-					else if (nKey == VK_PRIOR) {
-						moveToTask(-config.winTTaskMoveBy, CURRENT);
-						return 1;
-					}
-					else if (nKey == VK_NEXT) {
-						moveToTask(+config.winTTaskMoveBy, CURRENT);
-						return 1;
-					}
+				}
+				else if (winOnlyPressed() && nKey == 'T') {
+					inFunction = true;
+
+					// Windows <= 10
+					kbdpress('B', 0);
+					// First press on Win+T
+					TaskManager::RunLater([] {
+						kbdpress('T', 0);
+						kbdpress(VK_END, 0);
+					}, 10);
+					return 1;
 				}
 			}
 			else if (winOnlyPressed() && nKey == 'T') {
-				inFunction = true;
-				kbdpress('B', 0);
-				// First press on Win+T
-				TaskManager::RunLater([] {
-					kbdpress('T', 0);
-					kbdpress(VK_END, 0);
+				auto pressedKey = lWinPressed ? VK_LWIN : VK_RWIN;
+				// Let the normal Win+T operate, and later, move the cursor
+				TaskManager::RunLater([=] {
+					kbdup(pressedKey, 0);
+					kbdpress(VK_LEFT, 0);
+					//kbddown(pressedKey, 0);
 				}, 10);
-				return 1;
 			}
 		}
 	}

@@ -4,7 +4,6 @@
 #include "Utilities.h"
 #include <CommCtrl.h>
 
-const DWORD CLICK_TIME_FOR_TASK_SWITCHER = 250;
 static HHOOK hHook;
 static vector<WPARAM> mouseEventsToIgnore;
 
@@ -84,6 +83,7 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 
 		if (button & XBUTTON2) {
 			if (isGoingDown) {
+				const DWORD CLICK_TIME_FOR_TASK_SWITCHER = 250;
 				isDown = true;
 				clickPosition = mllStruct->pt;
 				TaskManager::RunLaterOnSameThread([=] {
@@ -94,10 +94,13 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 						kbdup(VK_LCONTROL, 0);
 						kbdup(VK_LMENU, 0);
 						TaskManager::RunLaterOnSameThread([=] {
-							if (isDown) {
-								cancelTaskView(clickPosition);
-							}
-						}, CLICK_TIME_FOR_TASK_SWITCHER);
+							//kbdpress(VK_HOME, 0);
+							TaskManager::RunLaterOnSameThread([=] {
+								if (isDown) {
+									cancelTaskView(clickPosition);
+								}
+							}, CLICK_TIME_FOR_TASK_SWITCHER - 50);
+						}, 50);
 					});
 				});
 				return 1;
@@ -109,7 +112,7 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 		}
 	}
 
-	if (config.scrollAccelerationFactor > 0 && nCode >= 0 && wParam == WM_MOUSEWHEEL) {
+	if (config.scrollAccelerationEnabled && nCode >= 0 && wParam == WM_MOUSEWHEEL) {
 		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
 		if (mllStruct->flags & LLMHF_INJECTED || mllStruct->flags & LLMHF_LOWER_IL_INJECTED) {
 			return CallNextHookEx(NULL, nCode, wParam, lParam);

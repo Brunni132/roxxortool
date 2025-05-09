@@ -55,3 +55,12 @@ void WindowsExplorer::showHomeFolderWindow() {
 	ShellExecuteA(NULL, "open", szHomeDirBuf, "", NULL, SW_SHOW);
 }
 
+void WindowsExplorer::showThisPcFolderWindow() {
+	TCHAR szHomeDirBuf[MAX_PATH] = { 0 };
+	HANDLE hToken = 0;
+	OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken);
+	DWORD BufSize = MAX_PATH;
+	GetUserProfileDirectory(hToken, szHomeDirBuf, &BufSize);
+	CloseHandle(hToken);
+	ShellExecuteA(NULL, "open", "file:", "", NULL, SW_SHOW);
+}

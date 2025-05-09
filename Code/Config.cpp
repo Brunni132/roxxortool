@@ -44,6 +44,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(reloadConfigWithCtrlWinR, true);
 	IMPLEMENT_BOOL_PROP(iAmAMac, false);
 	IMPLEMENT_BOOL_PROP(multiDesktopLikeApplicationSwitcher, true);
+	IMPLEMENT_BOOL_PROP(winEOpensThisPC, true);
 	IMPLEMENT_BOOL_PROP(winFOpensYourFiles, true);
 	IMPLEMENT_BOOL_PROP(winHHidesWindow, true);
 	IMPLEMENT_BOOL_PROP(noNumPad, false);
@@ -62,6 +63,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(doNotUseWinSpace, false);
 	IMPLEMENT_BOOL_PROP(internationalUsKeyboardForFrench, false);
 	IMPLEMENT_BOOL_PROP(resetDefaultGammaCurve, false);
+	IMPLEMENT_BOOL_PROP(scrollAccelerationEnabled, false);
 	IMPLEMENT_FLOAT_PROP(scrollAccelerationFactor, 0.0f);
 	IMPLEMENT_INT_PROP(scrollAccelerationIntertia, 50);
 	IMPLEMENT_FLOAT_PROP(scrollAccelerationMaxScrollFactor, 2000);
