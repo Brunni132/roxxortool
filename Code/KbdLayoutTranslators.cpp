@@ -28,9 +28,9 @@ void layoutTranslatorsRegister() {
 	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('C', 0xE7, 0xC7, nullptr, 0));
 	// ; -> …
 	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(VK_OEM_1, 0x2026, 0x2026, nullptr, 0));
-	// AltGr+' and AltGr+\ -> « »
-	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(0xDE, 0xAB, 0xAB, nullptr, 0));
-	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(0xDC, 0xBB, 0xBB, nullptr, 0));
+	// AltGr+[ and AltGr+] -> « » (AltGr+Shift+[] = unbreakable space)
+	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(0xDB, 0xAB, 0xA0, nullptr, 0));
+	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(0xDD, 0xBB, 0xA0, nullptr, 0));
 
 	//const WCHAR test[] = { L'ä', L'ë', L'ï', L'ö', L'ü', L'Ä' };
 	const LayoutTranslator::State::StateOutcome outcomesForAcute[] = {
