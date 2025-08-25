@@ -47,6 +47,7 @@ struct Config: public RefClass {
 	// Also bring the context menu when pressing on Right Shift
 	bool rightShiftContextMenu;
 	bool winEOpensThisPC;
+	bool winEOpensYourFiles;
 	bool winFOpensYourFiles;
 	bool winTSelectsLastTask;
 	int winTTaskMoveBy;

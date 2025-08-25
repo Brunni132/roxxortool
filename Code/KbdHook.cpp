@@ -661,7 +661,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			//}
 #endif
 
-			if (config.winFOpensYourFiles && nKey == 'F') {
+			if ((config.winFOpensYourFiles && nKey == 'F') ||
+				(config.winEOpensYourFiles && nKey == 'E')) {
 				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0);
 				WindowsExplorer::showHomeFolderWindow();
 				return 1;
