@@ -851,7 +851,10 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			else if (wParam == WM_KEYUP && !pressedAnotherKeySince) {
 				// Au keyup, on presse un context menu (93)
 				TaskManager::Run([] {
+					bool needsLeftShift = config.rightShiftContextMenuOpensExtendedMenu && !lShiftPressed;
+					if (needsLeftShift) kbddown(VK_LSHIFT, 0);
 					kbdpress(VK_APPS, 0);
+					if (needsLeftShift) kbdup(VK_LSHIFT, 0);
 				});
 			}
 		}

@@ -31,6 +31,7 @@ void layoutTranslatorsRegister() {
 	// AltGr+[ and AltGr+] -> « » (AltGr+Shift+[] = unbreakable space)
 	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(0xDB, 0xAB, 0xA0, nullptr, 0));
 	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(0xDD, 0xBB, 0xA0, nullptr, 0));
+	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(0x20, 0xA0, 0xA0, nullptr, 0));
 
 	//const WCHAR test[] = { L'ä', L'ë', L'ï', L'ö', L'ü', L'Ä' };
 	const LayoutTranslator::State::StateOutcome outcomesForAcute[] = {

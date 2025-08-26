@@ -46,6 +46,7 @@ struct Config: public RefClass {
 	bool iAmAMac;
 	// Also bring the context menu when pressing on Right Shift
 	bool rightShiftContextMenu;
+	bool rightShiftContextMenuOpensExtendedMenu;
 	bool winEOpensThisPC;
 	bool winEOpensYourFiles;
 	bool winFOpensYourFiles;
