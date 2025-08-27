@@ -751,11 +751,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				}
 			}
 			else if (winOnlyPressed() && nKey == 'T') {
-				auto pressedKey = lWinPressed ? VK_LWIN : VK_RWIN;
+				//auto pressedKey = lWinPressed ? VK_LWIN : VK_RWIN;
 				// Let the normal Win+T operate, and later, move the cursor
 				TaskManager::RunLater([=] {
-					kbdup(pressedKey, 0);
-					kbdpress(VK_LEFT, 0);
+					//kbdup(pressedKey, 0);
+					kbdpress(VK_END, 0);
 					//kbddown(pressedKey, 0);
 				}, 10);
 			}
