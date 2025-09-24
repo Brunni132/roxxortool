@@ -64,22 +64,11 @@ static void switchToHiragana() {
 	//kbdpress(VK_CAPITAL, 0);
 	//kbdpress(VK_CAPITAL, 0);
 	//if (needsControl) kbdup(VK_RCONTROL, 0);
-	kbdpress(0x16, 0, 0); // 0x16 = VK_IME_ON
-}
+	//kbdpress(0x16, 0, 0); // 0x16 = VK_IME_ON
 
-static void switchToHiraganaAfterDelay() {
-	TaskManager::RunNamedLater(TASKID_SWITCH_TO_HIRAGANA, [] {
-		// Doesn't work in Mail app
-		//if (getCurrentLayout() == 0x0411) {
-		switchToHiragana();
-		//}
-		TaskManager::RunNamedLater(TASKID_SWITCH_TO_HIRAGANA, [] {
-			switchToHiragana();
-			TaskManager::RunNamedLater(TASKID_SWITCH_TO_HIRAGANA, [] {
-				switchToHiragana();
-			}, 1000);
-		}, 200);
-	}, 50);
+	kbddown(0xA2, 0x1D); // https://sethclydesdale.github.io/genki-study-resources/help/writing/#microsoft-shortcuts:~:text=CTRL%2BCAPS%3A%20Change%20to%20Hiragana%20Input
+	kbdpress(0xF2, 0x3A);
+	kbdup(0xA2, 0x1D);
 }
 
 static void moveToTask(int taskNo, Location from) {
@@ -629,10 +618,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			if (config.doNotUseWinSpace && nKey == VK_SPACE) {
 				// Replace by Alt+Shift
 				sendAltShift();
-
-				if (config.selectHiraganaByDefault) {
-					switchToHiraganaAfterDelay();
-				}
 				return 1;
 			}
 
@@ -763,15 +748,28 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 	}
 
-	if (wParam == WM_KEYUP) {
-		static bool needSwitchToHiragana = false;
-		if (!config.doNotUseWinSpace && config.selectHiraganaByDefault && nKey == VK_SPACE) {
-			needSwitchToHiragana = winOnlyPressed();
+	if (config.selectHiraganaByDefault) {
+		static int needSwitchToHiragana = 0;
+
+		if (isDown) {
+			if (!config.doNotUseWinSpace && nKey == VK_SPACE && winPressed()) {
+				needSwitchToHiragana = 1;
+			}
+
+			if (lShiftPressed && lAltPressed) {
+				needSwitchToHiragana = 2;
+			}
 		}
 
-		if (needSwitchToHiragana && (nKey == VK_LWIN || nKey == VK_RWIN)) {
-			needSwitchToHiragana = false;
-			switchToHiraganaAfterDelay();
+		if (isUp &&
+			(needSwitchToHiragana == 1 && !lWinPressed && !rWinPressed) ||
+			(needSwitchToHiragana == 2 && !lAltPressed && !lShiftPressed))
+		{
+			needSwitchToHiragana = 0;
+
+			TaskManager::RunNamedLater(TASKID_SWITCH_TO_HIRAGANA, [] {
+				switchToHiragana();
+			}, 100);
 		}
 	}
 
