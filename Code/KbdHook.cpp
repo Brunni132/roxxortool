@@ -71,6 +71,16 @@ static void switchToHiragana() {
 	kbdup(0xA2, 0x1D);
 }
 
+static void switchToHiraganaAsync() {
+	TaskManager::RunNamedLater(TASKID_SWITCH_TO_HIRAGANA, [] {
+		switchToHiragana();
+
+		TaskManager::RunNamedLater(TASKID_SWITCH_TO_HIRAGANA, [] {
+			switchToHiragana();
+		}, 1000);
+	}, 100);
+}
+
 static void moveToTask(int taskNo, Location from) {
 	bool needsWin = !winPressed(), needsShift = !shiftPressed();
 	if (from == START) kbdpress(VK_HOME, 0);
@@ -749,7 +759,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	}
 
 	if (config.selectHiraganaByDefault) {
-		static int needSwitchToHiragana = 0;
+		static uint8_t needSwitchToHiragana = 0;
 
 		if (isDown) {
 			if (!config.doNotUseWinSpace && nKey == VK_SPACE && winPressed()) {
@@ -761,15 +771,13 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			}
 		}
 
-		if (isUp &&
-			(needSwitchToHiragana == 1 && !lWinPressed && !rWinPressed) ||
-			(needSwitchToHiragana == 2 && !lAltPressed && !lShiftPressed))
-		{
-			needSwitchToHiragana = 0;
+		if (isUp) {
+			if ((needSwitchToHiragana == 1 && !lWinPressed && !rWinPressed) ||
+				(needSwitchToHiragana == 2 && !lAltPressed && !lShiftPressed)) {
+				needSwitchToHiragana = 0;
 
-			TaskManager::RunNamedLater(TASKID_SWITCH_TO_HIRAGANA, [] {
-				switchToHiragana();
-			}, 100);
+				switchToHiraganaAsync();
+			}
 		}
 	}
 
