@@ -754,6 +754,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				//auto pressedKey = lWinPressed ? VK_LWIN : VK_RWIN;
 				// Let the normal Win+T operate, and later, move the cursor
 				TaskManager::RunLater([=] {
+					kbdpress('T', 0);
 					//kbdup(pressedKey, 0);
 					kbdpress(VK_END, 0);
 					//kbddown(pressedKey, 0);
