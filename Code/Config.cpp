@@ -58,6 +58,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_INT_PROP(winTTaskMoveBy, 4);
 	IMPLEMENT_BOOL_PROP(altTabWithMouseButtons, false);
 	IMPLEMENT_BOOL_PROP(selectHiraganaByDefault, false);
+	IMPLEMENT_INT_PROP(selectHiraganaDelay, 200);
 	IMPLEMENT_BOOL_PROP(japaneseMacBookPro, false);
 	IMPLEMENT_BOOL_PROP(japaneseWindowsKeyboard, false);
 	IMPLEMENT_BOOL_PROP(japaneseMacKeyboard, false);

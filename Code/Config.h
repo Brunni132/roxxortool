@@ -52,8 +52,9 @@ struct Config: public RefClass {
 	bool winFOpensYourFiles;
 	bool winTSelectsLastTask;
 	int winTTaskMoveBy;
-	// Sends Ctrl+Caps after Win+Space
+	// Sends Ctrl+Caps after Win+Space or Left Alt + Left Shift
 	bool selectHiraganaByDefault;
+	int selectHiraganaDelay;
 	bool winSSuspendsSystem;
 	bool doNotUseWinSpace;
 	bool internationalUsKeyboardForFrench;

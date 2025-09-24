@@ -74,11 +74,7 @@ static void switchToHiragana() {
 static void switchToHiraganaAsync() {
 	TaskManager::RunNamedLater(TASKID_SWITCH_TO_HIRAGANA, [] {
 		switchToHiragana();
-
-		TaskManager::RunNamedLater(TASKID_SWITCH_TO_HIRAGANA, [] {
-			switchToHiragana();
-		}, 1000);
-	}, 100);
+	}, config.selectHiraganaDelay);
 }
 
 static void moveToTask(int taskNo, Location from) {
