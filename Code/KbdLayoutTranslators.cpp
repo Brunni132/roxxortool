@@ -136,7 +136,7 @@ bool LayoutTranslator::processKeyDown(int kbdVcode, bool shiftPressed) {
 		return false;
 	}
 	// Ignore non-char keystrokes
-	if (kbdVcode >= 0x30 && kbdVcode <= 0x5A || kbdVcode >= 0x60 && kbdVcode <= 0x6F || kbdVcode >= 0x80 && kbdVcode <= 0xF0 || kbdVcode == ' ') {
+	if (kbdVcode >= 0x30 && kbdVcode <= 0x5A || kbdVcode >= 0x60 && kbdVcode <= 0x6F || kbdVcode >= 0xC3 && kbdVcode <= 0xFE || kbdVcode == ' ') {
 		// No state currently
 		if (stateIndex == -1) {
 			// Need alt for any special key
@@ -166,6 +166,7 @@ bool LayoutTranslator::processKeyDown(int kbdVcode, bool shiftPressed) {
 			// Not found any outcome -> output the default outcome and leave the state
 			if (foundOutcomeId == -1) {
 				stateIndex = -1;
+				printf("Vcode=%x st=%d no outcome -> %s ? %x\n", kbdVcode, stateIndex, shiftPressed ? "true" : "false", shiftPressed ? state.defaultOutcomeWithShift : state.defaultOutcome);
 				outputChar(shiftPressed ? state.defaultOutcomeWithShift : state.defaultOutcome);
 				// Note that in this case we also want to output the original typed character after the outcome (e.g. `e)
 				return false;
@@ -174,6 +175,7 @@ bool LayoutTranslator::processKeyDown(int kbdVcode, bool shiftPressed) {
 				// OK, just output the new outcome and leave the state
 				const State::StateOutcome &outcome = state.outcomes[foundOutcomeId];
 				stateIndex = -1;
+				printf("Vcode=%x st=%d has outcome ID=%d -> %s ? %x\n", kbdVcode, stateIndex, foundOutcomeId, shiftPressed ? "true" : "false", shiftPressed ? outcome.outputCharWithShift : outcome.outputCharNormal);
 				outputChar(shiftPressed ? outcome.outputCharWithShift : outcome.outputCharNormal);
 				keysToEatOnPressup.push_back(kbdVcode);
 				return true;
