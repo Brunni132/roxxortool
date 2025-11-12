@@ -166,7 +166,9 @@ bool LayoutTranslator::processKeyDown(int kbdVcode, bool shiftPressed) {
 			// Not found any outcome -> output the default outcome and leave the state
 			if (foundOutcomeId == -1) {
 				stateIndex = -1;
-				printf("Vcode=%x st=%d no outcome -> %s ? %x\n", kbdVcode, stateIndex, shiftPressed ? "true" : "false", shiftPressed ? state.defaultOutcomeWithShift : state.defaultOutcome);
+#ifdef _DEBUG
+				printf("Vcode=%x state=%d no outcome -> %s ? %x\n", kbdVcode, stateIndex, shiftPressed ? "true" : "false", shiftPressed ? state.defaultOutcomeWithShift : state.defaultOutcome);
+#endif
 				outputChar(shiftPressed ? state.defaultOutcomeWithShift : state.defaultOutcome);
 				// Note that in this case we also want to output the original typed character after the outcome (e.g. `e)
 				return false;
@@ -175,7 +177,9 @@ bool LayoutTranslator::processKeyDown(int kbdVcode, bool shiftPressed) {
 				// OK, just output the new outcome and leave the state
 				const State::StateOutcome &outcome = state.outcomes[foundOutcomeId];
 				stateIndex = -1;
-				printf("Vcode=%x st=%d has outcome ID=%d -> %s ? %x\n", kbdVcode, stateIndex, foundOutcomeId, shiftPressed ? "true" : "false", shiftPressed ? outcome.outputCharWithShift : outcome.outputCharNormal);
+#ifdef _DEBUG
+				printf("Vcode=%x state=%d has outcome ID=%d -> %s ? %x\n", kbdVcode, stateIndex, foundOutcomeId, shiftPressed ? "true" : "false", shiftPressed ? outcome.outputCharWithShift : outcome.outputCharNormal);
+#endif
 				outputChar(shiftPressed ? outcome.outputCharWithShift : outcome.outputCharNormal);
 				keysToEatOnPressup.push_back(kbdVcode);
 				return true;

@@ -356,7 +356,9 @@
 		SYSTEM_POWER_STATUS pwr_status;
 
 		if (r != ERROR_SUCCESS) {
+#ifdef _DEBUG
 			fprintf(stderr, "PowerGetActiveScheme failed: %u\n", r);
+#endif
 			return false;
 		}
 
@@ -373,7 +375,9 @@
 		}
 
 		if (r != ERROR_SUCCESS) {
+#ifdef _DEBUG
 			fprintf(stderr, "PowerReadDC/ACValue failed: %u\n", r);
+#endif
 			return false;
 		}
 
@@ -388,7 +392,9 @@
 		DWORD r = PowerGetActiveScheme(NULL, &pwrGUID);
 		SYSTEM_POWER_STATUS pwr_status;
 		if (r != ERROR_SUCCESS) {
+#ifdef _DEBUG
 			fprintf(stderr, "PowerGetActiveScheme failed: %u\n", r);
+#endif
 			return false;
 		}
 
@@ -404,13 +410,17 @@
 		}
 
 		if (r != ERROR_SUCCESS) {
+#ifdef _DEBUG
 			fprintf(stderr, "PowerWriteDC/ACValueIndex failed: %u\n", r);
+#endif
 			return false;
 		}
 
 		r = PowerSetActiveScheme(NULL, pwrGUID);
 		if (r != ERROR_SUCCESS) {
+#ifdef _DEBUG
 			fprintf(stderr, "PowerSetActiveScheme failed: %u\n", r);
+#endif
 			return false;
 		}
 		return true;
