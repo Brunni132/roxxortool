@@ -72,7 +72,7 @@ Additional (not as good, please shout out if you use them else I might remove th
 - `autoApplyGammaCurveDelay`: reapply the gamma curve (for negative brightness) at the given interval in milliseconds.
 - `japaneseWindowsKeyboard`: remaps some keys if you have a Japanese keyboard, so that the right alt key for example is replaced with the 変換 key, and the カタカナ・ひらがな・ローマ字 key acts as a right Windows key, and 無変換 acts as a a left Alt key.
 	- There are additional settings for Macs using Bootcamp: `japaneseMacBookPro` and `japaneseMacKeyboard`.
-
+- `disableWinKey`: If set to non-zero, disables the Windows key but only for a short press; still allows it to open if the following char is pressed along it (key code is the value of disableWinKey -> example 32 means you need to press win+space and the start menu will show).
 
 Using the Roxxor Tool
 ---------------------

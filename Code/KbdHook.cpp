@@ -15,6 +15,10 @@
 // Has been fixed in 1909 I think
 #define PRE_WINDOWS_1803_UPDATE 1
 
+const char* WINDOWS_NOT_TO_HIDE[] = {
+	"Progman", "Shell_TrayWnd", "Windows.UI.Core.CoreWindow"
+};
+
 bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, rWinPressed = false, lShiftPressed = false, rShiftPressed = false, lAltPressed = false;
 static bool ctrlPressed() { return lCtrlPressed || rCtrlPressed; }
 static bool winPressed() { return lWinPressed || rWinPressed; }
@@ -671,9 +675,14 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				HWND hWnd = GetForegroundWindow();
 				GetClassNameA(hWnd, className, 128);
 				GetWindowTextA(hWnd, title, 128);
-				if (strcmp(className, "Windows.UI.Core.CoreWindow") /*|| strcmp(title, "Search")*/) {
-					ShowWindow(GetForegroundWindow(), SW_MINIMIZE);
+
+				for (auto i = 0u; i < numberof(WINDOWS_NOT_TO_HIDE); i++) {
+					if (!strcmp(className, WINDOWS_NOT_TO_HIDE[i])) {
+						return 1;
+					}
 				}
+
+				ShowWindow(hWnd, SW_MINIMIZE);
 				return 1;
 			}
 
@@ -844,26 +853,105 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 #endif
 
-	if (config.rightShiftContextMenu) {
-		static bool pressedAnotherKeySince = false;
-		// Remappe Alt droit => context menu
-		if (nKey == VK_RSHIFT) {
-			if (wParam == WM_KEYDOWN && !injected) {
-				pressedAnotherKeySince = false;
-			}
-			else if (wParam == WM_KEYUP && !pressedAnotherKeySince) {
-				// Au keyup, on presse un context menu (93)
-				TaskManager::Run([] {
-					bool needsLeftShift = config.rightShiftContextMenuOpensExtendedMenu && !lShiftPressed;
-					if (needsLeftShift) kbddown(VK_LSHIFT, 0);
-					kbdpress(VK_APPS, 0);
-					if (needsLeftShift) kbdup(VK_LSHIFT, 0);
-				});
+	// Simple version
+	if (config.disableWinKey && !shiftPressed() && !altPressed() && !ctrlPressed()) {
+		static bool eatNextWinKey = true;
+		bool isWinKey = nKey == VK_LWIN || nKey == VK_RWIN;
+		
+		if (winPressed() && !isWinKey) {
+			eatNextWinKey = false;
+			if (nKey == config.disableWinKey) {
+				return 1;
 			}
 		}
-		else if (wParam == WM_KEYDOWN)
-			pressedAnotherKeySince = true;
+		else if (isWinKey && wParam == WM_KEYUP) {
+			if (eatNextWinKey) {
+				// Prepare the SendInput array to quickly tap Alt
+				INPUT inputs[2] = {};
+				// Alt Down
+				inputs[0].type = INPUT_KEYBOARD;
+				inputs[0].ki.wVk = VK_LCONTROL;
+				inputs[0].ki.dwFlags = 0;
+				// Alt Up
+				inputs[1].type = INPUT_KEYBOARD;
+				inputs[1].ki.wVk = VK_LCONTROL;
+				inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
+				SendInput(2, inputs, sizeof(INPUT));
+			}
+			eatNextWinKey = true;
+			return 0;
+		}
 	}
+
+	// Extra responsive version (shows win menu on key down)
+	//if (config.disableWinKey && !injected) {
+	//	static bool eatNextWinKey = true, eatNextWinUp = false, eatNextCharUp = false;
+	//	bool isWinKey = nKey == VK_LWIN || nKey == VK_RWIN;
+
+	//	if (nKey == config.disableWinKey && eatNextCharUp) {
+	//		printf("Eating next char up\n");
+	//		eatNextCharUp = false;
+	//		return 1;
+	//	}
+	//	else if (isWinKey && eatNextWinUp) {
+	//		printf("Eating next win up\n");
+	//		eatNextWinUp = false;
+	//		return 1;
+	//	}
+	//	else if (winPressed() && !isWinKey) {
+	//		eatNextWinKey = false;
+	//		if (nKey == config.disableWinKey) {
+	//			eatNextCharUp = eatNextWinUp = true;
+
+	//			INPUT inputs[1] = {};
+	//			// Win Up
+	//			inputs[0].type = INPUT_KEYBOARD;
+	//			inputs[0].ki.wVk = VK_LWIN;
+	//			inputs[0].ki.dwFlags = KEYEVENTF_KEYUP;
+	//			SendInput(1, inputs, sizeof(INPUT));
+
+	//			return 1;
+	//		}
+	//	}
+	//	else if (isWinKey && wParam == WM_KEYUP) {
+	//		if (eatNextWinKey) {
+	//			// Prepare the SendInput array to quickly tap Alt
+	//			INPUT inputs[2] = {};
+	//			// Alt Down
+	//			inputs[0].type = INPUT_KEYBOARD;
+	//			inputs[0].ki.wVk = VK_LCONTROL;
+	//			inputs[0].ki.dwFlags = 0;
+	//			// Alt Up
+	//			inputs[1].type = INPUT_KEYBOARD;
+	//			inputs[1].ki.wVk = VK_LCONTROL;
+	//			inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
+	//			SendInput(2, inputs, sizeof(INPUT));
+	//		}
+	//		eatNextWinKey = true;
+	//		return 0;
+	//	}
+	//}
+
+	//if (config.rightShiftContextMenu) {
+	//	static bool pressedAnotherKeySince = false;
+	//	// Remappe Alt droit => context menu
+	//	if (nKey == VK_RSHIFT) {
+	//		if (wParam == WM_KEYDOWN && !injected) {
+	//			pressedAnotherKeySince = false;
+	//		}
+	//		else if (wParam == WM_KEYUP && !pressedAnotherKeySince) {
+	//			// Au keyup, on presse un context menu (93)
+	//			TaskManager::Run([] {
+	//				bool needsLeftShift = config.rightShiftContextMenuOpensExtendedMenu && !lShiftPressed;
+	//				if (needsLeftShift) kbddown(VK_LSHIFT, 0);
+	//				kbdpress(VK_APPS, 0);
+	//				if (needsLeftShift) kbdup(VK_LSHIFT, 0);
+	//			});
+	//		}
+	//	}
+	//	else if (wParam == WM_KEYDOWN)
+	//		pressedAnotherKeySince = true;
+	//}
 
 	if (config.altGraveToStickyAltTab) {
 		//` = OEM_3 (0xC0)

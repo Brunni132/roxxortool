@@ -6,6 +6,7 @@
 #define IMPLEMENT_INT_PROP(name, default)       { if (obj) mkentry(""#name); if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) found(), name = (int) obj->value.toNumber(); }
 #define IMPLEMENT_FLOAT_PROP(name, default)     { if (obj) mkentry(""#name); if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) found(), name = (float) obj->value.toNumber(); }
 #define IMPLEMENT_ARRAY_PROP(name, default)     { if (obj) mkentry(""#name); if (serializer) serializer->put(""#name, name, numberof(name)); else if (!obj) memcpy(name, default, sizeof(name)); else if (!strcmp(obj->key, ""#name)) found(), parseNumberArray(name, numberof(name), obj->value); }
+#define IMPLEMENT_CHAR_PROP(name, default)      { if (obj) mkentry(""#name); if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) found(), name = obj->value.toChar(); }
 //#define IMPLEMENT_STRING_MAP_PROP(name, default)	{ propId++; if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (obj && !strcmp(obj->key, ""#name)) found = true, parseStringMap(name); }
 
 Config config;
@@ -77,6 +78,7 @@ void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
 	IMPLEMENT_BOOL_PROP(processAltTabWithMouseButtonsEvenFromRdp, false);
 	IMPLEMENT_BOOL_PROP(mediaKeysWithCapsLockFnKeys, false);
 	IMPLEMENT_BOOL_PROP(mediaKeysWithCapsLockSpaceArrow, false);
+	IMPLEMENT_INT_PROP(disableWinKey, 0);
 
 	if (obj && !thisEntryFound) {
 		char error[1024];

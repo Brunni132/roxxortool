@@ -136,7 +136,7 @@ bool LayoutTranslator::processKeyDown(int kbdVcode, bool shiftPressed) {
 		return false;
 	}
 	// Ignore non-char keystrokes
-	if (kbdVcode >= 0x30 && kbdVcode <= 0x5A || kbdVcode >= 0x60 && kbdVcode <= 0x6F || kbdVcode >= 0xC3 && kbdVcode <= 0xFE || kbdVcode == ' ') {
+	if (kbdVcode >= 0x30 && kbdVcode <= 0x5A || kbdVcode >= 0x60 && kbdVcode <= 0x6F || kbdVcode >= 0xBA && kbdVcode <= 0xFE || kbdVcode == ' ') {
 		// No state currently
 		if (stateIndex == -1) {
 			// Need alt for any special key
