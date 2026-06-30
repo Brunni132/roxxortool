@@ -854,62 +854,13 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 #endif
 
 	// Simple version
-	if (config.disableWinKey && !shiftPressed() && !altPressed() && !ctrlPressed()) {
-		static bool eatNextWinKey = true;
-		bool isWinKey = nKey == VK_LWIN || nKey == VK_RWIN;
-		
-		if (winPressed() && !isWinKey) {
-			eatNextWinKey = false;
-			if (nKey == config.disableWinKey) {
-				return 1;
-			}
-		}
-		else if (isWinKey && wParam == WM_KEYUP) {
-			if (eatNextWinKey) {
-				// Prepare the SendInput array to quickly tap Alt
-				INPUT inputs[2] = {};
-				// Alt Down
-				inputs[0].type = INPUT_KEYBOARD;
-				inputs[0].ki.wVk = VK_LCONTROL;
-				inputs[0].ki.dwFlags = 0;
-				// Alt Up
-				inputs[1].type = INPUT_KEYBOARD;
-				inputs[1].ki.wVk = VK_LCONTROL;
-				inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
-				SendInput(2, inputs, sizeof(INPUT));
-			}
-			eatNextWinKey = true;
-			return 0;
-		}
-	}
-
-	// Extra responsive version (shows win menu on key down)
-	//if (config.disableWinKey && !injected) {
-	//	static bool eatNextWinKey = true, eatNextWinUp = false, eatNextCharUp = false;
+	//if (config.disableWinKey && !shiftPressed() && !altPressed() && !ctrlPressed()) {
+	//	static bool eatNextWinKey = true;
 	//	bool isWinKey = nKey == VK_LWIN || nKey == VK_RWIN;
-
-	//	if (nKey == config.disableWinKey && eatNextCharUp) {
-	//		printf("Eating next char up\n");
-	//		eatNextCharUp = false;
-	//		return 1;
-	//	}
-	//	else if (isWinKey && eatNextWinUp) {
-	//		printf("Eating next win up\n");
-	//		eatNextWinUp = false;
-	//		return 1;
-	//	}
-	//	else if (winPressed() && !isWinKey) {
+	//	
+	//	if (winPressed() && !isWinKey) {
 	//		eatNextWinKey = false;
 	//		if (nKey == config.disableWinKey) {
-	//			eatNextCharUp = eatNextWinUp = true;
-
-	//			INPUT inputs[1] = {};
-	//			// Win Up
-	//			inputs[0].type = INPUT_KEYBOARD;
-	//			inputs[0].ki.wVk = VK_LWIN;
-	//			inputs[0].ki.dwFlags = KEYEVENTF_KEYUP;
-	//			SendInput(1, inputs, sizeof(INPUT));
-
 	//			return 1;
 	//		}
 	//	}
@@ -931,6 +882,42 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	//		return 0;
 	//	}
 	//}
+
+	// Extra responsive version (shows win menu on key down)
+	if (config.disableWinKey && !shiftPressed() && !altPressed() && !ctrlPressed()) {
+		static bool eatNextWinKey = true;
+		bool isWinKey = nKey == VK_LWIN || nKey == VK_RWIN;
+
+		if (winPressed() && !isWinKey) {
+			if (nKey == config.disableWinKey) {
+				if (wParam == WM_KEYDOWN) {
+					HWND hwnd = FindWindow("Shell_TrayWnd", NULL);
+					SendMessage(hwnd, WM_SYSCOMMAND, SC_TASKLIST, 0);
+				}
+				return 1;
+			}
+			else {
+				eatNextWinKey = false;
+			}
+		}
+		else if (isWinKey && wParam == WM_KEYUP) {
+			if (eatNextWinKey) {
+				// Prepare the SendInput array to quickly tap Alt
+				INPUT inputs[2] = {};
+				// Alt Down
+				inputs[0].type = INPUT_KEYBOARD;
+				inputs[0].ki.wVk = VK_LCONTROL;
+				inputs[0].ki.dwFlags = 0;
+				// Alt Up
+				inputs[1].type = INPUT_KEYBOARD;
+				inputs[1].ki.wVk = VK_LCONTROL;
+				inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
+				SendInput(2, inputs, sizeof(INPUT));
+			}
+			eatNextWinKey = true;
+			return 0;
+		}
+	}
 
 	//if (config.rightShiftContextMenu) {
 	//	static bool pressedAnotherKeySince = false;
