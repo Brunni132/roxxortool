@@ -750,10 +750,12 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 					return 1;
 				}
 			}
-			else if (winOnlyPressed() && nKey == 'T') {
+			else if (winOnlyPressed() && nKey == 'T' && !injected) {
 				//auto pressedKey = lWinPressed ? VK_LWIN : VK_RWIN;
 				// Let the normal Win+T operate, and later, move the cursor
+				printf("Executing win+t\n");
 				TaskManager::RunLater([=] {
+					printf("Inside win+t\n");
 					kbdpress('T', 0);
 					//kbdup(pressedKey, 0);
 					kbdpress(VK_END, 0);
