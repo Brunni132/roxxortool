@@ -1,93 +1,123 @@
 #include "Precompiled.h"
 #include "Config.h"
 
-#define IMPLEMENT_BOOL_PROP(name, default)      { if (obj) mkentry(""#name); if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) found(), name = obj->value.toBool(); }
-#define IMPLEMENT_UNSIGNED_PROP(name, default)	{ if (obj) mkentry(""#name); if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) found(), name = (unsigned) obj->value.toNumber(); }
-#define IMPLEMENT_INT_PROP(name, default)       { if (obj) mkentry(""#name); if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) found(), name = (int) obj->value.toNumber(); }
-#define IMPLEMENT_FLOAT_PROP(name, default)     { if (obj) mkentry(""#name); if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) found(), name = (float) obj->value.toNumber(); }
-#define IMPLEMENT_ARRAY_PROP(name, default)     { if (obj) mkentry(""#name); if (serializer) serializer->put(""#name, name, numberof(name)); else if (!obj) memcpy(name, default, sizeof(name)); else if (!strcmp(obj->key, ""#name)) found(), parseNumberArray(name, numberof(name), obj->value); }
-#define IMPLEMENT_CHAR_PROP(name, default)      { if (obj) mkentry(""#name); if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (!strcmp(obj->key, ""#name)) found(), name = obj->value.toChar(); }
-//#define IMPLEMENT_STRING_MAP_PROP(name, default)	{ propId++; if (serializer) serializer->put(""#name, name); else if (!obj) name = default; else if (obj && !strcmp(obj->key, ""#name)) found = true, parseStringMap(name); }
-
 Config config;
 
-void Config::process(JsonNode *obj, JsonWriterNode *serializer) {
-	// Checking whether the key exists
-	// If obj != null, foundProps should be all null (means that properties are found) and for each process call (key in the JSON) there thisEntryFound should be true.
-	int propId = -1;
-	bool thisEntryFound = false;
-	auto mkentry = [&](const char *key) {
-		propId++;
-		if (foundProps.size() < propId + 1) {
-			foundProps.push_back(key);
-		}
-	};
-	auto found = [&] {
-		foundProps[propId] = nullptr;
-		thisEntryFound = true;
-	};
+#define DEFINE_PROPERTY(name, default_value) processProperty(context, obj, serializer, name, ""#name, default_value)
 
-	unsigned short defaultGammaCurve[3 * 256];
-	memset(defaultGammaCurve, 0, sizeof(defaultGammaCurve));
+void Config::process(ProcessContext& context, JsonNode *obj, JsonWriterNode *serializer) {
+	//unsigned short defaultGammaCurve[3 * 256];
+	//memset(defaultGammaCurve, 0, sizeof(defaultGammaCurve));
 
-	//IMPLEMENT_BOOL_PROP(rightCtrlContextMenu, false);
-	IMPLEMENT_BOOL_PROP(toggleHideFolders, true);
-	IMPLEMENT_BOOL_PROP(startScreenSaverWithInsert, false);
-	IMPLEMENT_BOOL_PROP(smoothVolumeControl, true);
-	IMPLEMENT_FLOAT_PROP(volumeIncrementQuantity, 1.5f);
-	IMPLEMENT_BOOL_PROP(ddcCiBrightnessControl, true);
-	IMPLEMENT_BOOL_PROP(wmiLogarithmicBrightness, false);
-	IMPLEMENT_INT_PROP(brightnessIncrementQuantity, 5);
-	IMPLEMENT_BOOL_PROP(allowNegativeBrightness, false);
-	IMPLEMENT_INT_PROP(autoApplyGammaCurveDelay, 0);
-	IMPLEMENT_BOOL_PROP(useSoftMediaKeys, false);
-	IMPLEMENT_BOOL_PROP(forceReapplyGammaOnBrightnessChange, false);
-	IMPLEMENT_BOOL_PROP(reloadConfigWithCtrlWinR, true);
-	IMPLEMENT_BOOL_PROP(iAmAMac, false);
-	IMPLEMENT_BOOL_PROP(multiDesktopLikeApplicationSwitcher, true);
-	IMPLEMENT_BOOL_PROP(winEOpensThisPC, false);
-	IMPLEMENT_BOOL_PROP(winEOpensYourFiles, false);
-	IMPLEMENT_BOOL_PROP(winFOpensYourFiles, false);
-	IMPLEMENT_BOOL_PROP(winHHidesWindow, true);
-	IMPLEMENT_BOOL_PROP(noNumPad, false);
-	IMPLEMENT_BOOL_PROP(rightShiftContextMenu, false);
-	IMPLEMENT_BOOL_PROP(rightShiftContextMenuOpensExtendedMenu, false);
-	IMPLEMENT_INT_PROP(brightnessCacheDuration, 3000);
-	IMPLEMENT_BOOL_PROP(closeWindowWithWinQ, false);
-	IMPLEMENT_BOOL_PROP(altGraveToStickyAltTab, false);
-	IMPLEMENT_BOOL_PROP(winTSelectsLastTask, false);
-	IMPLEMENT_INT_PROP(winTTaskMoveBy, 4);
-	IMPLEMENT_BOOL_PROP(altTabWithMouseButtons, false);
-	IMPLEMENT_BOOL_PROP(selectHiraganaByDefault, false);
-	IMPLEMENT_INT_PROP(selectHiraganaDelay, 200);
-	IMPLEMENT_BOOL_PROP(japaneseMacBookPro, false);
-	IMPLEMENT_BOOL_PROP(japaneseWindowsKeyboard, false);
-	IMPLEMENT_BOOL_PROP(japaneseMacKeyboard, false);
-	IMPLEMENT_BOOL_PROP(winSSuspendsSystem, false);
-	IMPLEMENT_BOOL_PROP(doNotUseWinSpace, false);
-	IMPLEMENT_BOOL_PROP(internationalUsKeyboardForFrench, false);
-	IMPLEMENT_BOOL_PROP(resetDefaultGammaCurve, false);
-	IMPLEMENT_BOOL_PROP(scrollAccelerationEnabled, false);
-	IMPLEMENT_FLOAT_PROP(scrollAccelerationFactor, 0.0f);
-	IMPLEMENT_INT_PROP(scrollAccelerationIntertia, 50);
-	IMPLEMENT_FLOAT_PROP(scrollAccelerationMaxScrollFactor, 2000);
-	IMPLEMENT_BOOL_PROP(scrollAccelerationSendMultipleMessages, false);
-	IMPLEMENT_INT_PROP(scrollAccelerationBaseValue, 0);
-	IMPLEMENT_BOOL_PROP(capsPageControls, false);
-	IMPLEMENT_BOOL_PROP(disableCapsLock, false);
-	IMPLEMENT_BOOL_PROP(processAltTabWithMouseButtonsEvenFromRdp, false);
-	IMPLEMENT_BOOL_PROP(mediaKeysWithCapsLockFnKeys, false);
-	IMPLEMENT_BOOL_PROP(mediaKeysWithCapsLockSpaceArrow, false);
-	IMPLEMENT_INT_PROP(disableWinKey, 0);
+	bool success =
+		DEFINE_PROPERTY(toggleHideFolders, true)
+		//|| DEFINE_PROPERTY(rightCtrlContextMenu, false)
+		|| DEFINE_PROPERTY(startScreenSaverWithInsert, false)
+		|| DEFINE_PROPERTY(smoothVolumeControl, true)
+		|| DEFINE_PROPERTY(volumeIncrementQuantity, 1.5f)
+		|| DEFINE_PROPERTY(ddcCiBrightnessControl, true)
+		|| DEFINE_PROPERTY(wmiLogarithmicBrightness, false)
+		|| DEFINE_PROPERTY(brightnessIncrementQuantity, 5)
+		|| DEFINE_PROPERTY(allowNegativeBrightness, false)
+		|| DEFINE_PROPERTY(autoApplyGammaCurveDelay, 0)
+		|| DEFINE_PROPERTY(useSoftMediaKeys, false)
+		|| DEFINE_PROPERTY(forceReapplyGammaOnBrightnessChange, false)
+		|| DEFINE_PROPERTY(reloadConfigWithCtrlWinR, true)
+		|| DEFINE_PROPERTY(iAmAMac, false)
+		|| DEFINE_PROPERTY(multiDesktopLikeApplicationSwitcher, true)
+		|| DEFINE_PROPERTY(winEOpensThisPC, false)
+		|| DEFINE_PROPERTY(winEOpensYourFiles, false)
+		|| DEFINE_PROPERTY(winFOpensYourFiles, false)
+		|| DEFINE_PROPERTY(winHHidesWindow, true)
+		|| DEFINE_PROPERTY(noNumPad, false)
+		|| DEFINE_PROPERTY(rightShiftContextMenu, false)
+		|| DEFINE_PROPERTY(rightShiftContextMenuOpensExtendedMenu, false)
+		|| DEFINE_PROPERTY(brightnessCacheDuration, 3000L)
+		|| DEFINE_PROPERTY(closeWindowWithWinQ, false)
+		|| DEFINE_PROPERTY(altGraveToStickyAltTab, false)
+		|| DEFINE_PROPERTY(winTSelectsLastTask, false)
+		|| DEFINE_PROPERTY(winTTaskMoveBy, 4)
+		|| DEFINE_PROPERTY(altTabWithMouseButtons, false)
+		|| DEFINE_PROPERTY(selectHiraganaByDefault, false)
+		|| DEFINE_PROPERTY(selectHiraganaDelay, 200)
+		|| DEFINE_PROPERTY(japaneseMacBookPro, false)
+		|| DEFINE_PROPERTY(japaneseWindowsKeyboard, false)
+		|| DEFINE_PROPERTY(japaneseMacKeyboard, false)
+		|| DEFINE_PROPERTY(winSSuspendsSystem, false)
+		|| DEFINE_PROPERTY(doNotUseWinSpace, false)
+		|| DEFINE_PROPERTY(internationalUsKeyboardForFrench, false)
+		|| DEFINE_PROPERTY(resetDefaultGammaCurve, false)
+		|| DEFINE_PROPERTY(scrollAccelerationEnabled, false)
+		|| DEFINE_PROPERTY(scrollAccelerationFactor, 0.0f)
+		|| DEFINE_PROPERTY(scrollAccelerationIntertia, 50)
+		|| DEFINE_PROPERTY(scrollAccelerationMaxScrollFactor, 2000.0f)
+		|| DEFINE_PROPERTY(scrollAccelerationSendMultipleMessages, false)
+		|| DEFINE_PROPERTY(scrollAccelerationBaseValue, 0)
+		|| DEFINE_PROPERTY(capsPageControls, false)
+		|| DEFINE_PROPERTY(disableCapsLock, false)
+		|| DEFINE_PROPERTY(processAltTabWithMouseButtonsEvenFromRdp, false)
+		|| DEFINE_PROPERTY(mediaKeysWithCapsLockFnKeys, false)
+		|| DEFINE_PROPERTY(mediaKeysWithCapsLockSpaceArrow, false)
+		|| DEFINE_PROPERTY(disableWinKey, 0);
 
-	if (obj && !thisEntryFound) {
-		char error[1024];
-		sprintf(error, "Unrecognized entry %s", obj->key);
-		errors.push_back(error);
+	if (obj && !success) {
+		context.errors.push_back(string("Unrecognized entry ") + obj->key);
 	}
 }
 
+template<typename T>
+bool Config::processProperty(ProcessContext& context, JsonNode* for_read, JsonWriterNode* for_write, T& property, const char* property_name, const T& default_value) {
+	if (!for_read && !for_write) {
+		context.found_props[property_name] = false;
+		property = default_value;
+	}
+	else if (for_read && !strcmp(for_read->key, property_name)) {
+		context.found_props[property_name] = true;
+
+		if constexpr (std::is_same_v<T, bool>) {
+			property = for_read->value.toBool();
+		}
+		else if constexpr (std::is_same_v<T, std::string>) {
+			property = for_read->value.toString();
+		}
+		else if constexpr (std::is_arithmetic_v<T>) {
+			property = static_cast<T>(for_read->value.toNumber());
+		}
+		else if constexpr (std::is_array_v<T>) { // raw arrays (e.g., int property[5])
+			using ElementType = std::remove_extent_t<T>;
+			constexpr size_t ArraySize = std::extent_v<T>;
+
+			size_t index = 0;
+			if (for_read->value.getTag() != JSON_TAG_ARRAY) {
+				context.errors.push_back(property_name + ": expected an array");
+				return;
+			}
+
+			memset(property, 0, ArraySize * sizeof(property[0]));
+			for (auto obj : for_read->value) {
+				if (index >= ArraySize) {
+					context.errors.push_back(property_name + ": exceeded array capacity");
+					return;
+				}
+				property[index++] = static_cast<ElementType>(obj->value.toNumber());
+			}
+		}
+		else {
+			static_assert(always_false_v<T>, "Unsupported type passed to processProperty");
+		}
+		return true;
+	}
+	else if (for_write) {
+		for_write->put(property_name, property);
+	}
+	return false;
+}
+
 void Config::readFile() {
+	ProcessContext context;
+	// Init to default values and count recognized properties
+	process(context);
+
 	// Read & parse file
 	FILE *fp = fopen("config.json", "rb");
 	if (!fp) {
@@ -113,29 +143,23 @@ void Config::readFile() {
 	if (status != JSON_PARSE_OK) {
 		char error[1024];
 		sprintf(error, "Error at %ld, status: %d\n", long(endptr - buffer), status);
-		errors.push_back(error);
+		context.errors.push_back(error);
 	}
 	else {
-		// Init to default values
-		foundProps.clear();
-		process();
-
 		// Parse file itself
 		for (auto obj : value)
-			process(obj);
+			process(context, obj);
 
-		for (auto prop : foundProps) {
-			if (prop) {
-				char error[1024];
-				sprintf(error, "Missing entry %s", prop);
-				errors.push_back(error);
+		for (auto prop : context.found_props) {
+			if (!prop.second) {
+				context.errors.push_back(string("Missing entry: ") + prop.first);
 			}
 		}
 	}
 
-	if (!errors.empty()) {
+	if (!context.errors.empty()) {
 		std::string message("The following happened when loading the JSON config file:");
-		for (string &error : errors) {
+		for (string &error : context.errors) {
 			message.append("\n- ").append(error);
 		}
 		message.append("\nThis can be normal after an update. We can fix the file for you if you click on Yes (current is renamed as config.old.json), start as is if you click on No, or quit if you click on Cancel.");
@@ -162,25 +186,12 @@ void Config::readFile() {
 	}
 }
 
-void Config::parseNumberArray(unsigned short array[], unsigned maxLength, JsonValue &val) {
-	int index = 0;
-	if (val.getTag() != JSON_TAG_ARRAY) {
-		printf("Expected an array (consts)\n");
-		return;
-	}
-	memset(array, 0, maxLength * sizeof(array[0]));
-	for (auto obj : val) {
-		if (index >= int(maxLength))
-			break;
-		array[index++] = short(obj->value.toNumber());
-	}
-}
-
 void Config::writeSampleFile(const char *fname, bool showInExplorer) {
+	ProcessContext context;
 	JsonWriterNode node;
 	FILE *outFile = fopen(fname, "w");
 	if (outFile) {
-		process(NULL, &node);
+		process(context, nullptr, &node);
 		writeJson(node, outFile);
 		fclose(outFile);
 

@@ -12,8 +12,11 @@
 #include "lib/JsonSerializer.h"
 #include <functional>
 #include <vector>
+#include <unordered_map>
 #include <list>
 #include "TaskManager.h"
+
+template <typename...> inline constexpr bool always_false_v = false;
 
 template <typename T> int sgn(T val) {
 	return (T(0) < val) - (val < T(0));

@@ -40,6 +40,11 @@ JsonWriterNode& JsonWriterNode::put(string key, int value) {
 	return *this;
 }
 
+JsonWriterNode& JsonWriterNode::put(string key, long value) {
+	dico[key] = JsonWriterNode(to_string(value));
+	return *this;
+}
+
 JsonWriterNode& JsonWriterNode::put(string key, float value) {
 	dico[key] = JsonWriterNode(float_to_string(value));
 	return *this;

@@ -905,42 +905,37 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		else if (isWinKey && wParam == WM_KEYUP) {
 			if (eatNextWinKey) {
 				// Prepare the SendInput array to quickly tap Alt
-				INPUT inputs[2] = {};
-				// Alt Down
-				inputs[0].type = INPUT_KEYBOARD;
-				inputs[0].ki.wVk = VK_LCONTROL;
-				inputs[0].ki.dwFlags = 0;
-				// Alt Up
-				inputs[1].type = INPUT_KEYBOARD;
-				inputs[1].ki.wVk = VK_LCONTROL;
-				inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
-				SendInput(2, inputs, sizeof(INPUT));
+				INPUT inputs[] = {
+					{.type = INPUT_KEYBOARD, .ki = {.wVk = VK_LCONTROL, .dwFlags = 0 } },
+					{.type = INPUT_KEYBOARD, .ki = {.wVk = VK_LCONTROL, .dwFlags = KEYEVENTF_KEYUP } }
+				};
+				SendInput(numberof(inputs), inputs, sizeof(INPUT));
 			}
 			eatNextWinKey = true;
 			return 0;
 		}
 	}
 
-	//if (config.rightShiftContextMenu) {
-	//	static bool pressedAnotherKeySince = false;
-	//	// Remappe Alt droit => context menu
-	//	if (nKey == VK_RSHIFT) {
-	//		if (wParam == WM_KEYDOWN && !injected) {
-	//			pressedAnotherKeySince = false;
-	//		}
-	//		else if (wParam == WM_KEYUP && !pressedAnotherKeySince) {
-	//			// Au keyup, on presse un context menu (93)
-	//			TaskManager::Run([] {
-	//				bool needsLeftShift = config.rightShiftContextMenuOpensExtendedMenu && !lShiftPressed;
-	//				if (needsLeftShift) kbddown(VK_LSHIFT, 0);
-	//				kbdpress(VK_APPS, 0);
-	//				if (needsLeftShift) kbdup(VK_LSHIFT, 0);
-	//			});
-	//		}
-	//	}
-	//	else if (wParam == WM_KEYDOWN)
-	//		pressedAnotherKeySince = true;
-	//}
+	if (config.rightShiftContextMenu) {
+		static bool pressedAnotherKeySince = false;
+		// Remappe Alt droit => context menu
+		if (nKey == VK_RSHIFT) {
+			if (wParam == WM_KEYDOWN) {
+				pressedAnotherKeySince = false;
+			}
+			else if (wParam == WM_KEYUP && !pressedAnotherKeySince) {
+				// Au keyup, on presse un context menu (93)
+				TaskManager::Run([] {
+					bool needsLeftShift = config.rightShiftContextMenuOpensExtendedMenu && !lShiftPressed;
+					if (needsLeftShift) kbddown(VK_LSHIFT, 0);
+					kbdpress(VK_APPS, 0);
+					if (needsLeftShift) kbdup(VK_LSHIFT, 0);
+				});
+			}
+		}
+		else if (wParam == WM_KEYDOWN && nKey != VK_LSHIFT) // Note: you can tap rshift while holding lshift, which shows the classic or extended context menu
+			pressedAnotherKeySince = true;
+	}
 
 	if (config.altGraveToStickyAltTab) {
 		//` = OEM_3 (0xC0)

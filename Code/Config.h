@@ -5,9 +5,6 @@
 extern char originalExeCommand[1024];
 
 struct Config: public RefClass {
-	// Set to null when found
-	std::vector<const char*> foundProps;
-	std::vector<std::string> errors;
 	// The right control key becomes the context menu key
 	//bool rightCtrlContextMenu;
 	bool closeWindowWithWinQ;
@@ -82,9 +79,14 @@ struct Config: public RefClass {
 	void readFile();
 
 private:
-	// Does initialization (if obj = null), read (if serializer = null) or write for any instance variable
-	void process(struct JsonNode *obj = NULL, struct JsonWriterNode *serializer = NULL);
-	void parseNumberArray(unsigned short array[], unsigned maxLength, struct JsonValue &val);
+	struct ProcessContext {
+		std::map<const char*, bool> found_props; // bool: whether they were read
+		std::vector<std::string> errors;
+	};
+
+	template<typename T>
+	bool processProperty(ProcessContext& context, JsonNode* for_read, JsonWriterNode* for_write, T& property, const char* property_name, const T& default_value = {});
+	void process(ProcessContext& context, struct JsonNode *obj = NULL, struct JsonWriterNode *serializer = NULL);
 	void writeSampleFile(const char *fname, bool showInExplorer);
 };
 

@@ -32,6 +32,7 @@ struct JsonWriterNode: public RefClass {
 	JsonWriterNode &put(string key, const char *value);
 	JsonWriterNode &put(string key, unsigned value);
 	JsonWriterNode &put(string key, int value);
+	JsonWriterNode &put(string key, long value);
 	JsonWriterNode &put(string key, float value);
 	JsonWriterNode &put(string key, const float *values, unsigned count);
 	JsonWriterNode &put(string key, const unsigned short *values, unsigned count);

@@ -32,13 +32,13 @@ static void cancelTaskView(POINT mousePosition) {
 }
 
 #ifdef _DEBUG
-static char *buttonName(WPARAM wParam) {
+static const char *buttonName(WPARAM wParam) {
 	switch (wParam) {
-	case WM_XBUTTONDOWN: return "WM_XBUTTONDOWN";
-	case WM_XBUTTONUP: return "WM_XBUTTONUP";
-	case WM_XBUTTONDBLCLK: return "WM_XBUTTONDBLCLK";
-	case WM_MOUSEWHEEL: return "WM_MOUSEWHEEL";
-	default: return "";
+		case WM_XBUTTONDOWN: return "WM_XBUTTONDOWN";
+		case WM_XBUTTONUP: return "WM_XBUTTONUP";
+		case WM_XBUTTONDBLCLK: return "WM_XBUTTONDBLCLK";
+		case WM_MOUSEWHEEL: return "WM_MOUSEWHEEL";
+		default: return "";
 	}
 }
 #endif
