@@ -45,6 +45,11 @@ void kbdpress(int vkCode, BYTE scanCode, int flags) {
 	kbdup(vkCode, scanCode, flags);
 }
 
+template<size_t N>
+UINT MySendInput(const INPUT(&inputs)[N]) {
+	return SendInput(static_cast<UINT>(N), const_cast<INPUT*>(inputs), sizeof(INPUT));
+}
+
 static const struct { int original; int modified; } keyboardEatTable[] = {
 	VK_LEFT, VK_HOME,
 	VK_RIGHT, VK_END,
@@ -904,12 +909,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 		else if (isWinKey && wParam == WM_KEYUP) {
 			if (eatNextWinKey) {
-				// Prepare the SendInput array to quickly tap Alt
-				INPUT inputs[] = {
+				// Quickly tap Alt
+				MySendInput({
 					{.type = INPUT_KEYBOARD, .ki = {.wVk = VK_LCONTROL, .dwFlags = 0 } },
 					{.type = INPUT_KEYBOARD, .ki = {.wVk = VK_LCONTROL, .dwFlags = KEYEVENTF_KEYUP } }
-				};
-				SendInput(numberof(inputs), inputs, sizeof(INPUT));
+				});
 			}
 			eatNextWinKey = true;
 			return 0;
