@@ -2,6 +2,7 @@
 #include "KbdLayoutTranslators.h"
 #include "Utilities.h"
 
+static const WCHAR CHAR_UNBREAKABLE_SPACE = 0xA0;
 static bool layoutTranslatorsInited = false;
 LayoutTranslator layoutTranslatorsEnUs;
 
@@ -23,61 +24,61 @@ void layoutTranslatorsRegister() {
 	layoutTranslatorsInited = true;
 
 	// Simple E and A accented, and Ç
-	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('E', 0xE9, 0xC9, nullptr, 0));
-	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('A', 0xE0, 0xC0, nullptr, 0));
-	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('C', 0xE7, 0xC7, nullptr, 0));
+	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('E', L'é', L'É', nullptr, 0));
+	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('A', L'à', L'À', nullptr, 0));
+	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('C', L'ç', L'Ç', nullptr, 0));
 	// ; -> …
-	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(VK_OEM_1, 0x2026, 0x2026, nullptr, 0));
-	// AltGr+[ and AltGr+] -> « » (AltGr+Shift+[] = unbreakable space)
-	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(0xDB, 0xAB, 0xA0, nullptr, 0));
-	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(0xDD, 0xBB, 0xA0, nullptr, 0));
-	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(0x20, 0xA0, 0xA0, nullptr, 0));
+	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(VK_OEM_1, L'…', L'…', nullptr, 0));
+	// AltGr+[ and AltGr+] -> « » (AltGr+space = unbreakable space)
+	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(0xDB, L'«', L'«', nullptr, 0));
+	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(0xDD, L'»', L'»', nullptr, 0));
+	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State(0x20, CHAR_UNBREAKABLE_SPACE, CHAR_UNBREAKABLE_SPACE, nullptr, 0));
 
 	//const WCHAR test[] = { L'ä', L'ë', L'ï', L'ö', L'ü', L'Ä' };
 	const LayoutTranslator::State::StateOutcome outcomesForAcute[] = {
-		{ 'A', 0xE1, 0xC1 },
-		{ 'E', 0xE9, 0xC9 },
-		{ 'I', 0xED, 0xCD },
-		{ 'O', 0xF3, 0xD3 },
-		{ 'U', 0xFA, 0xDA },
-		{ ' ', 0xB4, 0xB4 },
+		{ 'A', L'á', L'Á' },
+		{ 'E', L'é', L'É' },
+		{ 'I', L'í', L'Í' },
+		{ 'O', L'ó', L'Ó' },
+		{ 'U', L'ú', L'Ú' },
+		{ ' ', L'´', L'´' },
 	};
 	const LayoutTranslator::State::StateOutcome outcomesForU[] = {
-		{ 'A', 0xE0, 0xC0 },
-		{ 'E', 0xE8, 0xC8 },
-		{ 'I', 0xEC, 0xCC },
-		{ 'O', 0xF2, 0xD2 },
-		{ 'U', 0xF9, 0xD9 },
-		{ ' ', 0x60, 0x60 },
+		{ 'A', L'à', L'À' },
+		{ 'E', L'è', L'È' },
+		{ 'I', L'ì', L'Ì' },
+		{ 'O', L'ò', L'Ò' },
+		{ 'U', L'ù', L'Ù' },
+		{ ' ', L'`', L'`' },
 	};
 	const LayoutTranslator::State::StateOutcome outcomesForI[] = {
-		{ 'A', 0xE2, 0xC2 },
-		{ 'E', 0xEA, 0xCA },
-		{ 'I', 0xEE, 0xCE },
-		{ 'O', 0xF4, 0xD4 },
-		{ 'U', 0xFB, 0xDB },
-		{ ' ', 0x5E, 0x5E },
+		{ 'A', L'â', L'Â' },
+		{ 'E', L'ê', L'Ê' },
+		{ 'I', L'î', L'Î' },
+		{ 'O', L'ô', L'Ô' },
+		{ 'U', L'û', L'Û' },
+		{ ' ', L'^', L'^' },
 	};
 	const LayoutTranslator::State::StateOutcome outcomesForO[] = {
-		{ 'A', 0xE4, 0xC4 },
-		{ 'E', 0xEB, 0xCB },
-		{ 'I', 0xEF, 0xCF },
-		{ 'O', 0xF6, 0xD6 },
-		{ 'U', 0xFC, 0xDC },
-		{ ' ', 0xA8, 0xA8 },
+		{ 'A', L'ä', L'Ä' },
+		{ 'E', L'ë', L'Ë' },
+		{ 'I', L'ï', L'Ï' },
+		{ 'O', L'ö', L'Ö' },
+		{ 'U', L'ü', L'Ü' },
+		{ ' ', L'¨', L'¨' },
 	};
 	const LayoutTranslator::State::StateOutcome outcomesForN[] = {
-		{ L'N', 0xF1, 0xD1 },
-		{ ' ', 0x7E, 0x7E },
+		{ 'N', L'ñ', L'Ñ' },
+		{ ' ', L'~', L'~' },
 	};
-	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('U', 0x60, 0x60, outcomesForU, numberof(outcomesForU)));
-	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('I', 0x5E, 0x5E, outcomesForI, numberof(outcomesForI)));
-	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('O', 0xA8, 0xA8, outcomesForO, numberof(outcomesForO)));
-	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('P', 0xB4, 0xB4, outcomesForAcute, numberof(outcomesForAcute)));
-	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('N', 0x7E, 0x7E, outcomesForN, numberof(outcomesForN)));
+	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('U', L'`', L'`', outcomesForU, numberof(outcomesForU)));
+	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('I', L'^', L'^', outcomesForI, numberof(outcomesForI)));
+	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('O', L'¨', L'¨', outcomesForO, numberof(outcomesForO)));
+	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('P', L'´', L'´', outcomesForAcute, numberof(outcomesForAcute)));
+	layoutTranslatorsEnUs.states.push_back(LayoutTranslator::State('N', L'~', L'~', outcomesForN, numberof(outcomesForN)));
 }
 
-LayoutTranslator::State::State(WCHAR entryChar, WCHAR defaultOutcome, WCHAR defaultOutcomeWithShift, const StateOutcome *outcomes, size_t numOutcomes)
+LayoutTranslator::State::State(WCHAR entryChar, WCHAR defaultOutcome, WCHAR defaultOutcomeWithShift, const StateOutcome* outcomes, size_t numOutcomes)
 	: entryChar(entryChar), defaultOutcome(defaultOutcome), defaultOutcomeWithShift(defaultOutcomeWithShift)
 {
 	for (size_t i = 0; i < numOutcomes; i += 1) {
@@ -154,7 +155,7 @@ bool LayoutTranslator::processKeyDown(int kbdVcode, bool shiftPressed) {
 		else {
 			// Process current state
 			// Assumes that there are outcomes (else we don't enter the state in the first place, cf. enterState)
-			const State &state = states[stateIndex];
+			const State& state = states[stateIndex];
 			int foundOutcomeId = -1; // -1 = not found
 			for (int i = 0; i < state.outcomes.size(); i++) {
 				if (kbdVcode == state.outcomes[i].pressedChar) {
@@ -175,7 +176,7 @@ bool LayoutTranslator::processKeyDown(int kbdVcode, bool shiftPressed) {
 			}
 			else {
 				// OK, just output the new outcome and leave the state
-				const State::StateOutcome &outcome = state.outcomes[foundOutcomeId];
+				const State::StateOutcome& outcome = state.outcomes[foundOutcomeId];
 				stateIndex = -1;
 #ifdef _DEBUG
 				printf("Vcode=%x state=%d has outcome ID=%d -> %s ? %x\n", kbdVcode, stateIndex, foundOutcomeId, shiftPressed ? "true" : "false", shiftPressed ? outcome.outputCharWithShift : outcome.outputCharNormal);
@@ -203,7 +204,7 @@ void LayoutTranslator::eatRAlt() {
 
 void LayoutTranslator::enterState(int stateIndex, bool shiftPressed) {
 	if (states[stateIndex].outcomes.empty()) {
-		const State &state = states[stateIndex];
+		const State& state = states[stateIndex];
 		// Not enter the state, just output the char
 		outputChar(shiftPressed ? state.defaultOutcomeWithShift : state.defaultOutcome);
 	}
@@ -214,9 +215,14 @@ void LayoutTranslator::enterState(int stateIndex, bool shiftPressed) {
 }
 
 void LayoutTranslator::outputChar(WCHAR character) {
+	// Correct syntax in French
+	if (character == L'»') outputChar(CHAR_UNBREAKABLE_SPACE);
+
 #ifdef _DEBUG
 	printf("Outputing %x\n", character);
 #endif
 	sendUnicodeKey(0, character, KEYEVENTF_UNICODE);
 	sendUnicodeKey(0, character, KEYEVENTF_UNICODE | KEYEVENTF_KEYUP);
+
+	if (character == L'«') outputChar(CHAR_UNBREAKABLE_SPACE);
 }
