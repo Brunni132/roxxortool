@@ -18,12 +18,13 @@ struct Config: public RefClass {
 	int scrollAccelerationBaseValue;
 	bool altTabWithMouseButtons;
 	// Brightness control if a monitor supporting DDC/CI is connected using Ctrl+Win+Left/Right
-	bool ddcCiBrightnessControl;
+	bool brightnessControl;
 	int brightnessIncrementQuantity;
 	// Set this to true to reapply the gamma curve even when changing the brightness only (i.e. brightness >= 0)
 	bool forceReapplyGammaOnBrightnessChange;
 	// Keep the current brightness in cache for the following duration before rereading it (milliseconds)
 	long brightnessCacheDuration;
+	bool useDdcCi;
 	// Set that to true on a Mac, it will use a logarithmic scale ofr the brightness setting.
 	bool wmiLogarithmicBrightness;
 	// If false, just doesn't touch the gamma curve (unless you have useCustomGammaCurve)

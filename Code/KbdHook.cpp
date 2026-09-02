@@ -497,7 +497,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		return 1;
 	}
 
-	if (config.ddcCiBrightnessControl) {
+	if (config.brightnessControl) {
 		if (nKey == VK_F9 && TRIGGERS_MEDIA_CONTROLS2) {
 			ON_KEYDOWN_ONLY({
 				int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
@@ -1057,12 +1057,12 @@ void cancelAllKeys() {
 void KbdHook::start() {
 	cancelAllKeys();
 	g_hHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
-	if (config.ddcCiBrightnessControl)
+	if (config.brightnessControl)
 		Monitor::init(config.autoApplyGammaCurveDelay);
 }
 
 void KbdHook::terminate() {
-	if (config.ddcCiBrightnessControl)
+	if (config.brightnessControl)
 		Monitor::terminate();
 	UnhookWindowsHookEx(g_hHook);
 	cancelAllKeys();

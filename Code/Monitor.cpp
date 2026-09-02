@@ -179,7 +179,7 @@ static void SetGammaRampForDevice(const char *deviceName, unsigned short initial
  * @param mi [OUT] destination for display information, inited is set to true
  */
 static void sc_get(MonitorInfo *mi, HANDLE hPhysicalMonitor, MONITORINFO *monitorInfo) {
-	mi->useWmi = !GetMonitorBrightness(hPhysicalMonitor, (LPDWORD)&mi->minBrightness, (LPDWORD)&mi->currentBrightness, (LPDWORD)&mi->maxBrightness);
+	mi->useWmi = !config.useDdcCi || !GetMonitorBrightness(hPhysicalMonitor, (LPDWORD)&mi->minBrightness, (LPDWORD)&mi->currentBrightness, (LPDWORD)&mi->maxBrightness);
 	GetGammaRampForDevice(mi->deviceName, mi->gammaRamp);
 	if (mi->useWmi) {
 		int maxBright = 100, previousBrightness = mi->currentBrightness;
@@ -226,8 +226,10 @@ static void sc_set(MonitorInfo *mi, HANDLE hPhysicalMonitor, MONITORINFO *monito
 				monitorBrightness = macBrightnessGamma[monitorBrightness];
 			}
 			Wmi::SetBrightness(monitorBrightness);
-		} else
+		}
+		else if (config.useDdcCi) {
 			SetMonitorBrightness(hPhysicalMonitor, monitorBrightness);
+		}
 		// Needs gamma ramp too?
 		bool needsGammaRamp = mi->lastBrightness < mi->minBrightness || mi->currentBrightness < 0;
 		if (needsGammaRamp || config.forceReapplyGammaOnBrightnessChange) {
