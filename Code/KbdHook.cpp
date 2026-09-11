@@ -394,59 +394,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	//	}
 	//}
 
-	if (config.capsPageControls) {
-		static bool capsIsDown = false, capsHasHadEffect = false, preventNativeKeys = true;
-
-		// Prevent native keys from working
-		if (preventNativeKeys && !injected && (nKey == VK_PRIOR || nKey == VK_NEXT || nKey == VK_HOME || nKey == VK_END)) return 1;
-
-		if (nKey == VK_INSERT) {
-			if (wParam == WM_KEYDOWN) {
-				StatusWindow::showPgControlsBlocked(preventNativeKeys = !preventNativeKeys);
-			}
-			return 1;
-		}
-
-		if (nKey == VK_CAPITAL && !injected) {
-			if (capsIsDown && wParam == WM_KEYUP && !capsHasHadEffect && !config.disableCapsLock) {
-				TaskManager::RunLaterOnSameThread([] {
-					kbdpress(VK_CAPITAL, 0);
-				});
-			}
-			capsIsDown = wParam == WM_KEYDOWN;
-			capsHasHadEffect = false;
-			return 1;
-		}
-
-		if (capsIsDown) {
-			auto method = wParam == WM_KEYDOWN ? kbddown : kbdup;
-			auto param = KEYEVENTF_EXTENDEDKEY | (wParam == WM_KEYUP ? KEYEVENTF_KEYUP : 0);
-			if (nKey == VK_UP) {
-				method(VK_PRIOR, 0x49, param);
-				capsHasHadEffect = true;
-				return 1;
-			}
-			else if (nKey == VK_DOWN) {
-				method(VK_NEXT, 0x51, param);
-				capsHasHadEffect = true;
-				return 1;
-			}
-			else if (nKey == VK_LEFT) {
-				method(VK_HOME, 0x47, param);
-				capsHasHadEffect = true;
-				return 1;
-			}
-			else if (nKey == VK_RIGHT) {
-				method(VK_END, 0x4f, param);
-				capsHasHadEffect = true;
-				return 1;
-			}
-		}
-	}
-	else if (config.disableCapsLock) {
-		if (nKey == VK_CAPITAL) return 1;
-	}
-
 	if (config.internationalUsKeyboardForFrench) {
 		layoutTranslatorsRegister();
 		if (isDown) {
@@ -617,7 +564,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				}, 500);
 				return 1;
 			}
-
 
 			if (config.useSoftMediaKeys) {
 				switch (nKey) {
@@ -854,6 +800,59 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				}
 			}
 		}
+	}
+
+	if (config.capsPageControls) {
+		static bool capsIsDown = false, capsHasHadEffect = false, preventNativeKeys = true;
+
+		// Prevent native keys from working
+		if (preventNativeKeys && !injected && (nKey == VK_PRIOR || nKey == VK_NEXT || nKey == VK_HOME || nKey == VK_END)) return 1;
+
+		if (nKey == VK_INSERT) {
+			if (wParam == WM_KEYDOWN) {
+				StatusWindow::showPgControlsBlocked(preventNativeKeys = !preventNativeKeys);
+			}
+			return 1;
+		}
+
+		if (nKey == VK_CAPITAL && !injected) {
+			if (capsIsDown && wParam == WM_KEYUP && !capsHasHadEffect && !config.disableCapsLock) {
+				TaskManager::RunLaterOnSameThread([] {
+					kbdpress(VK_CAPITAL, 0);
+				});
+			}
+			capsIsDown = wParam == WM_KEYDOWN;
+			capsHasHadEffect = false;
+			return 1;
+		}
+
+		if (capsIsDown) {
+			auto method = wParam == WM_KEYDOWN ? kbddown : kbdup;
+			auto param = KEYEVENTF_EXTENDEDKEY | (wParam == WM_KEYUP ? KEYEVENTF_KEYUP : 0);
+			if (nKey == VK_UP) {
+				method(VK_PRIOR, 0x49, param);
+				capsHasHadEffect = true;
+				return 1;
+			}
+			else if (nKey == VK_DOWN) {
+				method(VK_NEXT, 0x51, param);
+				capsHasHadEffect = true;
+				return 1;
+			}
+			else if (nKey == VK_LEFT) {
+				method(VK_HOME, 0x47, param);
+				capsHasHadEffect = true;
+				return 1;
+			}
+			else if (nKey == VK_RIGHT) {
+				method(VK_END, 0x4f, param);
+				capsHasHadEffect = true;
+				return 1;
+			}
+		}
+	}
+	else if (config.disableCapsLock) {
+		if (nKey == VK_CAPITAL) return 1;
 	}
 
 #if PRE_WINDOWS_1803_UPDATE
