@@ -96,17 +96,22 @@ static void showMessageInternal(int delayMs, int width = 200, int height = 50) {
 	}
 }
 
+void StatusWindow::showPgControlsBlocked(bool blocked) {
+	strcpy_s(text, blocked ? "PgUp/PgDown/Home/End blocked: use CapsLock + arrows only" : "PgUp/PgDown/Home/End restored");
+	showMessageInternal(2000, 450);
+}
+
 void StatusWindow::showBrightness(int brightnessLevel) {
-	sprintf(text, "Brightness: %d", brightnessLevel);
+	sprintf_s(text, "Brightness: %d", brightnessLevel);
 	showMessageInternal(2000);
 }
 
 void StatusWindow::showVolume(double volumeLevel) {
 	// Int vs double
 	if (volumeLevel - floor(volumeLevel) < DBL_EPSILON)
-		sprintf(text, "Volume: %d dB", (int)volumeLevel);
+		sprintf_s(text, "Volume: %d dB", (int)volumeLevel);
 	else
-		sprintf(text, "Volume: %.1f dB", volumeLevel);
+		sprintf_s(text, "Volume: %.1f dB", volumeLevel);
 	showMessageInternal(2000);
 }
 

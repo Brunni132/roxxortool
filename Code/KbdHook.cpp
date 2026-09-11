@@ -395,7 +395,18 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	//}
 
 	if (config.capsPageControls) {
-		static bool capsIsDown = false, capsHasHadEffect = false;
+		static bool capsIsDown = false, capsHasHadEffect = false, preventNativeKeys = true;
+
+		// Prevent native keys from working
+		if (preventNativeKeys && !injected && (nKey == VK_PRIOR || nKey == VK_NEXT || nKey == VK_HOME || nKey == VK_END)) return 1;
+
+		if (nKey == VK_INSERT) {
+			if (wParam == WM_KEYDOWN) {
+				StatusWindow::showPgControlsBlocked(preventNativeKeys = !preventNativeKeys);
+			}
+			return 1;
+		}
+
 		if (nKey == VK_CAPITAL && !injected) {
 			if (capsIsDown && wParam == WM_KEYUP && !capsHasHadEffect && !config.disableCapsLock) {
 				TaskManager::RunLaterOnSameThread([] {

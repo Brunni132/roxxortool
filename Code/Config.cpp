@@ -143,7 +143,7 @@ void Config::readFile() {
 	JsonParseStatus status = json_parse(buffer, &endptr, &value, allocator);
 	if (status != JSON_PARSE_OK) {
 		char error[1024];
-		sprintf(error, "Error at %ld, status: %d\n", long(endptr - buffer), status);
+		sprintf_s(error, "Error at %ld, status: %d\n", long(endptr - buffer), status);
 		context.errors.push_back(error);
 	}
 	else {
@@ -200,7 +200,7 @@ void Config::writeSampleFile(const char *fname, bool showInExplorer) {
 			char directoryAnsi[1024];
 			char fullCommand[1080];
 			GetCurrentDirectory(numberof(directoryAnsi), directoryAnsi);
-			sprintf(fullCommand, "/select,%s\\%s", directoryAnsi, fname);
+			sprintf_s(fullCommand, "/select,%s\\%s", directoryAnsi, fname);
 			ShellExecute(NULL, "open", "explorer.exe", fullCommand, directoryAnsi, SW_SHOW);
 		}
 	}
