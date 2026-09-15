@@ -671,59 +671,29 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				return 1;
 			}
 		}
+	}
 
-		if (config.winTSelectsLastTask) {
-			if (/* Windows 10 */ false) {
-				static bool inFunction = false;
-				// // Check that we are still in the task bar and restart function (Win+T from start) if not
-				if (inFunction) {
-					char className[128];
-					GetClassNameA(GetForegroundWindow(), className, 128);
-					if (strcmp(className, "Shell_TrayWnd")) {
-						inFunction = false;
-					}
-				}
-				if (inFunction) {
-					if (!winPressed()) {
-						if (nKey >= '5' && nKey <= '7') {
-							moveToTask(11 + (nKey - '5') * 10, START);
-							return 1;
-						}
-						else if (nKey == VK_PRIOR) {
-							moveToTask(-config.winTTaskMoveBy, CURRENT);
-							return 1;
-						}
-						else if (nKey == VK_NEXT) {
-							moveToTask(+config.winTTaskMoveBy, CURRENT);
-							return 1;
-						}
-					}
-				}
-				else if (winOnlyPressed() && nKey == 'T') {
-					inFunction = true;
+	if (config.winTSelectsLastTask) {
+		if (winOnlyPressed() && wParam == WM_KEYDOWN && nKey == 'T' && !injected) {
+			//auto pressedKey = lWinPressed ? VK_LWIN : VK_RWIN;
+			// Let the normal Win+T operate, and later, move the cursor
+			TaskManager::RunLater([=] {
+				kbdpress('T', 0);
+				//kbdup(pressedKey, 0);
+				kbdpress(VK_END, 0);
+				//kbddown(pressedKey, 0);
+			}, 10);
+		}
 
-					// Windows <= 10
-					kbdpress('B', 0);
-					// First press on Win+T
-					TaskManager::RunLater([] {
-						kbdpress('T', 0);
-						kbdpress(VK_END, 0);
-					}, 10);
-					return 1;
-				}
-			}
-			else if (winOnlyPressed() && nKey == 'T' && !injected) {
-				//auto pressedKey = lWinPressed ? VK_LWIN : VK_RWIN;
-				// Let the normal Win+T operate, and later, move the cursor
-				printf("Executing win+t\n");
-				TaskManager::RunLater([=] {
-					printf("Inside win+t\n");
-					kbdpress('T', 0);
-					//kbdup(pressedKey, 0);
-					kbdpress(VK_END, 0);
-					//kbddown(pressedKey, 0);
-				}, 10);
-			}
+		static bool injectReturnAfterWinB = false;
+		if (winOnlyPressed() && wParam == WM_KEYDOWN && nKey == 'B') {
+			injectReturnAfterWinB = true;
+		}
+		else if (!winPressed() && injectReturnAfterWinB) {
+			injectReturnAfterWinB = false;
+			TaskManager::RunLater([=] {
+				kbdpress(VK_RETURN, 0);
+			}, 10);
 		}
 	}
 
