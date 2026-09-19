@@ -227,21 +227,21 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (config.brightnessControl && ctrlWinAndMaybeShiftPressed()) {
 		if (nKey == VK_F9) {
 			if (isDown) {
-				int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
+				int qty = shiftPressed() ? 1 : config.brightnessIncrementQuantity;
 				TaskManager::RunLaterOnSameThread([qty] { Monitor::decreaseBrightnessBy(qty); });
 			}
 			return 1;
 		}
 		else if (nKey == VK_F10) {
 			if (isDown) {
-				int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
+				int qty = shiftPressed() ? 1 : config.brightnessIncrementQuantity;
 				TaskManager::RunLaterOnSameThread([qty] { Monitor::increaseBrightnessBy(qty); });
 			}
 			return 1;
 		}
 	}
 
-	if (config.useSoftMediaKeys && ctrlWinPressed()) {
+	if (config.useSoftMediaKeys && ctrlWinAndMaybeShiftPressed()) {
 		if (nKey == VK_F5) {
 			if (isDown) kbdpress(VK_MEDIA_STOP, 0);
 			return 1;
@@ -259,11 +259,13 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			return 1;
 		}
 		else if (nKey == VK_F11) {
-			if (isDown) AudioMixer::decrementVolume(config.volumeIncrementQuantity);
+			auto qty = shiftPressed() ? 1 : config.volumeIncrementQuantity;
+			if (isDown) AudioMixer::decrementVolume(qty);
 			return 1;
 		}
 		else if (nKey == VK_F12) {
-			if (isDown) AudioMixer::incrementVolume(config.volumeIncrementQuantity);
+			auto qty = shiftPressed() ? 1 : config.volumeIncrementQuantity;
+			if (isDown) AudioMixer::incrementVolume(qty);
 			return 1;
 		}
 	}
@@ -603,32 +605,20 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 }
 
 static void cancelAllKeys() {
-	kbdup(VK_LCONTROL, 0);
-	kbdup(VK_RCONTROL, 0);
-	kbdup(VK_LWIN, 0);
-	kbdup(VK_RWIN, 0);
+	kbdup(VK_LCONTROL, 0); lCtrlPressed = false;
+	kbdup(VK_RCONTROL, 0); rCtrlPressed = false;
+	kbdup(VK_LWIN, 0); lWinPressed = false;
+	kbdup(VK_RWIN, 0); rWinPressed = false;
 	//kbdup(VK_APPS, 0);
-	kbdup(VK_LMENU, 0);
-	kbdup(VK_RMENU, 0);
-	kbdup(VK_LSHIFT, 0);
-	kbdup(VK_RSHIFT, 0);
-	kbdup(VK_CAPITAL, 0);
-}
-
-static void initialize() {
-	lCtrlPressed = GetKeyState(VK_LCONTROL);
-	rCtrlPressed = GetKeyState(VK_RCONTROL);
-	lShiftPressed = GetKeyState(VK_LSHIFT);
-	rShiftPressed = GetKeyState(VK_RSHIFT);
-	lWinPressed = GetKeyState(VK_LWIN);
-	rWinPressed = GetKeyState(VK_RWIN);
-	lAltPressed = GetKeyState(VK_LMENU);
-	capsPressed = GetKeyState(VK_CAPITAL);
+	kbdup(VK_LMENU, 0); lAltPressed = false;
+	kbdup(VK_RMENU, 0); // rAltPressed = false;
+	kbdup(VK_LSHIFT, 0); lShiftPressed = false;
+	kbdup(VK_RSHIFT, 0); rShiftPressed = false;
+	kbdup(VK_CAPITAL, 0); capsPressed = false;
 }
 
 void KbdHook::start() {
 	cancelAllKeys(); // can be useful in case the hook messed up something
-	initialize();
 	g_hHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
 	if (config.brightnessControl)
 		Monitor::init(config.autoApplyGammaCurveDelay);

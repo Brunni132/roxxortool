@@ -5,7 +5,7 @@ namespace AudioMixer {
 	typedef float vol_t;
 
 	// Initializes the mixer, necessary before use
-	extern void init();
+	extern void init(bool logarithmic);
 	extern void terminate();
 	extern vol_t getVolume();
 	extern void setVolume(vol_t newVolume);

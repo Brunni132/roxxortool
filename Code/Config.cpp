@@ -14,6 +14,7 @@ void Config::process(ProcessContext& context, JsonNode *obj, JsonWriterNode *ser
 		//|| DEFINE_PROPERTY(rightCtrlContextMenu, false)
 		|| DEFINE_PROPERTY(startScreenSaverWithInsert, false)
 		|| DEFINE_PROPERTY(smoothVolumeControl, true)
+		|| DEFINE_PROPERTY(logarithmicVolume, true)
 		|| DEFINE_PROPERTY(volumeIncrementQuantity, 1.5f)
 		|| DEFINE_PROPERTY(brightnessControl, true)
 		|| DEFINE_PROPERTY(wmiLogarithmicBrightness, false)

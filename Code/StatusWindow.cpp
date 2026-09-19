@@ -106,12 +106,17 @@ void StatusWindow::showBrightness(int brightnessLevel) {
 	showMessageInternal(2000);
 }
 
-void StatusWindow::showVolume(double volumeLevel) {
-	// Int vs double
-	if (volumeLevel - floor(volumeLevel) < DBL_EPSILON)
-		sprintf_s(text, "Volume: %d dB", (int)volumeLevel);
-	else
-		sprintf_s(text, "Volume: %.1f dB", volumeLevel);
+void StatusWindow::showVolume(bool logarithmic, double volumeLevel) {
+	if (logarithmic) {
+		// Int vs double
+		if (volumeLevel - floor(volumeLevel) < DBL_EPSILON)
+			sprintf_s(text, "Volume: %d dB", (int)volumeLevel);
+		else
+			sprintf_s(text, "Volume: %.1f dB", volumeLevel);
+	}
+	else {
+		sprintf_s(text, "Volume: %d %%", (int)round(volumeLevel));
+	}
 	showMessageInternal(2000);
 }
 

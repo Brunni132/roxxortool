@@ -6,12 +6,15 @@ using namespace AudioMixer;
 static bool needsUpdateMixerEachTime = true;			// Card with two separate channels for headphones and speakers
 static IAudioEndpointVolume *g_endpointVolume = NULL;
 static IMMDeviceEnumerator *deviceEnumerator = NULL;
+static bool g_logarithmic;
 static float g_minVolume, g_maxVolume;
 
 static void updateWithDefaultEndpoint();
 
-void AudioMixer::init() {
+void AudioMixer::init(bool logarithmic) {
 	HRESULT hr;
+	g_logarithmic = logarithmic;
+
 	CoInitialize(NULL);
 	hr = CoCreateInstance(__uuidof(MMDeviceEnumerator), NULL, CLSCTX_INPROC_SERVER, __uuidof(IMMDeviceEnumerator), (LPVOID *)&deviceEnumerator);
 	updateWithDefaultEndpoint();
@@ -22,24 +25,36 @@ void AudioMixer::terminate() {
 }
 
 vol_t AudioMixer::getVolume() {
-	float currentVolume;
+	float currentVolume = 0.f;
 	if (needsUpdateMixerEachTime)
 		updateWithDefaultEndpoint();
-	if (g_endpointVolume)
-		g_endpointVolume->GetMasterVolumeLevel(&currentVolume);
+	if (g_endpointVolume) {
+		if (g_logarithmic) {
+			g_endpointVolume->GetMasterVolumeLevel(&currentVolume);
+		}
+		else {
+			g_endpointVolume->GetMasterVolumeLevelScalar(&currentVolume);
+			currentVolume *= 100;
+		}
+	}
 	return currentVolume;
 }
 
 void AudioMixer::setVolume(vol_t newVolume) {
 	if (g_endpointVolume) {
 		BOOL isMute;
-		g_endpointVolume->SetMasterVolumeLevel(newVolume, NULL);
+		if (g_logarithmic) {
+			g_endpointVolume->SetMasterVolumeLevel(newVolume, NULL);
+		}
+		else {
+			g_endpointVolume->SetMasterVolumeLevelScalar(newVolume / 100, NULL);
+		}
 		g_endpointVolume->GetMute(&isMute);
 		if (isMute) {
 			g_endpointVolume->SetMute(FALSE, NULL);
 		}
 	}
-	StatusWindow::showVolume(newVolume);
+	StatusWindow::showVolume(g_logarithmic, newVolume);
 }
 
 void AudioMixer::incrementVolume(float increment) {
@@ -63,6 +78,8 @@ void updateWithDefaultEndpoint() {
 	IMMDevice *defaultDevice = NULL;
 	float dummy;
 
+	g_minVolume = 0, g_maxVolume = 100;
+
 	if (g_endpointVolume) {
 		g_endpointVolume->Release();
 		g_endpointVolume = NULL;
@@ -78,6 +95,6 @@ void updateWithDefaultEndpoint() {
 		defaultDevice = NULL;
 	}
 
-	if (g_endpointVolume)
+	if (g_endpointVolume && g_logarithmic)
 		g_endpointVolume->GetVolumeRange(&g_minVolume, &g_maxVolume, &dummy);
 }

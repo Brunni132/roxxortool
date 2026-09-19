@@ -29,8 +29,9 @@ struct Config: public RefClass {
 	bool wmiLogarithmicBrightness;
 	// If false, just doesn't touch the gamma curve (unless you have useCustomGammaCurve)
 	bool allowNegativeBrightness;
-	// Enables smoother, logarithmic volume control (necessary if the keyboard has volume control)
+	// Enables smoother, volume control (necessary if the keyboard has volume control), optionally logarithmic if smoothVolumeControl is true
 	bool smoothVolumeControl;
+	bool logarithmicVolume;
 	// For a single press, uses this value; for a press with Ctrl, does it 4x
 	float volumeIncrementQuantity;
 	// Ctrl+Win+Home: stop, End: play/pause, PgUp: previous, PgDn: next, Up: vol+, Down: vol-

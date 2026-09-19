@@ -63,7 +63,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	freopen("CON", "w", stdout);
 #endif
 
-	AudioMixer::init();
+	AudioMixer::init(config.logarithmicVolume);
 	KbdHook::start();
 	MouseHook::start();
 	TaskManager::init();
