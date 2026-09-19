@@ -119,6 +119,9 @@
     <ClInclude Include="TaskManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="KbdHook_legacy.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="TODO.txt" />

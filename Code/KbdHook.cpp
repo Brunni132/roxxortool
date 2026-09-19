@@ -20,27 +20,27 @@ const char* WINDOWS_NOT_TO_HIDE[] = {
 };
 
 bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, rWinPressed = false, lShiftPressed = false, rShiftPressed = false, lAltPressed = false;
-static bool ctrlPressed() { return lCtrlPressed || rCtrlPressed; }
-static bool winPressed() { return lWinPressed || rWinPressed; }
-static bool shiftPressed() { return lShiftPressed || rShiftPressed; }
-static bool altPressed() { return lAltPressed; }
-static bool anyModifierPressed() { return lShiftPressed || rShiftPressed || lWinPressed || rWinPressed || lCtrlPressed || rCtrlPressed; }
+inline bool ctrlPressed() { return lCtrlPressed || rCtrlPressed; }
+inline bool winPressed() { return lWinPressed || rWinPressed; }
+inline bool shiftPressed() { return lShiftPressed || rShiftPressed; }
+inline bool altPressed() { return lAltPressed; }
+inline bool anyModifierPressed() { return lShiftPressed || rShiftPressed || lWinPressed || rWinPressed || lCtrlPressed || rCtrlPressed; }
 // Only those two, not the others
-static bool ctrlWinPressed() { return lCtrlPressed && lWinPressed && !rWinPressed && !rCtrlPressed && !shiftPressed() && !altPressed(); }
-static bool ctrlWinAndMaybeShiftPressed() { return lCtrlPressed && lWinPressed && !rWinPressed && !rCtrlPressed && !altPressed(); }
-static bool winOnlyPressed() { return lWinPressed && !rWinPressed && !ctrlPressed() && !shiftPressed() && !altPressed(); }
+inline bool ctrlWinPressed() { return lCtrlPressed && lWinPressed && !rWinPressed && !rCtrlPressed && !shiftPressed() && !altPressed(); }
+inline bool ctrlWinAndMaybeShiftPressed() { return lCtrlPressed && lWinPressed && !rWinPressed && !rCtrlPressed && !altPressed(); }
+inline bool winOnlyPressed() { return lWinPressed && !rWinPressed && !ctrlPressed() && !shiftPressed() && !altPressed(); }
 static void cancelAllKeys();
 
 // Codes: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html or https://www.codeproject.com/Articles/7305/Keyboard-Events-Simulation-using-keybd-event-funct
-void kbddown(int vkCode, BYTE scanCode, int flags) {
+inline void kbddown(int vkCode, BYTE scanCode, int flags) {
 	keybd_event(vkCode, scanCode, flags, 0);
 }
 
-void kbdup(int vkCode, BYTE scanCode, int flags) {
+inline void kbdup(int vkCode, BYTE scanCode, int flags) {
 	keybd_event(vkCode, scanCode, flags | KEYEVENTF_KEYUP, 0);
 }
 
-void kbdpress(int vkCode, BYTE scanCode, int flags) {
+inline void kbdpress(int vkCode, BYTE scanCode, int flags) {
 	kbddown(vkCode, scanCode, flags);
 	kbdup(vkCode, scanCode, flags);
 }
@@ -49,14 +49,6 @@ template<size_t N>
 UINT MySendInput(const INPUT(&inputs)[N]) {
 	return SendInput(static_cast<UINT>(N), const_cast<INPUT*>(inputs), sizeof(INPUT));
 }
-
-static const struct { int original; int modified; } keyboardEatTable[] = {
-	VK_LEFT, VK_HOME,
-	VK_RIGHT, VK_END,
-	VK_UP, VK_PRIOR,
-	VK_DOWN, VK_NEXT,
-	VK_BACK, VK_DELETE
-};
 
 enum Location { START, CURRENT, END };
 
@@ -174,6 +166,8 @@ static void showStatusInfo() {
 	MessageBoxA(NULL, destBuffer, "RoxxorTool debug info", MB_ICONINFORMATION);
 }
 
+#include "KbdHook_legacy.hpp"
+
 static HHOOK g_hHook;
 
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
@@ -182,9 +176,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		return CallNextHookEx(NULL, nCode, wParam, lParam);
 	}
 
-	// TODO Florian -- replace all this with reading the scan code (in kbd)
 	KBDLLHOOKSTRUCT *kbd = (KBDLLHOOKSTRUCT*)lParam;
-	int nKey = kbd->vkCode;
+	DWORD nKey = kbd->vkCode;
 	// Ignore injected input
 	bool injected = (kbd->flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED));
 	bool isDown = wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN;
@@ -207,206 +200,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 #endif
 
 	// Keyboard translation services, must be run before everyone else
-	if (config.japaneseMacKeyboard && !injected) {
-		if (nKey == 0xEB) {
-			// 英 -> Lwin
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0x5B, 0x5B);
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0x5B, 0x5B);
-			return 1;
-		}
-		if (nKey == 0x14) {
-			// Caps -> ctrl
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0xA2, 0x1D);
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0xA2, 0x1D);
-			return 1;
-		}
-		if (nKey == 0x5B) {
-			// Lwin -> Loption
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0xA4, 0x38);
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0xA4, 0x38);
-			return 1;
-		}
-		if (nKey == 0xA2 && kbd->scanCode == 0x1D) {
-			// Lctrl -> Caps
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0x14, 0x3A);
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0x14, 0x3A);
-			return 1;
-		}
-		if (nKey == 0xFF) {
-			// かな -> Ralt
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
-				kbddown(0xA5, 0x38, KEYEVENTF_EXTENDEDKEY);
-			}
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
-				kbdup(0xA5, 0x38, KEYEVENTF_EXTENDEDKEY);
-			}
-			return 1;
-		}
-		if (nKey == 0xA4) {
-			// Loption -> Ctrl
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0xA2, 0x1D);
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0xA2, 0x1D);
-			return 1;
-		}
-		// If a key has been remapped, we'll never go further (return 1)
+	if (!injected && config.japaneseMacBookPro || config.japaneseWindowsKeyboard || config.japaneseMacKeyboard) {
+		legacy_handleJapaneseKeyboards(isDown, isUp, kbd);
 	}
-
-	if (config.japaneseWindowsKeyboard && !injected) {
-		if (nKey == 0xEB) {
-			// 無変換 -> Lalt
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0xA4, 0x38);
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0xA4, 0x38);
-			return 1;
-		}
-		if (nKey == 0xFF && kbd->scanCode == 0x79) {
-			// 変換 -> Ralt
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0xA5, 0x38, KEYEVENTF_EXTENDEDKEY);
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0xA5, 0x38, KEYEVENTF_EXTENDEDKEY);
-			return 1;
-		}
-		if (nKey == 0xFF && kbd->scanCode == 0x70) {
-			// ｶﾀｶﾅ -> Rwin
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0x5C, 0x5C);
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0x5C, 0x5C);
-			return 1;
-		}
-		// If a key has been remapped, we'll never go further (return 1)
-	}
-
-	if (config.japaneseMacBookPro && !injected) {
-		static bool virtualFnIsDown = false;
-		static int fnRemappings[][2] = {
-			{ VK_LEFT, VK_HOME },
-			{ VK_RIGHT, VK_END },
-			{ VK_UP, VK_PRIOR },
-			{ VK_DOWN, VK_NEXT },
-			{ VK_BACK, VK_DELETE },
-			{ VK_F7, VK_MEDIA_PREV_TRACK },
-			{ VK_F8, VK_MEDIA_PLAY_PAUSE },
-			{ VK_F9, VK_MEDIA_NEXT_TRACK },
-			{ VK_F10, VK_VOLUME_MUTE },
-			{ VK_F11, VK_VOLUME_DOWN },
-			{ VK_F12, VK_VOLUME_UP },
-		};
-		static bool virtualKeysActive[numberof(fnRemappings)] = { 0 };
-		if (nKey == 0x14) {
-			// Fn
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) virtualFnIsDown = true;
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
-				virtualFnIsDown = false;
-				// Release all keys that were pressed during the time Fn was down
-				for (int i = 0; i < numberof(virtualKeysActive); i++) {
-					if (virtualKeysActive[i]) kbdup(fnRemappings[i][1], 0);
-					virtualKeysActive[i] = false;
-				}
-			}
-			return 1;
-		}
-		if (virtualFnIsDown) {
-			int foundIndex = -1;
-			for (int i = 0; i < numberof(fnRemappings); i++) {
-				if (nKey == fnRemappings[i][0]) {
-					foundIndex = i;
-					break;
-				}
-			}
-			if (foundIndex >= 0) {
-				int destKey = fnRemappings[foundIndex][1];
-				if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
-					virtualKeysActive[foundIndex] = true;
-					kbddown(destKey, 0);
-					return 1;
-				}
-				if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
-					virtualKeysActive[foundIndex] = false;
-					kbdup(destKey, 0);
-					return 1;
-				}
-			}
-		}
-		if (nKey == 0xEB) {
-			// 英 -> Lcommand
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0x5B, 0x5B);
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0x5B, 0x5B);
-			return 1;
-		}
-		if (nKey == 0x5B) {
-			// Lcommand -> Lalt
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0xA4, 0x38);
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0xA4, 0x38);
-			return 1;
-		}
-		if (nKey == 0xFF) {
-			// かな -> Ralt
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
-				kbddown(0xA5, 0x38, KEYEVENTF_EXTENDEDKEY);
-			}
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) {
-				kbdup(0xA5, 0x38, KEYEVENTF_EXTENDEDKEY);
-			}
-			return 1;
-		}
-		if (nKey == 0xA4) {
-			// Loption -> Ctrl
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0xA2, 0x1D);
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0xA2, 0x1D);
-			return 1;
-		}
-		if (nKey == 0xA2 && kbd->scanCode == 0x1D) {
-			// Lctrl -> Caps
-			if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) kbddown(0x14, 0x3A);
-			if (wParam == WM_KEYUP || wParam == WM_SYSKEYUP) kbdup(0x14, 0x3A);
-			return 1;
-		}
-		// If a key has been remapped, we'll never go further (return 1)
-	}
-
-	//const bool USE_R_ALT_MODE = false;
-	//if (USE_R_ALT_MODE) {
-	//	static bool featureActive = false;
-	//	const int R_ALT_DEPRESS_DELAY = 150;
-	//	static uint64_t keyPressTime = 0;
-
-	//	if (!featureActive) {
-	//		if (nKey == VK_RMENU) {
-	//			// TODO: refactor for rShift too
-	//			// TODO: do not take if any key is pressed meanwhile
-	//			// Enable feature by a quick press on R_ALT
-	//			if (!ctrlPressed() && !winPressed() && !shiftPressed() && isDown) {
-	//				keyPressTime = TaskManager::CurrentTime();
-	//			}
-	//			else if (isUp && TaskManager::CurrentTime() - keyPressTime <= R_ALT_DEPRESS_DELAY) {
-	//				featureActive = true;
-	//				StatusWindow::showMessage("Alt-mode active", 1000);
-	//			}
-	//		}
-	//	}
-	//	else {
-	//		if (isDown) {
-	//			if (nKey == 'K' || nKey == 'S') {
-	//				kbdpress(VK_DOWN, 0);
-	//				return 1;
-	//			}
-	//			else if (nKey == 'I' || nKey == 'W') {
-	//				kbdpress(VK_UP, 0);
-	//				return 1;
-	//			}
-	//			else if (nKey == 'A' || nKey == 'J') {
-	//				kbdpress(VK_LEFT, 0);
-	//				return 1;
-	//			}
-	//			else if (nKey == 'D' || nKey == 'L') {
-	//				kbdpress(VK_RIGHT, 0);
-	//				return 1;
-	//			}
-	//			else if (nKey != VK_UP && nKey != VK_DOWN && nKey != VK_RIGHT && nKey != VK_LEFT &&
-	//				nKey != VK_LCONTROL && nKey != VK_RCONTROL && nKey != VK_LMENU && nKey != VK_LSHIFT && nKey != VK_RSHIFT && nKey != VK_LWIN && nKey != VK_RWIN) {
-	//				featureActive = false;
-	//				StatusWindow::showMessage("Alt-mode disabled", 300);
-	//			}
-	//		}
-	//	}
-	//}
 
 	if (config.internationalUsKeyboardForFrench) {
 		layoutTranslatorsRegister();
@@ -756,32 +552,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	//}
 
 	if (config.iAmAMac) {
-		// Eat accidental left/right presses after home/end on Mac
-		static int eatNextCorrespondingKey;
-		static DWORD releaseTime;
-
-		if (wParam == WM_KEYDOWN && nKey == eatNextCorrespondingKey) {
-			// Key to be eaten
-			DWORD nowTime = GetTickCount();
-			eatNextCorrespondingKey = 0;
-			if (nowTime - releaseTime <= 10) {
-				return 1;
-			}
-		}
-		else if (wParam == WM_KEYUP) {
-			for (int i = 0; i < numberof(keyboardEatTable); i++) {
-				if (nKey == keyboardEatTable[i].original) {
-					eatNextCorrespondingKey = keyboardEatTable[i].modified;
-					releaseTime = GetTickCount();
-					break;
-				}
-				else if (nKey == keyboardEatTable[i].modified) {
-					eatNextCorrespondingKey = keyboardEatTable[i].original;
-					releaseTime = GetTickCount();
-					break;
-				}
-			}
-		}
+		if (legacy_handleMacKeyboard(isDown, isUp, nKey)) return 1;
 	}
 
 	if (config.capsPageControls) {

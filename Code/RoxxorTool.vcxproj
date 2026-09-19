@@ -301,6 +301,7 @@
     <ClInclude Include="AudioMixer.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="KbdHook.h" />
+    <ClInclude Include="KbdHook_legacy.hpp" />
     <ClInclude Include="KbdLayoutTranslators.h" />
     <ClInclude Include="lib\gason.h" />
     <ClInclude Include="lib\JsonSerializer.h" />
