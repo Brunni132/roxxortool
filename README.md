@@ -74,6 +74,9 @@ Additional (not as good, please shout out if you use them else I might remove th
 	- There are additional settings for Macs using Bootcamp: `japaneseMacBookPro` and `japaneseMacKeyboard`.
 - `disableWinKey`: If set to non-zero, disables the Windows key but only for a short press; still allows it to open if the following char is pressed along it (key code is the value of disableWinKey -> example 32 means you need to press win+space and the start menu will show).
 
+Note : both left and right ctrl+win keys can be used for shortcuts. If you want to send Win+Ctrl+F12 to Windows for example instead of the roxxortool, you can press Caps Lock at the same time.
+
+
 Using the Roxxor Tool
 ---------------------
 

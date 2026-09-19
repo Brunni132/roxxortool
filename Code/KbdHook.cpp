@@ -21,11 +21,10 @@ inline bool ctrlPressed() { return lCtrlPressed || rCtrlPressed; }
 inline bool winPressed() { return lWinPressed || rWinPressed; }
 inline bool shiftPressed() { return lShiftPressed || rShiftPressed; }
 inline bool altPressed() { return lAltPressed; }
-inline bool anyModifierPressed() { return lShiftPressed || rShiftPressed || lWinPressed || rWinPressed || lCtrlPressed || rCtrlPressed; }
 // Only those two, not the others
-inline bool ctrlWinPressed() { return lCtrlPressed && lWinPressed && !rWinPressed && !rCtrlPressed && !shiftPressed() && !altPressed(); }
-inline bool ctrlWinAndMaybeShiftPressed() { return lCtrlPressed && lWinPressed && !rWinPressed && !rCtrlPressed && !altPressed(); }
-inline bool winOnlyPressed() { return lWinPressed && !rWinPressed && !ctrlPressed() && !shiftPressed() && !altPressed(); }
+inline bool ctrlWinPressed() { return ctrlPressed() && winPressed() && !shiftPressed() && !altPressed() && !capsPressed; }
+inline bool ctrlWinAndMaybeShiftPressed() { return ctrlPressed && winPressed() && !altPressed() && !capsPressed; }
+inline bool winOnlyPressed() { return winPressed() && !ctrlPressed() && !shiftPressed() && !altPressed() && !capsPressed; }
 static void cancelAllKeys();
 
 // Codes: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html or https://www.codeproject.com/Articles/7305/Keyboard-Events-Simulation-using-keybd-event-funct
