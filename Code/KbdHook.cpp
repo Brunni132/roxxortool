@@ -60,6 +60,20 @@ static const struct { int original; int modified; } keyboardEatTable[] = {
 
 enum Location { START, CURRENT, END };
 
+bool shouldIgnoreWindow(HWND hWnd) {
+	char className[128], title[128];
+	GetClassNameA(hWnd, className, 128);
+	GetWindowTextA(hWnd, title, 128);
+
+	for (auto i = 0u; i < numberof(WINDOWS_NOT_TO_HIDE); i++) {
+		if (!strcmp(className, WINDOWS_NOT_TO_HIDE[i])) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 void sendNextPageCommand() {
 	bool needsAlt = !altPressed();
 	if (needsAlt) kbddown(VK_LMENU, 0);
@@ -632,37 +646,35 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			}
 
 			if (config.winHHidesWindow && nKey == 'H') {
-				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // To avoid bringing the menu
-				char className[128], title[128];
+				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // To avoid bringing the start menu
 				HWND hWnd = GetForegroundWindow();
-				GetClassNameA(hWnd, className, 128);
-				GetWindowTextA(hWnd, title, 128);
-
-				for (auto i = 0u; i < numberof(WINDOWS_NOT_TO_HIDE); i++) {
-					if (!strcmp(className, WINDOWS_NOT_TO_HIDE[i])) {
-						return 1;
-					}
+				if (!shouldIgnoreWindow(hWnd)) {
+					ShowWindow(hWnd, SW_MINIMIZE);
 				}
-
-				ShowWindow(hWnd, SW_MINIMIZE);
 				return 1;
 			}
 
 			if (config.closeWindowWithWinQ && nKey == 'Q') {
-				if (!injected) {
-					// Normal machine
-					bool needAlt = !lAltPressed;
-					if (needAlt) kbddown(VK_LMENU, 0);
-					kbdup(VK_LWIN, 0); // Temporarily release WIN since Win+Alt+F4 does nothing
-					kbdpress(VK_F4, 0); // +F4
-					kbddown(VK_LWIN, 0); // Re-enable WIN
-					if (needAlt) kbdup(VK_LMENU, 0);
+				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // To avoid bringing the start menu
+				HWND hWnd = GetForegroundWindow();
+				if (!shouldIgnoreWindow(hWnd)) {
+					SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_CLOSE, 0);
 				}
-				else {
-					// TeamViewer support
-					if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // To avoid bringing the menu
-					SendMessage(GetForegroundWindow(), WM_CLOSE, 0, 0);
-				}
+
+				//if (!injected) {
+				//	// Normal machine
+				//	bool needAlt = !lAltPressed;
+				//	if (needAlt) kbddown(VK_LMENU, 0);
+				//	kbdup(VK_LWIN, 0); // Temporarily release WIN since Win+Alt+F4 does nothing
+				//	kbdpress(VK_F4, 0); // +F4
+				//	kbddown(VK_LWIN, 0); // Re-enable WIN
+				//	if (needAlt) kbdup(VK_LMENU, 0);
+				//}
+				//else {
+				//	// TeamViewer support
+				//	if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // To avoid bringing the menu
+				//	SendMessage(GetForegroundWindow(), WM_CLOSE, 0, 0);
+				//}
 				return 1;
 			}
 
