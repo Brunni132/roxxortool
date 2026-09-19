@@ -12,14 +12,11 @@
 //#include "DisableAnimationsForWinTab.h"
 #include "PowrProf.h"
 
-// Has been fixed in 1909 I think
-#define PRE_WINDOWS_1803_UPDATE 1
-
 const char* WINDOWS_NOT_TO_HIDE[] = {
 	"Progman", "Shell_TrayWnd", "Windows.UI.Core.CoreWindow"
 };
 
-bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, rWinPressed = false, lShiftPressed = false, rShiftPressed = false, lAltPressed = false;
+bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, rWinPressed = false, lShiftPressed = false, rShiftPressed = false, lAltPressed = false, capsPressed = false;
 inline bool ctrlPressed() { return lCtrlPressed || rCtrlPressed; }
 inline bool winPressed() { return lWinPressed || rWinPressed; }
 inline bool shiftPressed() { return lShiftPressed || rShiftPressed; }
@@ -142,28 +139,8 @@ static void listToString(char dest[Size], std::vector<std::string> strings) {
 	strcat_s(dest, Size, "]");
 }
 
-static void showStatusInfo() {
-	std::vector<std::string> infos;
-
-	if (lCtrlPressed) infos.push_back("lCtrl");
-	if (rCtrlPressed) infos.push_back("rCtrl");
-	if (lWinPressed) infos.push_back("lWin");
-	if (rWinPressed) infos.push_back("rWin");
-	if (lShiftPressed) infos.push_back("lShift");
-	if (rShiftPressed) infos.push_back("rShift");
-	if (lAltPressed) infos.push_back("lAlt");
-
-	for (int i = 0x00; i <= 0xff; i++) {
-		if (GetAsyncKeyState(i) & 0x8000) {
-			char buf[256];
-			sprintf_s(buf, "key=%02x(%c)", i, i);
-			infos.push_back(buf);
-		}
-	}
-
-	char destBuffer[1024];
-	listToString<1024>(destBuffer, infos);
-	MessageBoxA(NULL, destBuffer, "RoxxorTool debug info", MB_ICONINFORMATION);
+void preventStartMenu() { // use that when releasing the Win key
+	if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0);
 }
 
 #include "KbdHook_legacy.hpp"
@@ -182,11 +159,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	bool injected = (kbd->flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED));
 	bool isDown = wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN;
 	bool isUp = wParam == WM_KEYUP || wParam == WM_SYSKEYUP;
-	int _capsLockDown = -1;
-	auto capsLockDownLazy = [&]() {
-		if (_capsLockDown == -1) _capsLockDown = GetKeyState(VK_CAPITAL) ? 1 : 0;
-		return _capsLockDown;
-	};
 
 #ifdef _DEBUG
 	if (wParam == WM_KEYDOWN)
@@ -199,7 +171,44 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		printf("Sysup%s: %x %x\n", injected ? " (inj.)" : "", nKey, kbd->scanCode);
 #endif
 
-	// Keyboard translation services, must be run before everyone else
+	// Keep state for special keys
+	if (isDown || isUp) {
+		switch (nKey) {
+			case VK_LCONTROL:
+				lCtrlPressed = isDown;
+				break;
+			case VK_RCONTROL:
+				rCtrlPressed = isDown;
+				break;
+			case VK_LSHIFT:
+				lShiftPressed = isDown;
+				break;
+			case VK_RSHIFT:
+				rShiftPressed = isDown;
+				break;
+			case VK_LWIN:
+				lWinPressed = isDown;
+				break;
+			case VK_RWIN:
+				rWinPressed = isDown;
+				break;
+			case VK_LMENU:
+				lAltPressed = isDown;
+				break;
+			case VK_CAPITAL:
+				capsPressed = isDown;
+			//case VK_RMENU: // used by layoutTranslators*
+			//	rAltPressed = isDown;
+			//	break;
+		}
+	}
+
+	// Win+L triggers a key down but not up, and no up for Win so get aware of that
+	if (isDown && nKey == 'L' && winPressed()) {
+		lWinPressed = rWinPressed = false;
+	}
+
+	// Keyboard translation services, must be run before everything else
 	if (!injected && config.japaneseMacBookPro || config.japaneseWindowsKeyboard || config.japaneseMacKeyboard) {
 		legacy_handleJapaneseKeyboards(isDown, isUp, kbd);
 	}
@@ -207,282 +216,125 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (config.internationalUsKeyboardForFrench) {
 		layoutTranslatorsRegister();
 		if (isDown) {
-			if (layoutTranslatorsEnUs.processKeyDown(nKey, shiftPressed())) {
-				return 1;
-			}
+			if (layoutTranslatorsEnUs.processKeyDown(nKey, shiftPressed())) return 1;
 		}
 		if (isUp) {
-			if (layoutTranslatorsEnUs.processKeyUp(nKey)) {
-				return 1;
-			}
+			if (layoutTranslatorsEnUs.processKeyUp(nKey)) return 1;
 		}
 	}
-
-	// Special keys
-	if (wParam == WM_KEYDOWN || wParam == WM_KEYUP || wParam == WM_SYSKEYDOWN || wParam == WM_SYSKEYUP) {
-		switch (nKey) {
-		case VK_LCONTROL:
-			lCtrlPressed = isDown;
-			break;
-		case VK_RCONTROL:
-			rCtrlPressed = isDown;
-			break;
-		case VK_LSHIFT:
-			lShiftPressed = isDown;
-			break;
-		case VK_RSHIFT:
-			rShiftPressed = isDown;
-			break;
-		case VK_LWIN:
-			lWinPressed = isDown;
-			break;
-		case VK_RWIN:
-			rWinPressed = isDown;
-			break;
-		case VK_LMENU:
-			lAltPressed = isDown;
-			break;
-		//case VK_RMENU: // used by international keyboards
-		//	rAltPressed = isDown;
-		//	break;
-		}
-	}
-
-	//if (config.startScreenSaverWithInsert && !injected) {
-	//	DidPerformAnAction();
-	//}
 
 	// External monitor brightness change
-#define TRIGGERS_MEDIA_CONTROLS1 (capsLockDownLazy() && (config.mediaKeysWithCapsLockFnKeys || config.mediaKeysWithCapsLockSpaceArrow))
-#define TRIGGERS_MEDIA_CONTROLS_ARROWS (capsLockDownLazy() && config.mediaKeysWithCapsLockSpaceArrow)
-#define TRIGGERS_MEDIA_CONTROLS2 (ctrlWinAndMaybeShiftPressed() || TRIGGERS_MEDIA_CONTROLS1)
-	// TODO -- refactor this function so that it automatically eats key up
-#define ON_KEYDOWN_ONLY(code) if (wParam == WM_KEYDOWN) code
+	if (config.brightnessControl && ctrlWinAndMaybeShiftPressed()) {
+		if (nKey == VK_F9) {
+			if (isDown) {
+				int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
+				TaskManager::RunLaterOnSameThread([qty] { Monitor::decreaseBrightnessBy(qty); });
+			}
+			return 1;
+		}
+		else if (nKey == VK_F10) {
+			if (isDown) {
+				int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
+				TaskManager::RunLaterOnSameThread([qty] { Monitor::increaseBrightnessBy(qty); });
+			}
+			return 1;
+		}
+	}
 
-	// Eat any alphanumeric key
-	if (config.mediaKeysWithCapsLockSpaceArrow && nKey >= 'A' && nKey <= 'Z' && !anyModifierPressed() && capsLockDownLazy()) {
-		StatusWindow::ShowBlocked();
+	if (config.useSoftMediaKeys && ctrlWinPressed()) {
+		if (nKey == VK_F5) {
+			if (isDown) kbdpress(VK_MEDIA_STOP, 0);
+			return 1;
+		}
+		else if (nKey == VK_F6) {
+			if (isDown) kbdpress(VK_MEDIA_PREV_TRACK, 0);
+			return 1;
+		}
+		else if (nKey == VK_F7) {
+			if (isDown) kbdpress(VK_MEDIA_NEXT_TRACK, 0);
+			return 1;
+		}
+		else if (nKey == VK_F8) {
+			if (isDown) kbdpress(VK_MEDIA_PLAY_PAUSE, 0);
+			return 1;
+		}
+		else if (nKey == VK_F11) {
+			if (isDown) AudioMixer::decrementVolume(config.volumeIncrementQuantity);
+			return 1;
+		}
+		else if (nKey == VK_F12) {
+			if (isDown) AudioMixer::incrementVolume(config.volumeIncrementQuantity);
+			return 1;
+		}
+	}
+
+	// Insert -> start screen saver & lock
+	if (config.startScreenSaverWithInsert && isDown && nKey == VK_INSERT) {
+		//LockMachineOnNextAction();
+		SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_SCREENSAVE, 0);
 		return 1;
 	}
 
-	if (config.brightnessControl) {
-		if (nKey == VK_F9 && TRIGGERS_MEDIA_CONTROLS2) {
-			ON_KEYDOWN_ONLY({
-				int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
-				TaskManager::RunLaterOnSameThread([qty] { Monitor::decreaseBrightnessBy(qty); });
-			})
-			return 1;
+	// Ctrl+H -> toggle hide/show hidden folders
+	if (config.toggleHideFolders && isDown && ctrlPressed() && nKey == 'H') {
+		if (WindowsExplorer::isActive()) {
+			WindowsExplorer::toggleShowHideFolders();
+			// Refresh the explorer
+			kbdpress(VK_F5, 0, 0);
 		}
-		else if (nKey == VK_F10 && TRIGGERS_MEDIA_CONTROLS2) {
-			ON_KEYDOWN_ONLY({
-				int qty = lShiftPressed ? 1 : config.brightnessIncrementQuantity;
-				TaskManager::RunLaterOnSameThread([qty] { Monitor::increaseBrightnessBy(qty); });
-			})
+	}
+
+	// Logarithmic volume management
+	if (config.smoothVolumeControl && isDown) {
+		int processed = 0;
+		if (nKey == 0xae) {
+			// Molette -
+			TaskManager::RunLaterOnSameThread([] { AudioMixer::decrementVolume(config.volumeIncrementQuantity); });
+			processed = 0xae;
+		}
+		else if (nKey == 0xaf) {
+			// Molette +
+			TaskManager::RunLaterOnSameThread([] { AudioMixer::incrementVolume(config.volumeIncrementQuantity); });
+			processed = 0xaf;
+		}
+
+		// Relâche la touche, il ne faut pas que Windows la prenne
+		if (processed != 0) {
+			kbdup(processed, 0);
 			return 1;
 		}
 	}
 
-	if (config.useSoftMediaKeys) {
-		if (nKey == VK_F5 && TRIGGERS_MEDIA_CONTROLS1) {
-			ON_KEYDOWN_ONLY({ kbdpress(VK_MEDIA_STOP, 0); })
-			return 1;
-		}
-		else if (nKey == VK_F6 && TRIGGERS_MEDIA_CONTROLS1) {
-			ON_KEYDOWN_ONLY({ kbdpress(VK_MEDIA_PREV_TRACK, 0); })
-			return 1;
-		}
-		else if (nKey == VK_F7 && TRIGGERS_MEDIA_CONTROLS1) {
-			ON_KEYDOWN_ONLY({ kbdpress(VK_MEDIA_NEXT_TRACK, 0); })
-			return 1;
-		}
-		else if (nKey == VK_F8 && TRIGGERS_MEDIA_CONTROLS1) {
-			ON_KEYDOWN_ONLY({ kbdpress(VK_MEDIA_PLAY_PAUSE, 0); })
-			return 1;
-		}
-		else if (nKey == VK_SPACE && TRIGGERS_MEDIA_CONTROLS_ARROWS) {
-			ON_KEYDOWN_ONLY({ kbdpress(VK_MEDIA_PLAY_PAUSE, 0); })
-			return 1;
-		}
-		else if (nKey == VK_F11 && TRIGGERS_MEDIA_CONTROLS2) {
-			ON_KEYDOWN_ONLY({ AudioMixer::decrementVolume(config.volumeIncrementQuantity); })
-			return 1;
-		}
-		else if (nKey == VK_F12 && TRIGGERS_MEDIA_CONTROLS2) {
-			ON_KEYDOWN_ONLY({ AudioMixer::incrementVolume(config.volumeIncrementQuantity); })
-			return 1;
-		}
+	// Reexecute ourselves on Ctrl+Win+R
+	if (config.reloadConfigWithCtrlWinR && isDown && ctrlWinPressed() && nKey == 'R') {
+		Main::editConfigAndRelaunch();
+		return 1;
 	}
-#undef TRIGGER_MEDIA_CONTROLS
 
-	if (wParam == WM_KEYDOWN) {
-		// Win+L triggers a key down but not up, and no up for Win so get aware of that
-		if (nKey == 'L' && winPressed()) {
-			lWinPressed = rWinPressed = false;
-		}
+	//if (config.reloadConfigWithCtrlWinR && isDown && ctrlWinPressed() && nKey == 'D') {
+	//	legacy_showStatusInfo();
+	//	return 1;
+	//}
 
-		// Insert -> start screen saver & lock
-		if (config.startScreenSaverWithInsert) {
-			if (nKey == VK_INSERT) {
-				//LockMachineOnNextAction();
-				SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_SCREENSAVE, 0);
+	if (config.useSoftMediaKeys && isDown && ctrlWinPressed()) {
+		switch (nKey) {
+			case VK_HOME:
+				kbdpress(VK_MEDIA_STOP, 0);
 				return 1;
-			}
-		}
-
-		// Ctrl+H -> toggle hide/show hidden folders
-		if (config.toggleHideFolders) {
-			if (nKey == 'H' && ctrlPressed()) {
-				if (WindowsExplorer::isActive()) {
-					WindowsExplorer::toggleShowHideFolders();
-					// Refresh the explorer
-					kbdpress(VK_F5, 0, 0);
-				}
-			}
-		}
-
-		// Logarithmic volume management
-		if (config.smoothVolumeControl) {
-			int processed = 0;
-			if (nKey == 0xae) {
-				// Molette -
-				TaskManager::RunLaterOnSameThread([] { AudioMixer::decrementVolume(config.volumeIncrementQuantity); });
-				processed = 0xae;
-			}
-			else if (nKey == 0xaf) {
-				// Molette +
-				TaskManager::RunLaterOnSameThread([] { AudioMixer::incrementVolume(config.volumeIncrementQuantity); });
-				processed = 0xaf;
-			}
-
-			// Relâche la touche, il ne faut pas que Windows la prenne
-			if (processed != 0) {
-				kbdup(processed, 0);
+			case VK_END:
+				kbdpress(VK_MEDIA_PLAY_PAUSE, 0);
 				return 1;
-			}
-		}
-
-		if (ctrlWinAndMaybeShiftPressed()) {
-			// Reexecute ourselves on Ctrl+Win+R
-			if (config.reloadConfigWithCtrlWinR && nKey == 'R') {
-				Main::editConfigAndRelaunch();
+			case VK_PRIOR:
+				kbdpress(VK_MEDIA_PREV_TRACK, 0);
 				return 1;
-			}
-
-			if (config.reloadConfigWithCtrlWinR && nKey == 'D') {
-				TaskManager::RunLater([] {
-					showStatusInfo();
-				}, 500);
+			case VK_NEXT:
+				kbdpress(VK_MEDIA_NEXT_TRACK, 0);
 				return 1;
-			}
-
-			if (config.useSoftMediaKeys) {
-				switch (nKey) {
-				case VK_HOME:
-					kbdpress(VK_MEDIA_STOP, 0);
-					return 1;
-				case VK_END:
-					kbdpress(VK_MEDIA_PLAY_PAUSE, 0);
-					return 1;
-				case VK_PRIOR:
-					kbdpress(VK_MEDIA_PREV_TRACK, 0);
-					return 1;
-				case VK_NEXT:
-					kbdpress(VK_MEDIA_NEXT_TRACK, 0);
-					return 1;
-				}
-			}
-		}
-
-		// Win only
-		if (winOnlyPressed()) {
-			static bool skipNextWinDot = false;
-
-			if (config.doNotUseWinSpace && nKey == VK_SPACE) {
-				// Replace by Alt+Shift
-				sendAltShift();
-				return 1;
-			}
-
-#if WIN_DOT_IN_OTHER_LANGUAGES
-			// Win+DOT also working in Japanese layout (not so useful for now)
-			if (config.selectHiraganaByDefault && nKey == 0xBE && !skipNextWinDot) {
-				CancelNamedTask(TASKID_SWITCH_TO_HIRAGANA); // Win+DOT is Interfered by a pending switch to hiragana
-				if (getCurrentLayout() == 0x0411) {
-					skipNextWinDot = true;
-					sendAltShift();
-					RunNamedTaskAfterDelay(TASKID_SWITCH_TO_HIRAGANA, 500, [] {
-						bool needsWin = !winPressed();
-						if (needsWin) kbddown(VK_RWIN, 0);
-						kbdpress(0xBE, 0x34);
-						if (needsWin) kbdup(VK_RWIN, 0);
-					}, [] {
-						skipNextWinDot = false;
-					});
-					return 1;
-				}
-			}
-#else
-			//// Avoid switching to hiragana if a Win+DOT is pressed soon after the Win+Space
-			//if (config.selectHiraganaByDefault && nKey == 0xBE && !skipNextWinDot) {
-			//	TaskManager::CancelNamed(TASKID_SWITCH_TO_HIRAGANA);
-			//}
-#endif
-
-			if ((config.winFOpensYourFiles && nKey == 'F') ||
-				(config.winEOpensYourFiles && nKey == 'E')) {
-				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0);
-				WindowsExplorer::showHomeFolderWindow();
-				return 1;
-			}
-
-			if (config.winEOpensThisPC && nKey == 'E') {
-				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0);
-				WindowsExplorer::showThisPcFolderWindow();
-				return 1;
-			}
-
-			if (config.winHHidesWindow && nKey == 'H') {
-				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // To avoid bringing the start menu
-				HWND hWnd = GetForegroundWindow();
-				if (!shouldIgnoreWindow(hWnd)) {
-					ShowWindow(hWnd, SW_MINIMIZE);
-				}
-				return 1;
-			}
-
-			if (config.closeWindowWithWinQ && nKey == 'Q') {
-				if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // To avoid bringing the start menu
-				HWND hWnd = GetForegroundWindow();
-				if (!shouldIgnoreWindow(hWnd)) {
-					SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_CLOSE, 0);
-				}
-
-				//if (!injected) {
-				//	// Normal machine
-				//	bool needAlt = !lAltPressed;
-				//	if (needAlt) kbddown(VK_LMENU, 0);
-				//	kbdup(VK_LWIN, 0); // Temporarily release WIN since Win+Alt+F4 does nothing
-				//	kbdpress(VK_F4, 0); // +F4
-				//	kbddown(VK_LWIN, 0); // Re-enable WIN
-				//	if (needAlt) kbdup(VK_LMENU, 0);
-				//}
-				//else {
-				//	// TeamViewer support
-				//	if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // To avoid bringing the menu
-				//	SendMessage(GetForegroundWindow(), WM_CLOSE, 0, 0);
-				//}
-				return 1;
-			}
-
-			if (config.winSSuspendsSystem && !injected && nKey == 'S') {
-				SetSuspendState(false, false, false);
-				return 1;
-			}
 		}
 	}
 
 	if (config.winTSelectsLastTask) {
-		if (winOnlyPressed() && wParam == WM_KEYDOWN && nKey == 'T' && !injected) {
+		if (winOnlyPressed() && isDown && nKey == 'T' && !injected) {
 			//auto pressedKey = lWinPressed ? VK_LWIN : VK_RWIN;
 			// Let the normal Win+T operate, and later, move the cursor
 			TaskManager::RunLater([=] {
@@ -503,6 +355,62 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				kbdpress(VK_RETURN, 0);
 			}, 10);
 		}
+	}
+
+	if (config.winEOpensYourFiles && isDown && winOnlyPressed() && nKey == 'E') {
+		preventStartMenu();
+		WindowsExplorer::showHomeFolderWindow();
+	}
+
+	if (config.winFOpensYourFiles && isDown && winOnlyPressed() && nKey == 'F') {
+		preventStartMenu();
+		WindowsExplorer::showHomeFolderWindow();
+	}
+
+	if (config.winEOpensThisPC && isDown && winOnlyPressed() && nKey == 'E') {
+		preventStartMenu();
+		WindowsExplorer::showThisPcFolderWindow();
+		return 1;
+	}
+
+	if (config.winHHidesWindow && isDown && winOnlyPressed() && nKey == 'H') {
+		preventStartMenu();
+
+		HWND hWnd = GetForegroundWindow();
+		if (!shouldIgnoreWindow(hWnd)) {
+			ShowWindow(hWnd, SW_MINIMIZE);
+		}
+		return 1;
+	}
+
+	if (config.closeWindowWithWinQ && isDown && winOnlyPressed() && nKey == 'Q') {
+		preventStartMenu();
+
+		HWND hWnd = GetForegroundWindow();
+		if (!shouldIgnoreWindow(hWnd)) {
+			SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_CLOSE, 0);
+		}
+
+		//if (!injected) {
+		//	// Normal machine
+		//	bool needAlt = !lAltPressed;
+		//	if (needAlt) kbddown(VK_LMENU, 0);
+		//	kbdup(VK_LWIN, 0); // Temporarily release WIN since Win+Alt+F4 does nothing
+		//	kbdpress(VK_F4, 0); // +F4
+		//	kbddown(VK_LWIN, 0); // Re-enable WIN
+		//	if (needAlt) kbdup(VK_LMENU, 0);
+		//}
+		//else {
+		//	// TeamViewer support
+		//	if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0); // To avoid bringing the menu
+		//	SendMessage(GetForegroundWindow(), WM_CLOSE, 0, 0);
+		//}
+		return 1;
+	}
+
+	if (config.winSSuspendsSystem && isDown && winOnlyPressed() && nKey == 'S' && !injected) {
+		SetSuspendState(false, false, false);
+		return 1;
 	}
 
 	if (config.selectHiraganaByDefault) {
@@ -528,28 +436,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 	}
 
-	//if (true) {
-	//	static bool capsIsDown;
-	//	if (nKey == VK_CAPITAL) {
-	//		capsIsDown = wParam == WM_KEYDOWN;
-	//		return 1;
-	//	}
-	//	if (nKey == 'J' && wParam == WM_KEYDOWN) {
-	//		TCHAR name[1024];
-	//		HKL keyboards[10];
-	//		int count = GetKeyboardLayoutList(10, keyboards);
-	//		for (int i = 0; i < count; i++)
-	//			printf("Keybd: %x\n", keyboards[i]);
-	//		// printf("Enabled: %x", ActivateKeyboardLayout(keyboards[1], KLF_ACTIVATE | KLF_SETFORPROCESS));
-	//		SystemParametersInfo(SPI_SETDEFAULTINPUTLANG, 0, keyboards[0], SPIF_SENDCHANGE);
-	//		//GetKeyboardLayoutName(name);
-	//		//HKL hkl1 = LoadKeyboardLayout("00000409", KLF_REPLACELANG | KLF_ACTIVATE | KLF_SUBSTITUTE_OK | KLF_REORDER);
-	//		//ActivateKeyboardLayout(hkl1, 0);
-	//		//printf("Current keyboard: %s\n", name);
-	//		return 1;
-	//	}
-
-	//}
+	if (config.doNotUseWinSpace && isDown && winOnlyPressed() && nKey == VK_SPACE) {
+		// Replace by Alt+Shift
+		sendAltShift();
+		return 1;
+	}
 
 	if (config.iAmAMac) {
 		if (legacy_handleMacKeyboard(isDown, isUp, nKey)) return 1;
@@ -623,36 +514,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 #endif
 
-	// Simple version
-	//if (config.disableWinKey && !shiftPressed() && !altPressed() && !ctrlPressed()) {
-	//	static bool eatNextWinKey = true;
-	//	bool isWinKey = nKey == VK_LWIN || nKey == VK_RWIN;
-	//	
-	//	if (winPressed() && !isWinKey) {
-	//		eatNextWinKey = false;
-	//		if (nKey == config.disableWinKey) {
-	//			return 1;
-	//		}
-	//	}
-	//	else if (isWinKey && wParam == WM_KEYUP) {
-	//		if (eatNextWinKey) {
-	//			// Prepare the SendInput array to quickly tap Alt
-	//			INPUT inputs[2] = {};
-	//			// Alt Down
-	//			inputs[0].type = INPUT_KEYBOARD;
-	//			inputs[0].ki.wVk = VK_LCONTROL;
-	//			inputs[0].ki.dwFlags = 0;
-	//			// Alt Up
-	//			inputs[1].type = INPUT_KEYBOARD;
-	//			inputs[1].ki.wVk = VK_LCONTROL;
-	//			inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
-	//			SendInput(2, inputs, sizeof(INPUT));
-	//		}
-	//		eatNextWinKey = true;
-	//		return 0;
-	//	}
-	//}
-
 	// Extra responsive version (shows win menu on key down)
 	if (config.disableWinKey && !shiftPressed() && !altPressed() && !ctrlPressed()) {
 		static bool eatNextWinKey = true;
@@ -725,7 +586,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	//	}
 	//}
 
-#if PRE_WINDOWS_1803_UPDATE
 	if (nKey >= VK_NUMPAD0 && nKey <= VK_NUMPAD9 && config.multiDesktopLikeApplicationSwitcher) {
 		if (wParam == WM_KEYDOWN && ctrlPressed()) {
 			int taskId = nKey - VK_NUMPAD0 + '0';
@@ -735,77 +595,14 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			kbdpress(taskId, 0);
 			if (needsWin) kbdup(VK_RWIN, 0);
 			return 1;
-	}
-	}
-#else
-	// Horrible hack because the taskbar in Windows 1803-1903 (?) is coded with feet. It's been fixed eventually.
-	if (config.multiDesktopLikeApplicationSwitcher) {
-		static int lCtrlPressCount = 0, rCtrlPressCount = 0;
-
-		if (wParam == WM_KEYUP) {
-			if (nKey == VK_LCONTROL && lCtrlPressCount > 0) {
-				if (--lCtrlPressCount == 0) {
-					kbdup(VK_RWIN, 0);
-					return 1;
-				}
-			}
-			if (nKey == VK_RCONTROL && rCtrlPressCount > 0) {
-				if (--rCtrlPressCount == 0) {
-					kbdup(VK_RWIN, 0);
-					return 1;
-				}
-			}
-		}
-
-		if (wParam == WM_KEYDOWN) {
-			if (nKey >= VK_NUMPAD0 && nKey <= VK_NUMPAD9) {
-				int taskId = nKey - VK_NUMPAD0 + '0';
-				// Key repeats
-				if (lCtrlPressCount > 0 || rCtrlPressCount > 0) {
-					kbdpress(taskId, 0);
-					return 1;
-				}
-
-				if (ctrlPressed() && !winPressed()) {
-					bool needsWin = !winPressed();
-					lCtrlPressCount = lCtrlPressed ? 2 : 0;
-					rCtrlPressCount = rCtrlPressed ? 2 : 0;
-
-					if (lCtrlPressCount) kbdup(VK_LCONTROL, 0);
-					if (rCtrlPressCount) kbdup(VK_RCONTROL, 0);
-					// Ctrl+Win+[taskId]
-					kbddown(VK_RWIN, 0);
-					kbdpress(taskId, 0);
-					return 1;
-				}
-			}
-
-			// In case another key was pressed while the win key was artificially switched
-			if (!(nKey >= VK_NUMPAD0 && nKey <= VK_NUMPAD9 || nKey >= '0' && nKey <= '9' || nKey == VK_LCONTROL || nKey == VK_RCONTROL || nKey == VK_RWIN)) {
-				if (lCtrlPressCount > 0) {
-					lCtrlPressCount = 0;
-					kbddown(VK_LCONTROL, 0);
-					kbdup(VK_RWIN, 0);
-					kbddown(nKey, (BYTE)kbd->scanCode, kbd->flags);
-					return 1;
-				}
-				if (rCtrlPressCount > 0) {
-					rCtrlPressCount = 0;
-					kbddown(VK_RCONTROL, 0);
-					kbdup(VK_RWIN, 0);
-					kbddown(nKey, (BYTE)kbd->scanCode, kbd->flags);
-					return 1;
-				}
-			}
 		}
 	}
-#endif
 
 	// wParam will contain the virtual key code.  
 	return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
-void cancelAllKeys() {
+static void cancelAllKeys() {
 	kbdup(VK_LCONTROL, 0);
 	kbdup(VK_RCONTROL, 0);
 	kbdup(VK_LWIN, 0);
@@ -815,10 +612,23 @@ void cancelAllKeys() {
 	kbdup(VK_RMENU, 0);
 	kbdup(VK_LSHIFT, 0);
 	kbdup(VK_RSHIFT, 0);
+	kbdup(VK_CAPITAL, 0);
+}
+
+static void initialize() {
+	lCtrlPressed = GetKeyState(VK_LCONTROL);
+	rCtrlPressed = GetKeyState(VK_RCONTROL);
+	lShiftPressed = GetKeyState(VK_LSHIFT);
+	rShiftPressed = GetKeyState(VK_RSHIFT);
+	lWinPressed = GetKeyState(VK_LWIN);
+	rWinPressed = GetKeyState(VK_RWIN);
+	lAltPressed = GetKeyState(VK_LMENU);
+	capsPressed = GetKeyState(VK_CAPITAL);
 }
 
 void KbdHook::start() {
-	cancelAllKeys();
+	cancelAllKeys(); // can be useful in case the hook messed up something
+	initialize();
 	g_hHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
 	if (config.brightnessControl)
 		Monitor::init(config.autoApplyGammaCurveDelay);

@@ -57,8 +57,6 @@ void Config::process(ProcessContext& context, JsonNode *obj, JsonWriterNode *ser
 		|| DEFINE_PROPERTY(capsPageControls, false)
 		|| DEFINE_PROPERTY(disableCapsLock, false)
 		|| DEFINE_PROPERTY(processAltTabWithMouseButtonsEvenFromRdp, false)
-		|| DEFINE_PROPERTY(mediaKeysWithCapsLockFnKeys, false)
-		|| DEFINE_PROPERTY(mediaKeysWithCapsLockSpaceArrow, false)
 		|| DEFINE_PROPERTY(disableWinKey, 0);
 
 	if (obj && !success) {

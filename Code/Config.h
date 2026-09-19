@@ -66,7 +66,6 @@ struct Config: public RefClass {
 	bool resetDefaultGammaCurve;
 	bool disableCapsLock;
 	bool capsPageControls;
-	bool mediaKeysWithCapsLockFnKeys, mediaKeysWithCapsLockSpaceArrow;
 	// If set to non-zero, disables the win key but only for a short press, still allows it to open if the following char (key code is the value of disableWinKey) is pressed along with it
 	int disableWinKey;
 
