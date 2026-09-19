@@ -23,7 +23,7 @@ inline bool shiftPressed() { return lShiftPressed || rShiftPressed; }
 inline bool altPressed() { return lAltPressed; }
 // Only those two, not the others
 inline bool ctrlWinPressed() { return ctrlPressed() && winPressed() && !shiftPressed() && !altPressed() && !capsPressed; }
-inline bool ctrlWinAndMaybeShiftPressed() { return ctrlPressed && winPressed() && !altPressed() && !capsPressed; }
+inline bool ctrlWinAndMaybeShiftPressed() { return ctrlPressed() && winPressed() && !altPressed() && !capsPressed; }
 inline bool winOnlyPressed() { return winPressed() && !ctrlPressed() && !shiftPressed() && !altPressed() && !capsPressed; }
 static void cancelAllKeys();
 
