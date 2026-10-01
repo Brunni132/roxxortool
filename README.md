@@ -57,10 +57,14 @@ This tool focuses on very basic functionality that is usually not covered by oth
 	- Right Alt + P = ´ (dead key; A=á, E=é, I=í, O=ó, U=ú, space=´)
 	- Right Alt + N = ~ (dead key; N=ñ, space=~)
 	- Right Alt + ; (semi-colon) = … (horizontal ellipsis)
+	- Right Alt + [ = French opening guillemet followed with unbreakable space
+	- Right Alt + ] = French closing guillemet preceded with unbreakable space
+	- Right Alt + space = unbreakable space
 	- Note that you may create your own layouts or customize it. Look at layoutTranslatorsRegister.
 - `processAltTabWithMouseButtonsEvenFromRdp`: set to true if you are using RDP, and your host does not use the RoxxorTool (ex. it is a Mac). Since the RoxxorTool is given mouse input (but not keyboard) coming from the RDP client app and processes it, translating for instance the mouse button to Alt Tab, by default, the RoxxorTool will not process mouse events on the RDP host, to avoid conflicts. If you don't have the RoxxorTool on your host though, this will prevent the functionality from working. In the future, I might come with a better solution (i.e. detecting where the mouse click came from, or avoid processing them from the RDP client app).
 - `disableCapsLock`: disable the normal operation of Caps Lock.
 - `capsPageControls`: allows to use Caps as an alternate Fn key. Then, you can use Caps+Up/Down to perform a PageUp / PageDown, and Caps+Left/Right to perform Home and End. Useful for some keyboards with unintuitive layouts, like Dell laptops.
+- `disableWinKey`: If set to non-zero, disables the Windows key but only for a short press; still allows it to open if the following char is pressed along it (key code is the value of disableWinKey -> example 32 means you need to press win+space and the start menu will show).
 
 Additional (not as good, please shout out if you use them else I might remove them in the future):
 
@@ -72,7 +76,6 @@ Additional (not as good, please shout out if you use them else I might remove th
 - `autoApplyGammaCurveDelay`: reapply the gamma curve (for negative brightness) at the given interval in milliseconds.
 - `japaneseWindowsKeyboard`: remaps some keys if you have a Japanese keyboard, so that the right alt key for example is replaced with the 変換 key, and the カタカナ・ひらがな・ローマ字 key acts as a right Windows key, and 無変換 acts as a a left Alt key.
 	- There are additional settings for Macs using Bootcamp: `japaneseMacBookPro` and `japaneseMacKeyboard`.
-- `disableWinKey`: If set to non-zero, disables the Windows key but only for a short press; still allows it to open if the following char is pressed along it (key code is the value of disableWinKey -> example 32 means you need to press win+space and the start menu will show).
 
 Note : both left and right ctrl+win keys can be used for shortcuts. If you want to send Win+Ctrl+F12 to Windows for example instead of the roxxortool, you can press Caps Lock at the same time.
 
