@@ -139,7 +139,7 @@ static void listToString(char dest[Size], std::vector<std::string> strings) {
 }
 
 void preventStartMenu() { // use that when releasing the Win key
-	if (!ctrlPressed()) kbdpress(VK_RCONTROL, 0);
+	if (!shiftPressed()) kbdpress(VK_LSHIFT, 0);
 }
 
 #include "KbdHook_legacy.hpp"
@@ -414,7 +414,10 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 		HWND hWnd = GetForegroundWindow();
 		if (!shouldIgnoreWindow(hWnd)) {
-			SendMessage(GetForegroundWindow(), WM_SYSCOMMAND, SC_CLOSE, 0);
+			// If done synchronously, some windows (SublimeText) can cause issues when closing the window and it's asking for changes
+			TaskManager::RunLater([=] {
+				SendMessage(hWnd, WM_SYSCOMMAND, SC_CLOSE, 0);
+			}, 0);
 		}
 
 		//if (!injected) {
