@@ -108,6 +108,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <CustomBuildBeforeTargets>
+    </CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <LinkIncremental>false</LinkIncremental>
@@ -225,8 +227,9 @@
       </Command>
     </PreBuildEvent>
     <PreLinkEvent>
-      <Command>rem nircmd.exe elevate taskkill /F /FI "imagename eq RoxxorTool.exe"</Command>
+      <Command>sudo taskkill /F /FI "imagename eq RoxxorTool.exe"</Command>
     </PreLinkEvent>
+    <CustomBuildStep />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <ClCompile>
@@ -255,7 +258,7 @@
       </Command>
     </PreBuildEvent>
     <PreLinkEvent>
-      <Command>rem nircmd.exe elevate taskkill /F /FI "imagename eq RoxxorTool.exe"</Command>
+      <Command>sudo taskkill /F /FI "imagename eq RoxxorTool.exe"</Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

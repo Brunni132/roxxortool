@@ -58,7 +58,8 @@ void Config::process(ProcessContext& context, JsonNode *obj, JsonWriterNode *ser
 		|| DEFINE_PROPERTY(capsPageControls, false)
 		|| DEFINE_PROPERTY(disableCapsLock, false)
 		|| DEFINE_PROPERTY(processAltTabWithMouseButtonsEvenFromRdp, false)
-		|| DEFINE_PROPERTY(disableWinKey, 0);
+		|| DEFINE_PROPERTY(disableWinKey, 0)
+		|| DEFINE_PROPERTY(disableCopilotKey, false);
 
 	if (obj && !success) {
 		context.errors.push_back(string("Unrecognized entry ") + obj->key);

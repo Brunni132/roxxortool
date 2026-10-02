@@ -222,6 +222,31 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		}
 	}
 
+	if (config.disableCopilotKey) {
+		static bool eatNextLwin = false, eatNextLshift = false;
+		if (isDown && nKey == VK_F23) { // Copilot key
+			eatNextLwin = eatNextLshift = false;
+			kbdup(VK_LWIN, VK_LWIN);
+			kbdup(VK_LSHIFT, VK_LSHIFT);
+
+			eatNextLwin = eatNextLshift = true;
+			kbddown(VK_RWIN, VK_RWIN);
+			return 1;
+		}
+		else if (isUp && eatNextLshift && nKey == VK_LSHIFT) {
+			eatNextLshift = false;
+			return 1;
+		}
+		else if (isUp && eatNextLwin && nKey == VK_LWIN) {
+			eatNextLwin = false;
+			return 1;
+		}
+		else if (isUp && nKey == VK_F23) {
+			kbdup(VK_RWIN, VK_RWIN);
+			return 1;
+		}
+	}
+
 	// External monitor brightness change
 	if (config.brightnessControl && ctrlWinAndMaybeShiftPressed()) {
 		if (nKey == VK_F9) {
@@ -345,17 +370,17 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				//kbddown(pressedKey, 0);
 			}, 10);
 		}
-
-		static bool injectReturnAfterWinB = false;
-		if (winOnlyPressed() && wParam == WM_KEYDOWN && nKey == 'B') {
-			injectReturnAfterWinB = true;
-		}
-		else if (!winPressed() && injectReturnAfterWinB) {
-			injectReturnAfterWinB = false;
-			TaskManager::RunLater([=] {
-				kbdpress(VK_RETURN, 0);
-			}, 10);
-		}
+		
+		//static bool injectReturnAfterWinB = false;
+		//if (winOnlyPressed() && wParam == WM_KEYDOWN && nKey == 'B') {
+		//	injectReturnAfterWinB = true;
+		//}
+		//else if (!winPressed() && injectReturnAfterWinB) {
+		//	injectReturnAfterWinB = false;
+		//	TaskManager::RunLater([=] {
+		//		kbdpress(VK_RETURN, 0);
+		//	}, 10);
+		//}
 	}
 
 	if (config.winEOpensYourFiles && isDown && winOnlyPressed() && nKey == 'E') {
