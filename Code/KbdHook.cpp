@@ -230,7 +230,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			kbdup(VK_LSHIFT, VK_LSHIFT);
 
 			eatNextLwin = eatNextLshift = true;
-			kbddown(VK_RWIN, VK_RWIN);
+			kbddown(VK_RCONTROL, VK_RCONTROL);
 			return 1;
 		}
 		else if (isUp && eatNextLshift && nKey == VK_LSHIFT) {
@@ -242,7 +242,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 			return 1;
 		}
 		else if (isUp && nKey == VK_F23) {
-			kbdup(VK_RWIN, VK_RWIN);
+			kbdup(VK_RCONTROL, VK_RCONTROL);
 			return 1;
 		}
 	}
