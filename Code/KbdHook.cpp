@@ -152,7 +152,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		return CallNextHookEx(NULL, nCode, wParam, lParam);
 	}
 
-	KBDLLHOOKSTRUCT *kbd = (KBDLLHOOKSTRUCT*)lParam;
+	KBDLLHOOKSTRUCT* kbd = (KBDLLHOOKSTRUCT*)lParam;
 	DWORD nKey = kbd->vkCode;
 	// Ignore injected input
 	bool injected = (kbd->flags & (LLKHF_INJECTED | LLKHF_LOWER_IL_INJECTED));
@@ -196,9 +196,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				break;
 			case VK_CAPITAL:
 				capsPressed = isDown;
-			//case VK_RMENU: // used by layoutTranslators*
-			//	rAltPressed = isDown;
-			//	break;
+				//case VK_RMENU: // used by layoutTranslators*
+				//	rAltPressed = isDown;
+				//	break;
 		}
 	}
 
@@ -370,7 +370,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				//kbddown(pressedKey, 0);
 			}, 10);
 		}
-		
+
 		//static bool injectReturnAfterWinB = false;
 		//if (winOnlyPressed() && wParam == WM_KEYDOWN && nKey == 'B') {
 		//	injectReturnAfterWinB = true;
@@ -528,20 +528,17 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		if (nKey == VK_CAPITAL) return 1;
 	}
 
-#if PRE_WINDOWS_1803_UPDATE
 	// LWin+[0-9] -> Ctrl+Win+[0-9]
 	if (config.noNumPad /*&& !injected*/ && !rCtrlPressed) {
 		if (lWinPressed && nKey >= '0' && nKey <= '9' && wParam == WM_KEYDOWN) {
 			if (!shiftPressed() && !ctrlPressed() && config.multiDesktopLikeApplicationSwitcher) {
-				// Press Ctrl (http://www.codeproject.com/Articles/7305/Keyboard-Events-Simulation-using-keybd-event-funct)
 				kbddown(VK_RCONTROL, 0);
 				kbddown(nKey, 0);
 				kbdup(VK_RCONTROL, 0);
 				return 1;
-				}
 			}
 		}
-#endif
+	}
 
 	// Extra responsive version (shows win menu on key down)
 	if (config.disableWinKey && !shiftPressed() && !altPressed() && !ctrlPressed()) {
