@@ -15,8 +15,6 @@ static HANDLE hThread = NULL;
 static HANDLE hQueueReadyEvent = NULL;
 static bool exitRequested = false;
 static list<Action> actionQueue;
-static UINT_PTR checkRemoteDesktopTimer = 0;
-bool TaskManager::isBeingRemoteDesktopd = false;
 
 static DWORD WINAPI ActionWorkerThread(LPVOID lpParam) {
 	while (!exitRequested) {
@@ -39,19 +37,14 @@ static DWORD WINAPI ActionWorkerThread(LPVOID lpParam) {
 	return 0;
 }
 
-void CALLBACK CheckRemoteDesktop(HWND, UINT, UINT_PTR, DWORD) {
+bool TaskManager::IsBeingRemoteDesktopd() {
 	char className[128];
 	HWND hWnd = GetForegroundWindow();
 	GetClassName(hWnd, className, numberof(className));
 	// TODO: il faut afficher une fenêtre (comme celle du Brightness) et lui donner le focus, alors le Ctrl+Alt+Tab marchera.
-	isBeingRemoteDesktopd = !strcmp(className, "TV_CClientWindowClass")
+	return !strcmp(className, "TV_CClientWindowClass")
 		|| !strcmp(className, "RustdeskMultiWindow")
 		|| GetSystemMetrics(SM_REMOTESESSION);
-#ifdef _DEBUG
-	char windowTitle[128];
-	GetWindowText(hWnd, windowTitle, sizeof(windowTitle));
-	printf("Current wnd class: %s, title: %s%s\n", className, windowTitle, isBeingRemoteDesktopd ? " (Remote Desktop)" : "");
-#endif
 }
 
 void TaskManager::init() {
@@ -66,12 +59,9 @@ void TaskManager::init() {
 		NULL,                   // argument to thread function 
 		0,                      // use default creation flags 
 		NULL);                  // returns the thread identifier 
-
-	checkRemoteDesktopTimer = SetTimer(NULL, 0, 2000, CheckRemoteDesktop);
 }
 
 void TaskManager::terminate() {
-	KillTimer(NULL, checkRemoteDesktopTimer);
 	exitRequested = true;
 	SetEvent(hQueueReadyEvent);
 	WaitForSingleObject(hThread, INFINITE);

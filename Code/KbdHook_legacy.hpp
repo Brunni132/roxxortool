@@ -1,7 +1,7 @@
 int legacy_handleMacKeyboard(bool isDown, bool isUp, DWORD nKey) {
 	// Eat accidental left/right presses after home/end on Mac
 	static int eatNextCorrespondingKey;
-	static DWORD releaseTime;
+	static ULONGLONG releaseTime;
 	static const struct { int original; int modified; } keyboardEatTable[] = {
 		VK_LEFT, VK_HOME,
 		VK_RIGHT, VK_END,
@@ -12,7 +12,7 @@ int legacy_handleMacKeyboard(bool isDown, bool isUp, DWORD nKey) {
 
 	if (isDown && nKey == eatNextCorrespondingKey) {
 		// Key to be eaten
-		DWORD nowTime = GetTickCount();
+		ULONGLONG nowTime = GetTickCount64();
 		eatNextCorrespondingKey = 0;
 		if (nowTime - releaseTime <= 10) {
 			return 1;
@@ -22,12 +22,12 @@ int legacy_handleMacKeyboard(bool isDown, bool isUp, DWORD nKey) {
 		for (int i = 0; i < numberof(keyboardEatTable); i++) {
 			if (nKey == keyboardEatTable[i].original) {
 				eatNextCorrespondingKey = keyboardEatTable[i].modified;
-				releaseTime = GetTickCount();
+				releaseTime = GetTickCount64();
 				break;
 			}
 			else if (nKey == keyboardEatTable[i].modified) {
 				eatNextCorrespondingKey = keyboardEatTable[i].original;
-				releaseTime = GetTickCount();
+				releaseTime = GetTickCount64();
 				break;
 			}
 		}

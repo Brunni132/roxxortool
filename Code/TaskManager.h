@@ -12,7 +12,7 @@ namespace TaskManager {
 	void terminate();
 
 	uint64_t CurrentTime();
-	extern bool isBeingRemoteDesktopd;
+	bool IsBeingRemoteDesktopd();
 
 	void Run(std::function<void()> function);
 	void RunNamed(NamedTask name, std::function<void()> function);

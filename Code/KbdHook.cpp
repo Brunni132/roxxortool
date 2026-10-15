@@ -333,6 +333,12 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 	// Reexecute ourselves on Ctrl+Win+R
 	if (config.reloadConfigWithCtrlWinR && isDown && ctrlWinPressed() && nKey == 'R') {
+#ifdef _DEBUG
+		char windowTitle[128];
+		GetWindowText(hWnd, windowTitle, sizeof(windowTitle));
+		printf("Current wnd class: %s, title: %s%s\n", className, windowTitle, TaskManager::IsBeingRemoteDesktopd() ? " (Remote Desktop)" : "");
+#endif
+
 		Main::editConfigAndRelaunch();
 		return 1;
 	}
@@ -409,7 +415,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		return 1;
 	}
 
-	if (config.closeWindowWithWinQ && isDown && winOnlyPressed() && nKey == 'Q' && !TaskManager::isBeingRemoteDesktopd) {
+	if (config.closeWindowWithWinQ && isDown && winOnlyPressed() && nKey == 'Q') {
+		if (TaskManager::IsBeingRemoteDesktopd()) return CallNextHookEx(NULL, nCode, wParam, lParam);
+
 		preventStartMenu();
 
 		HWND hWnd = GetForegroundWindow();

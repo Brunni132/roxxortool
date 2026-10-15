@@ -84,7 +84,7 @@ static void CALLBACK autoApplyTimer(HWND, UINT, UINT_PTR, DWORD);
 static const int MAX_MONITORS_NUM = 128;
 static MonitorInfo *monitors[MAX_MONITORS_NUM];
 static int currentMonitors = 0;
-static DWORD lastReadTime;
+static ULONGLONG lastReadTime;
 static bool hasBeenAttenuated = false;
 static UINT_PTR timerProcPtr = NULL;
 
@@ -261,8 +261,8 @@ static bool shouldReadBrightnessNow(MonitorInfo *mi) {
 	if (mi->currentBrightness < mi->minBrightness) return false;
 	if (config.brightnessCacheDuration == 0) return true;
 	// Reread after selected duration
-	DWORD nowTime = GetTickCount(), last = lastReadTime;
-	bool shouldRead = nowTime - lastReadTime >= DWORD(config.brightnessCacheDuration);
+	ULONGLONG nowTime = GetTickCount64(), last = lastReadTime;
+	bool shouldRead = nowTime - lastReadTime >= ULONGLONG(config.brightnessCacheDuration);
 	lastReadTime = nowTime;
 	return shouldRead;
 }

@@ -43,16 +43,15 @@ static const char *buttonName(WPARAM wParam) {
 }
 #endif
 
-
 LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lParam) {
 	// Unlike the keyboard hook, the mouse hook is called and processed properly even if MS TSC is the active window
 	// So we let the host do the job and ignore anything on the guest
-	if (TaskManager::isBeingRemoteDesktopd && !config.processAltTabWithMouseButtonsEvenFromRdp) {
-#ifdef _DEBUG
-		printf("Ignoring mouse event because in remote desktop session\n");
-#endif
-		return CallNextHookEx(NULL, nCode, wParam, lParam);
-	}
+//	if (TaskManager::isBeingRemoteDesktopd && !config.processAltTabWithMouseButtonsEvenFromRdp) {
+//#ifdef _DEBUG
+//		printf("Ignoring mouse event because in remote desktop session\n");
+//#endif
+//		return CallNextHookEx(NULL, nCode, wParam, lParam);
+//	}
 
 //#ifdef _DEBUG
 //	{
@@ -75,6 +74,8 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 	}
 
 	if (config.altTabWithMouseButtons && nCode >= 0 && (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP)) {
+		if (!config.processAltTabWithMouseButtonsEvenFromRdp && TaskManager::IsBeingRemoteDesktopd()) return CallNextHookEx(NULL, nCode, wParam, lParam);
+
 		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
 		static bool isDown = false;
 		static POINT clickPosition;
