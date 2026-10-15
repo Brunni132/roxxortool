@@ -16,7 +16,7 @@ static HANDLE hQueueReadyEvent = NULL;
 static bool exitRequested = false;
 static list<Action> actionQueue;
 static UINT_PTR checkRemoteDesktopTimer = 0;
-bool TaskManager::isInTeamViewer = false, TaskManager::isBeingRemoteDesktopd = false;
+bool TaskManager::isBeingRemoteDesktopd = false;
 
 static DWORD WINAPI ActionWorkerThread(LPVOID lpParam) {
 	while (!exitRequested) {
@@ -43,15 +43,15 @@ void CALLBACK CheckRemoteDesktop(HWND, UINT, UINT_PTR, DWORD) {
 	char className[128];
 	HWND hWnd = GetForegroundWindow();
 	GetClassName(hWnd, className, numberof(className));
-	//isInMsRDP = !strcmp(className, "TscShellContainerClass");
-	isInTeamViewer = !strcmp(className, "TV_CClientWindowClass");
+	// TODO: il faut afficher une fenêtre (comme celle du Brightness) et lui donner le focus, alors le Ctrl+Alt+Tab marchera.
+	isBeingRemoteDesktopd = !strcmp(className, "TV_CClientWindowClass")
+		|| !strcmp(className, "RustdeskMultiWindow")
+		|| GetSystemMetrics(SM_REMOTESESSION);
 #ifdef _DEBUG
 	char windowTitle[128];
 	GetWindowText(hWnd, windowTitle, sizeof(windowTitle));
-	printf("Current wnd class: %s, title: %s\n", className, windowTitle);
+	printf("Current wnd class: %s, title: %s%s\n", className, windowTitle, isBeingRemoteDesktopd ? " (Remote Desktop)" : "");
 #endif
-	// TODO only works with MS TSC
-	isBeingRemoteDesktopd = GetSystemMetrics(SM_REMOTESESSION);
 }
 
 void TaskManager::init() {

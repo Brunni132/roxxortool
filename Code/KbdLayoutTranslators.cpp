@@ -94,7 +94,7 @@ void LayoutTranslator::cancelAnyState() {
 
 // Returns TRUE if the key must be eaten
 bool LayoutTranslator::processKeyUp(int kbdVcode) {
-	if (kbdVcode == VK_APPS && !TaskManager::isInTeamViewer) {
+	if (kbdVcode == VK_APPS) {
 		bool pressMenuKey = isMenuDown && shouldSendMenuKey;
 		isMenuDown = shouldSendMenuKey = false;
 		if (pressMenuKey) {
@@ -121,7 +121,7 @@ bool LayoutTranslator::processKeyUp(int kbdVcode) {
 
 // Returns TRUE if the key must be eaten
 bool LayoutTranslator::processKeyDown(int kbdVcode, bool shiftPressed) {
-	if (kbdVcode == VK_APPS && !TaskManager::isInTeamViewer) {
+	if (kbdVcode == VK_APPS) {
 		isMenuDown = true;
 		shouldSendMenuKey = true;
 		return true;

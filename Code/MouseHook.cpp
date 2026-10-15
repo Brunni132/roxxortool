@@ -74,7 +74,7 @@ LRESULT CALLBACK LowLevelMouseProc_AltTab(int nCode, WPARAM wParam, LPARAM lPara
 		}
 	}
 
-	if (config.altTabWithMouseButtons && nCode >= 0 && (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP) && !TaskManager::isInTeamViewer) {
+	if (config.altTabWithMouseButtons && nCode >= 0 && (wParam == WM_XBUTTONDOWN || wParam == WM_XBUTTONUP)) {
 		MSLLHOOKSTRUCT *mllStruct = (MSLLHOOKSTRUCT*)lParam;
 		static bool isDown = false;
 		static POINT clickPosition;

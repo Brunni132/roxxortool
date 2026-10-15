@@ -148,7 +148,7 @@ static HHOOK g_hHook;
 
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	// Not something for us
-	if (nCode != HC_ACTION || TaskManager::isInTeamViewer) {
+	if (nCode != HC_ACTION) {
 		return CallNextHookEx(NULL, nCode, wParam, lParam);
 	}
 
@@ -409,7 +409,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 		return 1;
 	}
 
-	if (config.closeWindowWithWinQ && isDown && winOnlyPressed() && nKey == 'Q') {
+	if (config.closeWindowWithWinQ && isDown && winOnlyPressed() && nKey == 'Q' && !TaskManager::isBeingRemoteDesktopd) {
 		preventStartMenu();
 
 		HWND hWnd = GetForegroundWindow();

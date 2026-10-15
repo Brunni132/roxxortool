@@ -12,7 +12,6 @@ namespace TaskManager {
 	void terminate();
 
 	uint64_t CurrentTime();
-	extern bool isInTeamViewer;
 	extern bool isBeingRemoteDesktopd;
 
 	void Run(std::function<void()> function);
