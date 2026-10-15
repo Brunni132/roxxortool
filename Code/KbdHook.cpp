@@ -12,6 +12,10 @@
 //#include "DisableAnimationsForWinTab.h"
 #include "PowrProf.h"
 
+static const char* SETTINGS_REGISTRY_KEY = "Software\\RoxxorTool";
+static const char* PREVENT_NATIVE_KEYS_VALUE = "PreventNativeKeys";
+static DWORD preventNativeKeys = false;
+
 const char* WINDOWS_NOT_TO_HIDE[] = {
 	"Progman", "Shell_TrayWnd", "Windows.UI.Core.CoreWindow"
 };
@@ -140,6 +144,19 @@ static void listToString(char dest[Size], std::vector<std::string> strings) {
 
 void preventStartMenu() { // use that when releasing the Win key
 	if (!shiftPressed()) kbdpress(VK_LSHIFT, 0);
+}
+
+static void loadRegistryBackedVars() {
+	DWORD size = sizeof(preventNativeKeys);
+	RegGetValueA(HKEY_CURRENT_USER, SETTINGS_REGISTRY_KEY,
+		PREVENT_NATIVE_KEYS_VALUE, RRF_RT_REG_DWORD, NULL, &preventNativeKeys, &size);
+}
+
+static void saveRegistryBackedVars() {
+	if (RegSetKeyValueA(HKEY_CURRENT_USER, SETTINGS_REGISTRY_KEY,
+		PREVENT_NATIVE_KEYS_VALUE, REG_DWORD, &preventNativeKeys, sizeof(preventNativeKeys)) != ERROR_SUCCESS) {
+		printf("Failed to save PreventNativeKeys to the registry.\n");
+	}
 }
 
 #include "KbdHook_legacy.hpp"
@@ -484,14 +501,16 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	}
 
 	if (config.capsPageControls) {
-		static bool capsIsDown = false, capsHasHadEffect = false, preventNativeKeys = true;
+		static bool capsIsDown = false, capsHasHadEffect = false;
 
 		// Prevent native keys from working
 		if (preventNativeKeys && !injected && (nKey == VK_PRIOR || nKey == VK_NEXT || nKey == VK_HOME || nKey == VK_END)) return 1;
 
-		if (nKey == VK_INSERT) {
+		if (ctrlWinPressed() && nKey == VK_INSERT) {
 			if (wParam == WM_KEYDOWN) {
-				StatusWindow::showPgControlsBlocked(preventNativeKeys = !preventNativeKeys);
+				preventNativeKeys = preventNativeKeys == 0 ? 1 : 0;
+				StatusWindow::showPgControlsBlocked(preventNativeKeys);
+				saveRegistryBackedVars();
 			}
 			return 1;
 		}
@@ -650,6 +669,7 @@ static void cancelAllKeys() {
 }
 
 void KbdHook::start() {
+	loadRegistryBackedVars();
 	cancelAllKeys(); // can be useful in case the hook messed up something
 	g_hHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
 	if (config.brightnessControl)

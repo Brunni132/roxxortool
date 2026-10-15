@@ -64,6 +64,7 @@ This tool focuses on very basic functionality that is usually not covered by oth
 - `processAltTabWithMouseButtonsEvenFromRdp`: set to true if you are using RDP, and your host does not use the RoxxorTool (ex. it is a Mac). Since the RoxxorTool is given mouse input (but not keyboard) coming from the RDP client app and processes it, translating for instance the mouse button to Alt Tab, by default, the RoxxorTool will not process mouse events on the RDP host, to avoid conflicts. If you don't have the RoxxorTool on your host though, this will prevent the functionality from working. In the future, I might come with a better solution (i.e. detecting where the mouse click came from, or avoid processing them from the RDP client app).
 - `disableCapsLock`: disable the normal operation of Caps Lock.
 - `capsPageControls`: allows to use Caps as an alternate Fn key. Then, you can use Caps+Up/Down to perform a PageUp / PageDown, and Caps+Left/Right to perform Home and End. Useful for some keyboards with unintuitive layouts, like Dell laptops.
+- 
 - `disableWinKey`: If set to non-zero, disables the Windows key but only for a short press; still allows it to open if the following char is pressed along it (key code is the value of disableWinKey -> example 32 means you need to press win+space and the start menu will show).
 - `disableCopilotKey`: if set to true, replaces the Copilot (dedicated key) by a right Ctrl key.
 
