@@ -92,27 +92,6 @@ static void switchToHiraganaAsync() {
 	}, config.selectHiraganaDelay);
 }
 
-static void moveToTask(int taskNo, Location from) {
-	bool needsWin = !winPressed(), needsShift = !shiftPressed();
-	if (from == START) kbdpress(VK_HOME, 0);
-	else if (from == END) kbdpress(VK_END, 0);
-	else if (from == CURRENT) taskNo += sgn(taskNo);
-	if (taskNo == 0 || taskNo == 1) return;
-
-	TaskManager::RunNamedLater(TASKID_TASK_SWITCH, [=] {
-		if (needsWin) kbddown(VK_RWIN, 0);
-		if (taskNo <= 0) {
-			if (needsShift) kbddown(VK_RSHIFT, 0);
-			for (int i = 0; i < -1 - taskNo; i += 1) kbdpress('T', 0);
-			if (needsShift) kbdup(VK_RSHIFT, 0);
-		}
-		else {
-			for (int i = 0; i < taskNo - 1; i += 1) kbdpress('T', 0);
-		}
-		if (needsWin) kbdup(VK_RWIN, 0);
-	}, 70);
-}
-
 static void sendAltShift() {
 	// Replace by Alt+Shift
 	bool needLWin = lWinPressed, needRWin = rWinPressed;
@@ -391,7 +370,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 				//kbdup(pressedKey, 0);
 				kbdpress(VK_END, 0);
 				//kbddown(pressedKey, 0);
-			}, 10);
+			}, 100);
 		}
 
 		//static bool injectReturnAfterWinB = false;
