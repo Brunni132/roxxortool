@@ -28,6 +28,7 @@ inline bool altPressed() { return lAltPressed; }
 // Only those two, not the others
 inline bool ctrlWinPressed() { return ctrlPressed() && winPressed() && !shiftPressed() && !altPressed() && !capsPressed; }
 inline bool ctrlWinAndMaybeShiftPressed() { return ctrlPressed() && winPressed() && !altPressed() && !capsPressed; }
+inline bool ctrlWinAndMaybeCapsPressed() { return ctrlPressed() && winPressed() && !shiftPressed() && !altPressed(); }
 inline bool winOnlyPressed() { return winPressed() && !ctrlPressed() && !shiftPressed() && !altPressed() && !capsPressed; }
 static void cancelAllKeys();
 
@@ -330,9 +331,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	// Reexecute ourselves on Ctrl+Win+R
 	if (config.reloadConfigWithCtrlWinR && isDown && ctrlWinPressed() && nKey == 'R') {
 #ifdef _DEBUG
-		char windowTitle[128];
-		GetWindowText(hWnd, windowTitle, sizeof(windowTitle));
-		printf("Current wnd class: %s, title: %s%s\n", className, windowTitle, TaskManager::IsBeingRemoteDesktopd() ? " (Remote Desktop)" : "");
+		char cls[128], title[128];
+		HWND hWnd = GetForegroundWindow();
+		GetClassNameA(hWnd, cls, numberof(cls));
+		GetWindowTextA(hWnd, title, numberof(title));
+		printf("Current wnd class: %s, title: %s%s\n", cls, title, TaskManager::IsBeingRemoteDesktopd() ? " (Remote Desktop)" : "");
 #endif
 
 		Main::editConfigAndRelaunch();
@@ -344,7 +347,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 	//	return 1;
 	//}
 
-	if (config.useSoftMediaKeys && isDown && ctrlWinPressed()) {
+	// ctrlWinAndMaybeCapsPressed -> case where we use capsPageControl to do Ctrl+Win+Caps+Up to do Ctrl+Win+PgUp (previous song)
+	if (config.useSoftMediaKeys && isDown && ctrlWinAndMaybeCapsPressed()) {
 		switch (nKey) {
 			case VK_HOME:
 				kbdpress(VK_MEDIA_STOP, 0);
