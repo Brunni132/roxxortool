@@ -3,7 +3,7 @@
 enum NamedTask {
 	TASKID_UNNAMED = 0,
 	TASKID_SWITCH_TO_HIRAGANA,
-	TASKID_TASK_SWITCH
+	TASKID_TASK_SWITCH,
 };
 
 namespace TaskManager {

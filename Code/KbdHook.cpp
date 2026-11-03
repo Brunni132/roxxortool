@@ -16,10 +16,6 @@ static const char* SETTINGS_REGISTRY_KEY = "Software\\RoxxorTool";
 static const char* PREVENT_NATIVE_KEYS_VALUE = "PreventNativeKeys";
 static DWORD preventNativeKeys = false;
 
-const char* WINDOWS_NOT_TO_HIDE[] = {
-	"Progman", "Shell_TrayWnd", "Windows.UI.Core.CoreWindow"
-};
-
 bool lCtrlPressed = false, rCtrlPressed = false, lWinPressed = false, rWinPressed = false, lShiftPressed = false, rShiftPressed = false, lAltPressed = false, capsPressed = false;
 inline bool ctrlPressed() { return lCtrlPressed || rCtrlPressed; }
 inline bool winPressed() { return lWinPressed || rWinPressed; }
@@ -58,10 +54,13 @@ bool shouldIgnoreWindow(HWND hWnd) {
 	GetClassNameA(hWnd, className, 128);
 	GetWindowTextA(hWnd, title, 128);
 
-	for (auto i = 0u; i < numberof(WINDOWS_NOT_TO_HIDE); i++) {
-		if (!strcmp(className, WINDOWS_NOT_TO_HIDE[i])) {
-			return true;
-		}
+	if (!strcmp(className, "Progman") ||
+		!strcmp(className, "Shell_TrayWnd") ||
+		!strcmp(className, "Windows.UI.Core.CoreWindow") ||
+		!strcmp(className, "TopLevelWindowForOverflowXamlIsland") ||
+		!strcmp(className, "XamlExplorerHostIslandWindow"))
+	{
+		return true;
 	}
 
 	return false;
